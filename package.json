@@ -1,0 +1,92 @@
+{
+  "name": "git-scope",
+  "displayName": "GitScope",
+  "description": "Commit graph visualization with git actions — view your repository history and act on it directly from the graph.",
+  "version": "0.0.1",
+  "publisher": "dok6n",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.84.0"
+  },
+  "categories": [
+    "SCM Providers",
+    "Visualization"
+  ],
+  "keywords": [
+    "git",
+    "graph",
+    "commit",
+    "branch",
+    "worktree"
+  ],
+  "main": "./dist/extension/main.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "gitScope.view",
+        "title": "View Git Graph",
+        "category": "GitScope",
+        "icon": "$(git-branch)"
+      }
+    ],
+    "menus": {
+      "scm/title": [
+        {
+          "command": "gitScope.view",
+          "group": "navigation",
+          "when": "scmProvider == git"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "GitScope",
+      "properties": {
+        "gitScope.initialLoadCommits": {
+          "type": "number",
+          "default": 300,
+          "description": "Number of commits to load when the graph is first opened."
+        },
+        "gitScope.loadMoreCommits": {
+          "type": "number",
+          "default": 100,
+          "description": "Number of additional commits to load when scrolling to the bottom of the graph."
+        },
+        "gitScope.dateType": {
+          "type": "string",
+          "enum": [
+            "author",
+            "commit"
+          ],
+          "default": "author",
+          "description": "Which date to display for each commit."
+        },
+        "gitScope.fetchPruneByDefault": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run fetch with --prune enabled by default."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "npm run build:ext && npm run build:web",
+    "build:ext": "node esbuild.mjs",
+    "build:web": "vite build",
+    "watch:ext": "node esbuild.mjs --watch",
+    "watch:web": "vite build --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.extension.json && tsc --noEmit -p tsconfig.webview.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.84.0",
+    "esbuild": "^0.21.0",
+    "solid-js": "^1.8.0",
+    "typescript": "^5.4.0",
+    "vite": "^5.2.0",
+    "vite-plugin-solid": "^2.10.0",
+    "vitest": "^1.6.0"
+  }
+}

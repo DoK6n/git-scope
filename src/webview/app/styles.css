@@ -1,0 +1,634 @@
+/* GitScope webview — VS Code 테마 변수 기반 */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size, 13px);
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+  overflow: hidden;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-state {
+  padding: 32px;
+  text-align: center;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* ── 그래프 브랜치 색상 팔레트 ─────────────────── */
+.color-0 { stroke: #4e9de6; fill: #4e9de6; }
+.color-1 { stroke: #d9699e; fill: #d9699e; }
+.color-2 { stroke: #53c17f; fill: #53c17f; }
+.color-3 { stroke: #d9a03f; fill: #d9a03f; }
+.color-4 { stroke: #9d78d9; fill: #9d78d9; }
+.color-5 { stroke: #4fc3c3; fill: #4fc3c3; }
+.color-6 { stroke: #d96c57; fill: #d96c57; }
+.color-7 { stroke: #a8b840; fill: #a8b840; }
+
+/* ── 툴바 ─────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--vscode-panel-border, #444);
+  flex-shrink: 0;
+}
+
+.toolbar-spacer {
+  flex: 1;
+}
+
+.toolbar-btn {
+  background: var(--vscode-button-secondaryBackground, #3a3d41);
+  color: var(--vscode-button-secondaryForeground, #ccc);
+  border: none;
+  border-radius: 3px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.toolbar-btn:hover {
+  background: var(--vscode-button-secondaryHoverBackground, #45494e);
+}
+
+.toolbar-btn.primary {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.toolbar-btn.danger {
+  background: var(--vscode-inputValidation-errorBackground, #5a1d1d);
+  color: var(--vscode-errorForeground, #f48771);
+}
+
+.repo-select,
+.toolbar input[type='text'] {
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 3px;
+  padding: 3px 6px;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.head-branch {
+  color: var(--vscode-descriptionForeground);
+  margin-right: 6px;
+}
+
+.branch-filter {
+  position: relative;
+}
+
+.branch-filter-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 50;
+  margin-top: 4px;
+  min-width: 260px;
+  max-height: 340px;
+  display: flex;
+  flex-direction: column;
+  background: var(--vscode-dropdown-background, #252526);
+  border: 1px solid var(--vscode-dropdown-border, #454545);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.branch-filter-list {
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.branch-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.branch-filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 6px;
+  border-top: 1px solid var(--vscode-panel-border, #444);
+}
+
+/* ── 에러 배너 ─────────────────────────────────── */
+.error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--vscode-inputValidation-errorBackground, #5a1d1d);
+  color: var(--vscode-errorForeground, #f48771);
+  border-bottom: 1px solid var(--vscode-inputValidation-errorBorder, #be1100);
+  flex-shrink: 0;
+}
+
+.error-text {
+  flex: 1;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.error-dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* ── 그래프 뷰 ─────────────────────────────────── */
+.graph-view {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.graph-canvas {
+  position: relative;
+}
+
+.graph-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.graph-line {
+  stroke-width: 2;
+}
+
+.graph-node.uncommitted {
+  fill: var(--vscode-editor-background);
+  stroke-width: 2;
+  stroke-dasharray: 2 2;
+}
+
+.graph-loading {
+  position: sticky;
+  bottom: 0;
+  text-align: center;
+  padding: 4px;
+  color: var(--vscode-descriptionForeground);
+  background: var(--vscode-editor-background);
+}
+
+.commit-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding-right: 10px;
+  white-space: nowrap;
+}
+
+.commit-row:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.commit-row.selected {
+  background: var(--vscode-list-activeSelectionBackground);
+  color: var(--vscode-list-activeSelectionForeground);
+}
+
+.commit-row.uncommitted .commit-subject {
+  font-style: italic;
+  color: var(--vscode-descriptionForeground);
+}
+
+.col-graph {
+  flex-shrink: 0;
+  height: 100%;
+}
+
+.col-message {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.commit-subject {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-author {
+  width: 130px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--vscode-descriptionForeground);
+}
+
+.col-date {
+  width: 120px;
+  flex-shrink: 0;
+  color: var(--vscode-descriptionForeground);
+}
+
+.col-hash {
+  width: 70px;
+  flex-shrink: 0;
+  font-family: var(--vscode-editor-font-family, monospace);
+  color: var(--vscode-descriptionForeground);
+}
+
+/* ── 레퍼런스 라벨 ─────────────────────────────── */
+.ref-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 6px;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 16px;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+}
+
+.ref-head {
+  font-weight: 600;
+}
+
+.ref-badge.ref-head {
+  /* type=head(로컬 브랜치) */
+}
+
+.ref-badge[class*='ref-'] {
+  background: var(--vscode-badge-background, #4d4d4d);
+  color: var(--vscode-badge-foreground, #fff);
+}
+
+.ref-badge.ref-remote {
+  opacity: 0.75;
+}
+
+.ref-badge.ref-tag {
+  border-radius: 2px;
+  background: transparent;
+  border-color: var(--vscode-badge-background, #4d4d4d);
+  color: var(--vscode-foreground);
+}
+
+.ref-head-dot {
+  color: #53c17f;
+}
+
+.ref-worktree-mark {
+  color: #4fc3c3;
+}
+
+/* ── 컨텍스트 메뉴 ─────────────────────────────── */
+.context-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+.context-menu {
+  position: absolute;
+  min-width: 200px;
+  padding: 4px 0;
+  background: var(--vscode-menu-background, #252526);
+  color: var(--vscode-menu-foreground, #ccc);
+  border: 1px solid var(--vscode-menu-border, #454545);
+  border-radius: 5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.context-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: inherit;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.context-menu-item:hover {
+  background: var(--vscode-menu-selectionBackground, #094771);
+  color: var(--vscode-menu-selectionForeground, #fff);
+}
+
+.context-menu-item.danger {
+  color: var(--vscode-errorForeground, #f48771);
+}
+
+.context-menu-separator {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--vscode-menu-separatorBackground, #454545);
+}
+
+/* ── 다이얼로그 ────────────────────────────────── */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+}
+
+.dialog {
+  min-width: 380px;
+  max-width: 520px;
+  background: var(--vscode-editorWidget-background, #252526);
+  border: 1px solid var(--vscode-editorWidget-border, #454545);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.dialog-title {
+  padding: 10px 14px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--vscode-panel-border, #444);
+}
+
+.dialog-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--vscode-panel-border, #444);
+}
+
+.dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dialog-field label {
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+}
+
+.dialog-field input[type='text'],
+.dialog-field input[type='number'] {
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 3px;
+  padding: 5px 8px;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.dialog-radio,
+.dialog-checkbox {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.dialog-radio .hint {
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+}
+
+.dialog-warning {
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: var(--vscode-inputValidation-warningBackground, #5a4a1d);
+  color: var(--vscode-editorWarning-foreground, #cca700);
+  font-size: 12px;
+}
+
+/* ── 커밋 상세 패널 ────────────────────────────── */
+.commit-details {
+  position: relative;
+  flex-shrink: 0;
+  max-height: 40%;
+  min-height: 120px;
+  display: flex;
+  border-top: 1px solid var(--vscode-panel-border, #444);
+  overflow: hidden;
+}
+
+.details-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  z-index: 1;
+}
+
+.details-meta {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+  overflow-y: auto;
+}
+
+.details-subject {
+  font-weight: 600;
+  margin-bottom: 8px;
+  padding-right: 20px;
+}
+
+.details-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.details-field b {
+  display: inline-block;
+  width: 64px;
+  font-weight: 600;
+}
+
+.details-body {
+  margin-top: 8px;
+  font-family: inherit;
+  white-space: pre-wrap;
+  font-size: 12px;
+}
+
+.details-files {
+  width: 45%;
+  flex-shrink: 0;
+  border-left: 1px solid var(--vscode-panel-border, #444);
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.details-file {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: inherit;
+  padding: 3px 6px;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  text-align: left;
+  border-radius: 3px;
+}
+
+.details-file:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.file-status {
+  font-weight: 700;
+  width: 14px;
+  flex-shrink: 0;
+  font-family: var(--vscode-editor-font-family, monospace);
+}
+
+.status-A { color: #53c17f; }
+.status-M { color: #d9a03f; }
+.status-D { color: #d96c57; }
+.status-R, .status-C { color: #4e9de6; }
+
+.file-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.details-loading {
+  padding: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* ── worktree 패널 ─────────────────────────────── */
+.worktree-panel {
+  position: absolute;
+  top: 40px;
+  right: 10px;
+  z-index: 60;
+  width: 380px;
+  max-height: 60%;
+  display: flex;
+  flex-direction: column;
+  background: var(--vscode-editorWidget-background, #252526);
+  border: 1px solid var(--vscode-editorWidget-border, #454545);
+  border-radius: 6px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+.worktree-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--vscode-panel-border, #444);
+}
+
+.worktree-list {
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.worktree-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 4px;
+}
+
+.worktree-item:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.worktree-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.worktree-branch {
+  font-weight: 600;
+}
+
+.worktree-path {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.worktree-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.worktree-footer {
+  padding: 8px 12px;
+  border-top: 1px solid var(--vscode-panel-border, #444);
+  display: flex;
+  justify-content: flex-end;
+}
