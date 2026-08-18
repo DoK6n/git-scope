@@ -378,6 +378,11 @@ body {
   color: #4fc3c3;
 }
 
+.ref-remote-mark {
+  font-size: 9px;
+  line-height: 1;
+}
+
 /* ── 컨텍스트 메뉴 ─────────────────────────────── */
 .context-menu-overlay {
   position: fixed;

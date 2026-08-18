@@ -4,6 +4,7 @@
 
 ### Added
 
+- 원격 브랜치 라벨 앞에 🔌 아이콘 표시 (로컬 브랜치와 한눈에 구분)
 - **git reset UI (M4)**: soft/mixed/hard 모드 선택 + 커밋 타겟 또는 HEAD~N 지정, hard 모드 시 취소 불가 경고 (끌 수 없음)
 - **검색·필터 glob 지원 (M4)**: 커밋 검색(메시지·작성자·해시)과 브랜치 필터에 즉석 glob 패턴(`*`, `?`, `[...]`) — 일치 하이라이트, 개수 표시, 이전/다음 이동
 - **git fetch --prune (M4)**: fetch 버튼 우클릭으로 prune 실행, `gitScope.fetchPruneByDefault` 설정 지원

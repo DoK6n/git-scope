@@ -21,6 +21,9 @@ export function RefBadge(props: RefBadgeProps) {
       <Show when={props.isHead}>
         <span class="ref-head-dot">●</span>
       </Show>
+      <Show when={props.gitRef.type === 'remote'}>
+        <span class="ref-remote-mark" title={`remote branch (${props.gitRef.remote})`}>🔌</span>
+      </Show>
       <Show when={props.isWorktree}>
         <span class="ref-worktree-mark" title="checked out in a worktree">⊕</span>
       </Show>
