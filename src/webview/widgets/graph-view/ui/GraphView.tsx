@@ -1,7 +1,8 @@
-import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import type { Commit, GitRef } from '@shared-types/domain'
 import { graphStore } from '../../../entities/graph'
 import type { Segment } from '../../../entities/graph'
+import { searchStore } from '../../../features/search'
 import { CommitRow } from './CommitRow'
 import { buildRowMenu } from '../model/rowMenu'
 import { openContextMenu } from '../../../shared/ui'
@@ -41,6 +42,14 @@ export function GraphView() {
   })
 
   const commits = createMemo<Commit[]>(() => graphStore.graph()?.commits ?? [])
+
+  // 검색 이동: 매치 행이 화면 중앙에 오도록 스크롤
+  createEffect(() => {
+    const target = searchStore.scrollTarget()
+    if (target === null || !containerRef) return
+    containerRef.scrollTop = Math.max(0, target * ROW_H - containerRef.clientHeight / 2)
+    searchStore.consumeScrollTarget()
+  })
 
   const refsByHash = createMemo(() => {
     const map = new Map<string, GitRef[]>()
@@ -138,6 +147,8 @@ export function GraphView() {
                   graphWidth={graphWidth()}
                   refs={refsByHash().get(commit()!.hash) ?? []}
                   selected={graphStore.selectedCommit() === commit()!.hash}
+                  searchMatch={searchStore.matchSet().has(i)}
+                  searchCurrent={searchStore.currentRow() === i}
                   onClick={() => {
                     if (!commit()!.isUncommitted) {
                       graphStore.setSelectedCommit(

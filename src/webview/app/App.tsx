@@ -4,6 +4,7 @@ import { ContextMenuHost, PromptHost } from '../shared/ui'
 import { CommitDetails } from '../widgets/commit-details'
 import { GraphView } from '../widgets/graph-view'
 import { Toolbar } from '../widgets/toolbar'
+import { WorktreePanel } from '../widgets/worktree-panel'
 
 export function App() {
   onMount(() => void graphStore.loadRepos())
@@ -28,6 +29,7 @@ export function App() {
         </Show>
       </div>
       <CommitDetails />
+      <WorktreePanel />
       <ContextMenuHost />
       <PromptHost />
     </div>

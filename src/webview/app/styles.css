@@ -138,6 +138,61 @@ body {
   white-space: nowrap;
 }
 
+.branch-filter-glob {
+  padding: 6px;
+  border-bottom: 1px solid var(--vscode-panel-border, #444);
+}
+
+.branch-filter-glob input {
+  width: 100%;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 3px;
+  padding: 4px 6px;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.branch-filter-empty {
+  padding: 8px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.search-box input {
+  width: 220px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 3px;
+  padding: 3px 6px;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.search-count {
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.commit-row.search-match {
+  background: var(--vscode-editor-findMatchHighlightBackground, rgba(234, 92, 0, 0.33));
+}
+
+.commit-row.search-current {
+  background: var(--vscode-editor-findMatchBackground, rgba(234, 92, 0, 0.66));
+  outline: 1px solid var(--vscode-editor-findMatchBorder, transparent);
+}
+
 .branch-filter-actions {
   display: flex;
   justify-content: flex-end;

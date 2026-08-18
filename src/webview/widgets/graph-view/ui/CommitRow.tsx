@@ -12,6 +12,8 @@ interface CommitRowProps {
   graphWidth: number
   refs: GitRef[]
   selected: boolean
+  searchMatch?: boolean
+  searchCurrent?: boolean
   onClick: () => void
   onContextMenu: (e: MouseEvent) => void
 }
@@ -25,7 +27,12 @@ export function CommitRow(props: CommitRowProps) {
   return (
     <div
       class="commit-row"
-      classList={{ selected: props.selected, uncommitted: props.commit.isUncommitted }}
+      classList={{
+        selected: props.selected,
+        uncommitted: props.commit.isUncommitted,
+        'search-match': props.searchMatch,
+        'search-current': props.searchCurrent,
+      }}
       style={{ top: `${props.top}px` }}
       onClick={() => props.onClick()}
       onContextMenu={(e) => props.onContextMenu(e)}

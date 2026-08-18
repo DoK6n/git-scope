@@ -2,7 +2,7 @@
 
 GitScope가 원본 Git Graph 대비 추가로 제공하는 필수 신규 기능 4종의 명세. 모두 GitScope 자체 설계이며 원본 관찰에서 유래하지 않는다.
 
-## 1. git reset — 모드 선택 + 타겟 지정 `[todo]`
+## 1. git reset — 모드 선택 + 타겟 지정 `[done]`
 
 원본은 커밋 우클릭 → reset 정도의 제한적 지원이었으나, GitScope는 모드와 타겟을 명시적으로 선택하는 UI를 제공한다.
 
@@ -22,7 +22,7 @@ GitScope가 원본 Git Graph 대비 추가로 제공하는 필수 신규 기능 
 - `--hard`는 반드시 확인 다이얼로그를 거친다 (설정으로 끌 수 없음)
 - reset 후 uncommitted changes 행이 상태를 반영해 갱신되어야 한다
 
-## 2. git worktree — 목록/추가/제거 + 그래프 표시 `[todo]`
+## 2. git worktree — 목록/추가/제거 + 그래프 표시 `[done]`
 
 원본은 worktree를 전혀 지원하지 않는다.
 
@@ -33,7 +33,7 @@ GitScope가 원본 Git Graph 대비 추가로 제공하는 필수 신규 기능 
 - **제거**: 목록 항목의 Remove → 확인 다이얼로그 → `git worktree remove` 실행. 변경사항이 있어 실패하면 stderr 표시 + "Force remove" 재확인 옵션 제공 ⚠️
 - **그래프 표시**: worktree에 체크아웃된 브랜치의 라벨에 worktree 아이콘/뱃지 표시. 해당 브랜치는 일반 checkout이 불가하므로(git 제약) 컨텍스트 메뉴에서 checkout 대신 "Open worktree" (해당 경로를 새 창으로 열기) 제공
 
-## 3. 검색·필터 glob 패턴 지원 `[todo]`
+## 3. 검색·필터 glob 패턴 지원 `[done]`
 
 원본의 glob은 설정 파일(`customBranchGlobPatterns`)에 **사전 등록한 패턴을 드롭다운에서 고르는 방식**이고 브랜치에만 적용된다. 커밋 검색은 단순 부분 문자열 매칭뿐이다. GitScope의 차별점은 "glob 지원" 자체가 아니라 **즉석 입력 + 커밋 메시지·작성자·해시까지 적용 확대**다. (30-search-filter.md §30.4 참조)
 
@@ -45,7 +45,7 @@ GitScope가 원본 Git Graph 대비 추가로 제공하는 필수 신규 기능 
   - **브랜치 필터**: 브랜치 필터 드롭다운 상단 입력란에 glob 입력 → 일치하는 브랜치만 그래프에 표시 (예: `feature/*`, `release-[0-9]*`)
 - 매칭 규칙: 대소문자 무시, `*`는 `/` 포함 임의 문자열과 매칭(경로 구분 없음), 유효하지 않은 패턴(`[` 미닫힘 등)은 문자 그대로 매칭으로 폴백
 
-## 4. git fetch --prune `[todo]`
+## 4. git fetch --prune `[done]`
 
 원본은 fetch 시 원격에서 삭제된 브랜치 참조가 로컬에 남는 문제가 있다.
 

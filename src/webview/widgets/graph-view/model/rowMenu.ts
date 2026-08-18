@@ -2,6 +2,7 @@ import type { Commit } from '@shared-types/domain'
 import { createBranchAt } from '../../../features/branch'
 import { checkoutCommit } from '../../../features/checkout'
 import { mergeInto } from '../../../features/merge'
+import { resetToCommit } from '../../../features/reset'
 import { createTagAt } from '../../../features/tag'
 import { request } from '../../../shared/api'
 import type { MenuItem } from '../../../shared/ui'
@@ -17,6 +18,12 @@ export function buildRowMenu(commit: Commit): MenuItem[] {
     {
       label: 'Merge into Current Branch…',
       onClick: () => void mergeInto(hash),
+    },
+    {
+      label: 'Reset Current Branch to This Commit…',
+      danger: true,
+      separatorBefore: true,
+      onClick: () => void resetToCommit(hash),
     },
     {
       label: 'Copy Commit Hash',
