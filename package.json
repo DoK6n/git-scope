@@ -28,6 +28,11 @@
         "title": "View Git Graph",
         "category": "GitScope",
         "icon": "$(git-branch)"
+      },
+      {
+        "command": "gitScope.clearAvatarCache",
+        "title": "Clear Avatar Cache",
+        "category": "GitScope"
       }
     ],
     "menus": {

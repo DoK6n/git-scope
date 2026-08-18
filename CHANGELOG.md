@@ -4,7 +4,7 @@
 
 ### Changed
 
-- Author 컬럼에 작성자 프로필 사진 표시 (Gravatar, identicon 폴백, 오프라인 시 숨김)
+- Author 컬럼에 작성자 프로필 사진 표시 — GitHub 리포면 GitHub API로 실제 프로필을 가져와 디스크 캐시(14일 TTL), 아니면 Gravatar(identicon) 폴백, 오프라인 시 숨김. `GitScope: Clear Avatar Cache` 명령 추가
 
 - 커밋 상세를 하단 고정 패널에서 **선택한 행 바로 아래 인라인 확장**으로 변경 (원본 Git Graph의 inline 방식, 스펙 40.1)
 

@@ -60,7 +60,13 @@ export function CommitRow(props: CommitRowProps) {
       </div>
       <Show when={!props.commit.isUncommitted}>
         <div class="col-author" title={props.commit.authorEmail}>
-          <AuthorAvatar email={props.commit.authorEmail} />
+          <Show when={graphStore.currentRepo()}>
+            <AuthorAvatar
+              repo={graphStore.currentRepo()!}
+              email={props.commit.authorEmail}
+              commitHash={props.commit.hash}
+            />
+          </Show>
           <span class="author-name">{props.commit.author}</span>
         </div>
         <div class="col-date">{formatDate(date())}</div>

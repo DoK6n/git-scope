@@ -2,6 +2,7 @@ import * as path from 'node:path'
 import * as vscode from 'vscode'
 import type { ActionResult, RepoInfo } from '@shared-types/domain'
 import type { BridgeRequest, RequestCommand, RequestMap } from '@shared-types/messages'
+import { AvatarService } from '../git/avatars'
 import { EMPTY_TREE_HASH, GitRepo } from '../git/repo'
 import { execGit } from '../git/exec'
 import { makeGitUri } from '../git/contentProvider'
@@ -13,6 +14,8 @@ type Handler<C extends RequestCommand> = (
 /** webview 요청을 GitRepo/VS Code API 호출로 라우팅한다 */
 export class Router {
   private repos = new Map<string, GitRepo>()
+
+  constructor(readonly avatars: AvatarService) {}
 
   getRepo(root: string): GitRepo {
     let repo = this.repos.get(root)
@@ -91,6 +94,9 @@ export class Router {
         )
         return { ok: true }
       },
+      getAvatar: async (p) => ({
+        dataUri: await this.avatars.getAvatar(p.repo, p.email, p.commitHash),
+      }),
       copyToClipboard: async (p) => {
         await vscode.env.clipboard.writeText(p.text)
         return { ok: true }

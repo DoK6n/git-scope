@@ -103,6 +103,12 @@ export interface RequestMap {
   }
   openWorktree: { params: { path: string }; result: ActionResult }
 
+  /** 작성자 아바타 — GitHub API + 디스크 캐시, 없으면 null (webview가 Gravatar 폴백) */
+  getAvatar: {
+    params: { repo: string; email: string; commitHash: string }
+    result: { dataUri: string | null }
+  }
+
   /** 워킹트리 변경사항 stash 등 이후 확장용 자리 */
   copyToClipboard: { params: { text: string }; result: ActionResult }
 }
