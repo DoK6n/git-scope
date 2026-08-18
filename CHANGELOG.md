@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added (인증)
+
+- `GitScope: Sign in to GitHub` — Cursor/VS Code GitHub 로그인 플로우로 세션 생성, 성공 시 아바타 캐시 초기화 후 재조회
+- `GitScope: Set GitHub Token (PAT)` — 토큰을 SecretStorage에 저장 (빈 입력 = 삭제)
+- 토큰 우선순위: GitHub 세션 → SecretStorage PAT → `GITHUB_TOKEN` 환경변수
+
 ### Changed
 
 - Author 컬럼에 작성자 프로필 사진 표시 — GitHub 리포면 GitHub API로 실제 프로필을 가져와 디스크 캐시(14일 TTL), 아니면 Gravatar(identicon) 폴백, 오프라인 시 숨김. `GitScope: Clear Avatar Cache` 명령 추가
