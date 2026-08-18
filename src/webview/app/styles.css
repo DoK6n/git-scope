@@ -514,14 +514,17 @@ body {
   font-size: 12px;
 }
 
-/* ── 커밋 상세 패널 ────────────────────────────── */
-.commit-details {
-  position: relative;
-  flex-shrink: 0;
-  max-height: 40%;
-  min-height: 120px;
+/* ── 커밋 상세 (선택한 행 아래로 인라인 확장) ───── */
+.commit-details-inline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 300px;
   display: flex;
+  z-index: 5;
+  background: var(--vscode-editorWidget-background, #252526);
   border-top: 1px solid var(--vscode-panel-border, #444);
+  border-bottom: 1px solid var(--vscode-panel-border, #444);
   overflow: hidden;
 }
 

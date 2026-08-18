@@ -4,6 +4,7 @@ import { graphStore } from '../../../entities/graph'
 import type { Segment } from '../../../entities/graph'
 import { searchStore } from '../../../features/search'
 import { CommitRow } from './CommitRow'
+import { DETAILS_H, InlineDetails } from './InlineDetails'
 import { buildRowMenu } from '../model/rowMenu'
 import { openContextMenu } from '../../../shared/ui'
 
@@ -11,6 +12,8 @@ export const ROW_H = 26
 const LANE_W = 14
 const NODE_R = 4
 const OVERSCAN = 10
+/** 인라인 상세 패널로 밀려난 행까지 커버하는 추가 오버스캔 */
+const DETAILS_ROWS = Math.ceil(DETAILS_H / ROW_H)
 /** 그래프 컬럼이 무한히 넓어지지 않도록 표시 레인 수 제한 */
 const MAX_VISIBLE_LANES = 16
 
@@ -18,13 +21,11 @@ function laneX(lane: number): number {
   return lane * LANE_W + LANE_W / 2 + 4
 }
 
-function segmentPath(seg: Segment): string {
+function segmentPath(seg: Segment, y1: number, y2: number): string {
   const x1 = laneX(seg.fromLane)
   const x2 = laneX(seg.toLane)
-  const y1 = seg.row * ROW_H + ROW_H / 2
-  const y2 = y1 + ROW_H
   if (x1 === x2) return `M ${x1} ${y1} L ${x2} ${y2}`
-  const midY = ROW_H / 2
+  const midY = (y2 - y1) / 2
   return `M ${x1} ${y1} C ${x1} ${y1 + midY}, ${x2} ${y2 - midY}, ${x2} ${y2}`
 }
 
@@ -43,11 +44,26 @@ export function GraphView() {
 
   const commits = createMemo<Commit[]>(() => graphStore.graph()?.commits ?? [])
 
+  /** 선택된 커밋의 행 인덱스 — 이 행 바로 아래에 인라인 상세가 열린다 */
+  const selectedIndex = createMemo<number | null>(() => {
+    const hash = graphStore.selectedCommit()
+    if (hash === null) return null
+    const idx = commits().findIndex((c) => c.hash === hash)
+    return idx >= 0 ? idx : null
+  })
+
+  /** 행 i의 화면 y 오프셋 — 상세 패널 아래 행들은 패널 높이만큼 밀린다 */
+  const rowTop = (i: number): number => {
+    const sel = selectedIndex()
+    return i * ROW_H + (sel !== null && i > sel ? DETAILS_H : 0)
+  }
+  const nodeY = (i: number): number => rowTop(i) + ROW_H / 2
+
   // 검색 이동: 매치 행이 화면 중앙에 오도록 스크롤
   createEffect(() => {
     const target = searchStore.scrollTarget()
     if (target === null || !containerRef) return
-    containerRef.scrollTop = Math.max(0, target * ROW_H - containerRef.clientHeight / 2)
+    containerRef.scrollTop = Math.max(0, rowTop(target) - containerRef.clientHeight / 2)
     searchStore.consumeScrollTarget()
   })
 
@@ -62,7 +78,8 @@ export function GraphView() {
   })
 
   const range = createMemo(() => {
-    const start = Math.max(0, Math.floor(scrollTop() / ROW_H) - OVERSCAN)
+    // 상세 패널이 열려 있으면 그 위쪽 인덱스가 더 아래 y에 그려질 수 있으므로 여유분을 더 둔다
+    const start = Math.max(0, Math.floor(scrollTop() / ROW_H) - OVERSCAN - DETAILS_ROWS)
     const end = Math.min(
       commits().length,
       Math.ceil((scrollTop() + viewHeight()) / ROW_H) + OVERSCAN,
@@ -90,7 +107,9 @@ export function GraphView() {
     return lanes * LANE_W + 8
   })
 
-  const totalHeight = createMemo(() => commits().length * ROW_H)
+  const totalHeight = createMemo(
+    () => commits().length * ROW_H + (selectedIndex() !== null ? DETAILS_H : 0),
+  )
 
   const onScroll = (e: Event) => {
     const el = e.currentTarget as HTMLDivElement
@@ -112,7 +131,7 @@ export function GraphView() {
           <For each={visibleSegments()}>
             {(seg) => (
               <path
-                d={segmentPath(seg)}
+                d={segmentPath(seg, nodeY(seg.row), nodeY(seg.row + 1))}
                 class={`graph-line color-${seg.color % 8}`}
                 fill="none"
               />
@@ -126,7 +145,7 @@ export function GraphView() {
                 <Show when={row() && commit()}>
                   <circle
                     cx={laneX(row()!.lane)}
-                    cy={i * ROW_H + ROW_H / 2}
+                    cy={nodeY(i)}
                     r={NODE_R}
                     class={`graph-node color-${row()!.color % 8}`}
                     classList={{ uncommitted: commit()!.isUncommitted }}
@@ -143,7 +162,7 @@ export function GraphView() {
               <Show when={commit()}>
                 <CommitRow
                   commit={commit()!}
-                  top={i * ROW_H}
+                  top={rowTop(i)}
                   graphWidth={graphWidth()}
                   refs={refsByHash().get(commit()!.hash) ?? []}
                   selected={graphStore.selectedCommit() === commit()!.hash}
@@ -165,6 +184,9 @@ export function GraphView() {
             )
           }}
         </For>
+        <Show when={selectedIndex() !== null}>
+          <InlineDetails top={(selectedIndex()! + 1) * ROW_H} />
+        </Show>
       </div>
       <Show when={graphStore.loading()}>
         <div class="graph-loading">Loading…</div>
