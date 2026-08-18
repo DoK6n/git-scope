@@ -1,6 +1,6 @@
 import { onMount, Show } from 'solid-js'
 import { graphStore } from '../entities/graph'
-import { ContextMenuHost } from '../shared/ui'
+import { ContextMenuHost, PromptHost } from '../shared/ui'
 import { CommitDetails } from '../widgets/commit-details'
 import { GraphView } from '../widgets/graph-view'
 import { Toolbar } from '../widgets/toolbar'
@@ -29,6 +29,7 @@ export function App() {
       </div>
       <CommitDetails />
       <ContextMenuHost />
+      <PromptHost />
     </div>
   )
 }

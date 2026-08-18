@@ -1,3 +1,5 @@
 export { Dialog } from './Dialog'
 export { ContextMenuHost, openContextMenu, closeContextMenu } from './ContextMenu'
 export type { MenuItem } from './ContextMenu'
+export { PromptHost, formDialog, confirmDialog } from './prompts'
+export type { FieldSpec, FormValues } from './prompts'

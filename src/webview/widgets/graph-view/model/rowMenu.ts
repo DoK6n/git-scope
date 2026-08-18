@@ -1,14 +1,27 @@
 import type { Commit } from '@shared-types/domain'
+import { createBranchAt } from '../../../features/branch'
+import { checkoutCommit } from '../../../features/checkout'
+import { mergeInto } from '../../../features/merge'
+import { createTagAt } from '../../../features/tag'
 import { request } from '../../../shared/api'
 import type { MenuItem } from '../../../shared/ui'
 
 /** 커밋 행 우클릭 메뉴 구성 */
 export function buildRowMenu(commit: Commit): MenuItem[] {
   if (commit.isUncommitted) return []
+  const hash = commit.hash
   return [
+    { label: 'Checkout Commit…', onClick: () => void checkoutCommit(hash) },
+    { label: 'Create Branch Here…', onClick: () => void createBranchAt(hash) },
+    { label: 'Create Tag Here…', onClick: () => void createTagAt(hash) },
+    {
+      label: 'Merge into Current Branch…',
+      onClick: () => void mergeInto(hash),
+    },
     {
       label: 'Copy Commit Hash',
-      onClick: () => void request('copyToClipboard', { text: commit.hash }),
+      separatorBefore: true,
+      onClick: () => void request('copyToClipboard', { text: hash }),
     },
     {
       label: 'Copy Commit Subject',

@@ -35,7 +35,7 @@ GitScope가 원본 Git Graph 대비 추가로 제공하는 필수 신규 기능 
 
 ## 3. 검색·필터 glob 패턴 지원 `[todo]`
 
-원본 검색은 단순 부분 문자열 매칭. GitScope는 glob 패턴을 추가 지원한다.
+원본의 glob은 설정 파일(`customBranchGlobPatterns`)에 **사전 등록한 패턴을 드롭다운에서 고르는 방식**이고 브랜치에만 적용된다. 커밋 검색은 단순 부분 문자열 매칭뿐이다. GitScope의 차별점은 "glob 지원" 자체가 아니라 **즉석 입력 + 커밋 메시지·작성자·해시까지 적용 확대**다. (30-search-filter.md §30.4 참조)
 
 ### 동작
 
