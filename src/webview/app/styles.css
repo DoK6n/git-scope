@@ -83,6 +83,12 @@ body {
   color: var(--vscode-button-foreground);
 }
 
+.toolbar-btn.icon-btn {
+  font-size: 16px;
+  line-height: 1;
+  padding: 3px 8px;
+}
+
 .toolbar-btn.danger {
   background: var(--vscode-inputValidation-errorBackground, #5a1d1d);
   color: var(--vscode-errorForeground, #f48771);

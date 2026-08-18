@@ -169,7 +169,7 @@ export function Toolbar() {
       >
         Fetch ▾
       </button>
-      <button class="toolbar-btn" onClick={() => void graphStore.refresh()} title="Refresh">
+      <button class="toolbar-btn icon-btn" onClick={() => void graphStore.refresh()} title="Refresh">
         ⟳
       </button>
     </div>
