@@ -30,7 +30,12 @@ export class AvatarService {
   private rateLimited = false
   private remoteCache = new Map<string, { owner: string; repo: string } | null>()
 
-  constructor(private readonly storageDir: string) {}
+  constructor(
+    private readonly storageDir: string,
+    /** GitHub 토큰 공급자 — 비공개 리포 접근 + rate limit 완화(60/h → 5000/h) */
+    private readonly getToken: () => Promise<string | null> = async () =>
+      process.env.GITHUB_TOKEN ?? null,
+  ) {}
 
   private get dir(): string {
     return path.join(this.storageDir, 'avatars')
@@ -120,9 +125,11 @@ export class AvatarService {
     if (!github) return null
 
     const index = await this.loadIndex()
-    const headers = {
+    const token = await this.getToken().catch(() => null)
+    const headers: Record<string, string> = {
       'User-Agent': 'GitScope',
       Accept: 'application/vnd.github+json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     }
 
     try {

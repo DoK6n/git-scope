@@ -63,6 +63,7 @@ export function CommitRow(props: CommitRowProps) {
           <Show when={graphStore.currentRepo()}>
             <AuthorAvatar
               repo={graphStore.currentRepo()!}
+              name={props.commit.author}
               email={props.commit.authorEmail}
               commitHash={props.commit.hash}
             />
