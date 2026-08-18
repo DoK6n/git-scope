@@ -84,9 +84,9 @@ body {
 }
 
 .toolbar-btn.icon-btn {
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1;
-  padding: 3px 8px;
+  padding: 2px 8px;
 }
 
 .toolbar-btn.danger {
@@ -321,9 +321,24 @@ body {
 .col-author {
   width: 130px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  color: var(--vscode-descriptionForeground);
+}
+
+.author-avatar {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.author-name {
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--vscode-descriptionForeground);
+  white-space: nowrap;
 }
 
 .col-date {

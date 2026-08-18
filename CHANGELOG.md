@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Author 컬럼에 작성자 프로필 사진 표시 (Gravatar, identicon 폴백, 오프라인 시 숨김)
+
 - 커밋 상세를 하단 고정 패널에서 **선택한 행 바로 아래 인라인 확장**으로 변경 (원본 Git Graph의 inline 방식, 스펙 40.1)
 
 ### Added

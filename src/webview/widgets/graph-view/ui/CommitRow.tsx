@@ -1,5 +1,6 @@
 import { For, Show } from 'solid-js'
 import type { Commit, GitRef } from '@shared-types/domain'
+import { AuthorAvatar } from '../../../entities/author'
 import { RefBadge } from '../../../entities/ref'
 import { graphStore } from '../../../entities/graph'
 import { formatDate, shortHash } from '../../../shared/lib'
@@ -59,7 +60,8 @@ export function CommitRow(props: CommitRowProps) {
       </div>
       <Show when={!props.commit.isUncommitted}>
         <div class="col-author" title={props.commit.authorEmail}>
-          {props.commit.author}
+          <AuthorAvatar email={props.commit.authorEmail} />
+          <span class="author-name">{props.commit.author}</span>
         </div>
         <div class="col-date">{formatDate(date())}</div>
         <div class="col-hash">{shortHash(props.commit.hash)}</div>

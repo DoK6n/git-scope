@@ -44,7 +44,7 @@ GitScope의 핵심 화면인 커밋 그래프 뷰의 **관찰 가능한 동작**
 - **G-19** `[todo]` 각 컬럼의 **너비를 드래그로 조절**할 수 있다. 그래프 컬럼 너비는 레인 수에 따라 자동으로 늘어난다.
 - **G-20** `[todo]` 날짜 표시는 **작성자 날짜(author date) / 커밋 날짜(commit date)** 중 선택할 수 있으며 기본은 작성자 날짜다.
 - **G-21** `[changed]` 원본은 날짜 형식을 5종(`Date & Time` / `Date Only` / `ISO Date & Time` / `ISO Date Only` / `Relative`)에서 고른다. GitScope는 MVP에서 **`Date & Time`과 `Relative` 2종만** 제공한다.
-- **G-22** `[skip]` 작성자 아바타 이미지 조회·표시(GitHub/GitLab 등)와 아바타 캐시. (원본: `fetchAvatars`, `clearAvatarCache` 명령)
+- **G-22** `[changed]` 작성자 아바타: 원본은 GitHub/GitLab API 조회 + 로컬 캐시(`fetchAvatars`, `clearAvatarCache`). GitScope는 **Gravatar(이메일 SHA-256 해시, identicon 폴백)로 단순화**해 Author 컬럼에 16px 원형으로 표시. 로드 실패 시 숨김.
 - **G-23** `[skip]` 커밋 메시지의 이모지 숏코드 치환, 마크다운 서식 렌더링. (원본: `customEmojiShortcodeMappings`, `markdown`)
 - **G-24** `[skip]` 커밋 서명(GPG) 상태 표시. (원본: `showSignatureStatus`)
 - **G-25** `[skip]` `.mailmap` 을 적용한 작성자명 정규화. (원본: `useMailmap`)
