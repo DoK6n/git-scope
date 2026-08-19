@@ -22,3 +22,11 @@ export function saveToFile(store: TaskStore, path: string): void {
 export function loadFromFile(path: string): Task[] {
   return JSON.parse(readFileSync(path, 'utf8')) as Task[]
 }
+
+export function loadSafe(path: string): Task[] {
+  try {
+    return loadFromFile(path)
+  } catch {
+    return [] // 손상된 JSON 은 빈 목록으로 복구
+  }
+}
