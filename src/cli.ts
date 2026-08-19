@@ -23,3 +23,5 @@ switch (command) {
 }
 
 // TODO: done/remove 는 id 안정화 후 서브커맨드 모듈로 분리
+
+// fix: 목록이 비어 있을 때 안내 문구 출력
