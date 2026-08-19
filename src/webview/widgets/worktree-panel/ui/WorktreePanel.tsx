@@ -1,8 +1,39 @@
 import { For, Show } from 'solid-js'
+import type { Worktree } from '@shared-types/domain'
+import { graphStore } from '../../../entities/graph'
 import { worktreeStore } from '../../../features/worktree'
+import { openContextMenu } from '../../../shared/ui'
+import type { MenuItem } from '../../../shared/ui'
 
-/** worktree 목록/추가/제거 패널 (툴바에서 토글) */
+/** worktree 우클릭 메뉴 — Move / Repair / Remove / Lock (원본 IDE 스타일) */
+function buildWorktreeMenu(worktree: Worktree): MenuItem[] {
+  const items: MenuItem[] = []
+  if (!worktree.isMain) {
+    items.push({ label: 'Move Worktree', onClick: () => void worktreeStore.moveWorktree(worktree) })
+  }
+  items.push({ label: 'Repair Worktree', onClick: () => void worktreeStore.repairWorktree(worktree) })
+  if (!worktree.isMain) {
+    items.push(
+      {
+        label: 'Remove Worktree',
+        danger: true,
+        separatorBefore: true,
+        onClick: () => void worktreeStore.removeWorktree(worktree),
+      },
+      {
+        label: worktree.locked ? 'Unlock Worktree' : 'Lock Worktree',
+        separatorBefore: true,
+        onClick: () => void worktreeStore.toggleLockWorktree(worktree),
+      },
+    )
+  }
+  return items
+}
+
+/** worktree 목록 패널 — ✓ 현재 / ▢ 기타 / ✨ 메인, hover 시 열기 액션 */
 export function WorktreePanel() {
+  const isCurrent = (worktree: Worktree) => worktree.path === graphStore.currentRepo()
+
   return (
     <Show when={worktreeStore.panelOpen()}>
       <div class="worktree-panel">
@@ -19,35 +50,48 @@ export function WorktreePanel() {
           >
             <For each={worktreeStore.worktrees()}>
               {(worktree) => (
-                <div class="worktree-item">
-                  <div class="worktree-info">
-                    <div class="worktree-branch">
-                      {worktree.branch ?? `(detached: ${worktree.head.slice(0, 8)})`}
-                      <Show when={worktree.isMain}> · main</Show>
-                      <Show when={worktree.locked}> · 🔒</Show>
-                    </div>
-                    <div class="worktree-path" title={worktree.path}>
-                      {worktree.path}
-                    </div>
-                  </div>
-                  <div class="worktree-actions">
+                <div
+                  class="worktree-item"
+                  classList={{ current: isCurrent(worktree) }}
+                  onContextMenu={(e) => openContextMenu(e, buildWorktreeMenu(worktree))}
+                >
+                  <span class="worktree-status" title={isCurrent(worktree) ? 'current window' : 'worktree'}>
+                    {isCurrent(worktree) ? '✓' : '▢'}
+                  </span>
+                  <span class="worktree-branch">
+                    {worktree.branch ?? `(detached: ${worktree.head.slice(0, 8)})`}
+                  </span>
+                  <Show when={worktree.isMain}>
+                    <span class="worktree-main-mark" title="main worktree">✨</span>
+                  </Show>
+                  <Show when={worktree.locked}>
+                    <span title="locked">🔒</span>
+                  </Show>
+                  <span class="worktree-path" title={worktree.path}>
+                    {worktree.path}
+                  </span>
+                  <span class="worktree-hover-actions">
                     <button
-                      class="toolbar-btn"
-                      title="Open in new window"
-                      onClick={() => void worktreeStore.openWorktree(worktree.path)}
+                      class="worktree-action-btn"
+                      title="Open in New Window"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        void worktreeStore.openWorktree(worktree.path, true)
+                      }}
                     >
-                      Open
+                      📂
                     </button>
-                    <Show when={!worktree.isMain}>
-                      <button
-                        class="toolbar-btn danger"
-                        title="git worktree remove"
-                        onClick={() => void worktreeStore.removeWorktree(worktree)}
-                      >
-                        Remove
-                      </button>
-                    </Show>
-                  </div>
+                    <button
+                      class="worktree-action-btn"
+                      title="Open in This Window"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        void worktreeStore.openWorktree(worktree.path, false)
+                      }}
+                    >
+                      →
+                    </button>
+                  </span>
                 </div>
               )}
             </For>

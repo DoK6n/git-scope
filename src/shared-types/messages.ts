@@ -149,7 +149,16 @@ export interface RequestMap {
     params: { repo: string; path: string; force: boolean }
     result: ActionResult
   }
-  openWorktree: { params: { path: string }; result: ActionResult }
+  moveWorktree: {
+    params: { repo: string; path: string; newPath: string }
+    result: ActionResult
+  }
+  repairWorktree: { params: { repo: string; path: string }; result: ActionResult }
+  lockWorktree: {
+    params: { repo: string; path: string; lock: boolean }
+    result: ActionResult
+  }
+  openWorktree: { params: { path: string; newWindow: boolean }; result: ActionResult }
 
   /** 활성 파일 아이콘 테마에서 파일/폴더 아이콘 해석 (트리 뷰용) */
   getFileIcons: {

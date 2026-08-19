@@ -371,4 +371,16 @@ export class GitRepo {
     args.push(path)
     return this.action(args)
   }
+
+  moveWorktree(path: string, newPath: string): Promise<ActionResult> {
+    return this.action(['worktree', 'move', path, newPath])
+  }
+
+  repairWorktree(path: string): Promise<ActionResult> {
+    return this.action(['worktree', 'repair', path])
+  }
+
+  lockWorktree(path: string, lock: boolean): Promise<ActionResult> {
+    return this.action(['worktree', lock ? 'lock' : 'unlock', path])
+  }
 }

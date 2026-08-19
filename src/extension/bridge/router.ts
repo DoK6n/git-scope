@@ -124,11 +124,14 @@ export class Router {
       addWorktree: (p) =>
         this.getRepo(p.repo).addWorktree(p.path, p.branch, p.createBranch, p.startPoint),
       removeWorktree: (p) => this.getRepo(p.repo).removeWorktree(p.path, p.force),
+      moveWorktree: (p) => this.getRepo(p.repo).moveWorktree(p.path, p.newPath),
+      repairWorktree: (p) => this.getRepo(p.repo).repairWorktree(p.path),
+      lockWorktree: (p) => this.getRepo(p.repo).lockWorktree(p.path, p.lock),
       openWorktree: async (p) => {
         await vscode.commands.executeCommand(
           'vscode.openFolder',
           vscode.Uri.file(p.path),
-          { forceNewWindow: true },
+          { forceNewWindow: p.newWindow },
         )
         return { ok: true }
       },
