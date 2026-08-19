@@ -11,6 +11,7 @@ import {
   LOG_FORMAT,
   parseLog,
   parseNameStatus,
+  parseNumstat,
   parseRefs,
   parseWorktrees,
   REF_FORMAT,
@@ -108,15 +109,6 @@ export class GitRepo {
     const fields = meta.split('\0')
     const parents = fields[1] === '' ? [] : fields[1]!.split(' ')
     const base = parents.length > 0 ? parents[0]! : EMPTY_TREE_HASH
-    const nameStatus = await this.git([
-      'diff',
-      '--name-status',
-      '-z',
-      '--find-renames',
-      base,
-      hash,
-      '--',
-    ])
     return {
       hash: fields[0]!,
       parents,
@@ -126,22 +118,26 @@ export class GitRepo {
       committer: fields[5]!,
       commitDate: Number(fields[6]),
       body: (fields[7] ?? '').trim(),
-      files: parseNameStatus(nameStatus),
+      files: await this.diffFiles(base, hash),
     }
   }
 
   async getComparison(fromHash: string, toHash: string): Promise<CommitDetails> {
     const details = await this.getCommitDetails(toHash)
-    const nameStatus = await this.git([
-      'diff',
-      '--name-status',
-      '-z',
-      '--find-renames',
-      fromHash,
-      toHash,
-      '--',
+    return { ...details, files: await this.diffFiles(fromHash, toHash) }
+  }
+
+  /** name-status(변경 종류) + numstat(추가/삭제 라인 수)을 합친 파일 목록 */
+  private async diffFiles(base: string, target: string): Promise<CommitDetails['files']> {
+    const [nameStatus, numstat] = await Promise.all([
+      this.git(['diff', '--name-status', '-z', '--find-renames', base, target, '--']),
+      this.git(['diff', '--numstat', '-z', '--find-renames', base, target, '--']),
     ])
-    return { ...details, files: parseNameStatus(nameStatus) }
+    const stats = parseNumstat(numstat)
+    return parseNameStatus(nameStatus).map((file) => ({
+      ...file,
+      ...(stats.get(file.path) ?? {}),
+    }))
   }
 
   /** `git show <hash>:<path>` — 디프 뷰용 파일 내용. 없으면 빈 문자열 */

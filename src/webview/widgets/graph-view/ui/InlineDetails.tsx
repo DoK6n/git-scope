@@ -148,6 +148,13 @@ function FileRow(props: {
     >
       <span class={`file-status status-${props.file.status}`}>{props.file.status}</span>
       <span class="file-path">{props.label}</span>
+      <Show when={props.file.additions !== undefined}>
+        <span class="file-linestat">
+          (<span class="file-added">+{props.file.additions}</span>
+          {' | '}
+          <span class="file-removed">-{props.file.deletions}</span>)
+        </span>
+      </Show>
     </button>
   )
 }

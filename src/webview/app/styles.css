@@ -821,6 +821,20 @@ path.graph-line-hit {
   white-space: nowrap;
 }
 
+.file-linestat {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.file-added {
+  color: var(--vscode-gitDecoration-addedResourceForeground, #53c17f);
+}
+
+.file-removed {
+  color: var(--vscode-gitDecoration-deletedResourceForeground, #d96c57);
+}
+
 .details-loading {
   padding: 12px;
   color: var(--vscode-descriptionForeground);

@@ -85,6 +85,25 @@ describe('parseNameStatus', () => {
   })
 })
 
+describe('parseNumstat', () => {
+  it('일반 변경·rename·바이너리를 파싱한다', async () => {
+    const { parseNumstat } = await import('./parse')
+    const out =
+      '5\t3\tsrc/a.ts' + NUL +
+      '10\t0\t' + NUL + 'old/name.ts' + NUL + 'new/name.ts' + NUL +
+      '-\t-\timage.png' + NUL
+    const map = parseNumstat(out)
+    expect(map.get('src/a.ts')).toEqual({ additions: 5, deletions: 3 })
+    expect(map.get('new/name.ts')).toEqual({ additions: 10, deletions: 0 })
+    expect(map.get('image.png')).toEqual({})
+  })
+
+  it('빈 출력이면 빈 맵', async () => {
+    const { parseNumstat } = await import('./parse')
+    expect(parseNumstat('').size).toBe(0)
+  })
+})
+
 describe('countPorcelainEntries', () => {
   it('변경 파일 수를 센다 (rename은 1개)', () => {
     const out =

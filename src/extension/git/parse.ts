@@ -93,6 +93,43 @@ export function parseNameStatus(output: string): FileChange[] {
   return files
 }
 
+export interface NumstatEntry {
+  additions?: number
+  deletions?: number
+}
+
+/**
+ * `git diff --numstat -z` 출력 파싱 → 새 경로 기준 맵.
+ * 레코드: "A\tD\tpath NUL" / rename이면 "A\tD\t NUL oldpath NUL newpath NUL".
+ * 바이너리 파일은 "-\t-" → additions/deletions 없음.
+ */
+export function parseNumstat(output: string): Map<string, NumstatEntry> {
+  const result = new Map<string, NumstatEntry>()
+  const parts = output.split(NUL)
+  let i = 0
+  while (i < parts.length) {
+    const record = parts[i]
+    if (!record) break
+    const [added, deleted, inlinePath] = record.split('\t')
+    if (added === undefined || deleted === undefined) break
+    const entry: NumstatEntry =
+      added === '-'
+        ? {}
+        : { additions: Number(added), deletions: Number(deleted) }
+    if (inlinePath !== undefined && inlinePath !== '') {
+      result.set(inlinePath, entry)
+      i += 1
+    } else {
+      // rename: 다음 두 필드가 old/new 경로
+      const newPath = parts[i + 2]
+      if (newPath === undefined) break
+      result.set(newPath, entry)
+      i += 3
+    }
+  }
+  return result
+}
+
 /** `git status --porcelain -z` 출력에서 변경 파일 수를 센다 */
 export function countPorcelainEntries(output: string): number {
   let count = 0

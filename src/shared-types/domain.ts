@@ -47,6 +47,10 @@ export interface FileChange {
   path: string
   /** rename/copy일 때 이전 경로 */
   oldPath?: string
+  /** 추가된 라인 수 (바이너리면 undefined) */
+  additions?: number
+  /** 삭제된 라인 수 (바이너리면 undefined) */
+  deletions?: number
 }
 
 export interface CommitDetails {
