@@ -1,0 +1,8 @@
+{
+  "name": "taskly",
+  "version": "0.0.1",
+  "description": "작고 단순한 CLI 태스크 트래커",
+  "bin": { "taskly": "dist/cli.js" },
+  "scripts": { "build": "tsc", "test": "vitest run" },
+  "license": "MIT"
+}
