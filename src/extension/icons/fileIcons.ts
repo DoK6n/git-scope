@@ -32,6 +32,8 @@ interface LoadedTheme {
   themeId: string
   /** 테마 JSON이 있는 디렉토리 — iconPath/폰트 경로의 기준 */
   dir: string
+  /** 테마 익스텐션 루트 — 아이콘이 dir 밖(../icons 등)에 있을 수 있어 리소스 루트는 이걸 쓴다 */
+  extensionRoot: string
   json: ThemeJson
 }
 
@@ -63,7 +65,12 @@ export class FileIconService {
       try {
         const jsonPath = path.join(ext.extensionPath, contribution.path)
         const json = JSON.parse(fs.readFileSync(jsonPath, 'utf8')) as ThemeJson
-        this.cache = { themeId, dir: path.dirname(jsonPath), json }
+        this.cache = {
+          themeId,
+          dir: path.dirname(jsonPath),
+          extensionRoot: ext.extensionPath,
+          json,
+        }
       } catch {
         this.cache = null
       }
@@ -72,9 +79,9 @@ export class FileIconService {
     return this.cache
   }
 
-  /** webview localResourceRoots에 추가할 테마 디렉토리 */
+  /** webview localResourceRoots에 추가할 테마 익스텐션 루트 */
   themeDir(): string | null {
-    return this.load()?.dir ?? null
+    return this.load()?.extensionRoot ?? null
   }
 
   /** 폰트 기반 테마(Seti 등)의 @font-face 정보 — src는 절대 fsPath */
