@@ -56,6 +56,7 @@ export function RefBadge(props: RefBadgeProps) {
       class={`ref-badge ref-${gitRef().type}`}
       classList={{ 'ref-head': props.isHead }}
       style={{ 'border-color': color(), '--ref-color': color() }}
+      onClick={(e) => e.stopPropagation()} // 뱃지 클릭이 행 선택(상세뷰)으로 번지지 않게
       onContextMenu={(e) => props.onContextMenu?.(e)}
       onDblClick={(e) => {
         e.stopPropagation()
