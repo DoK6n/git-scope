@@ -490,6 +490,7 @@ path.graph-line-hit {
   color: var(--vscode-foreground);
   overflow: hidden;
   cursor: pointer;
+  user-select: none; /* 더블클릭(switch) 시 텍스트 블록 선택 방지 */
 }
 
 /* 로컬 영역과 origin 세그먼트가 각각 독립적으로 hover 된다 */
