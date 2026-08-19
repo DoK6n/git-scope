@@ -911,7 +911,8 @@ path.graph-line-hit {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 8px;
+  height: 26px; /* hover 액션 표시 여부와 무관하게 고정 */
+  padding: 0 8px;
   border-radius: 4px;
   cursor: default;
   white-space: nowrap;
@@ -951,15 +952,16 @@ path.graph-line-hit {
   text-overflow: ellipsis;
 }
 
-/* hover 시에만 나타나는 열기 액션 (📂 새 창 / → 현재 창) */
+/* hover 시에만 보이는 열기 액션 — 공간은 항상 차지해 행 높이가 흔들리지 않는다 */
 .worktree-hover-actions {
-  display: none;
+  display: inline-flex;
+  visibility: hidden;
   gap: 2px;
   flex-shrink: 0;
 }
 
 .worktree-item:hover .worktree-hover-actions {
-  display: inline-flex;
+  visibility: visible;
 }
 
 .worktree-action-btn {
