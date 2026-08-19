@@ -34,12 +34,20 @@ async function runReset(to: string, mode: string): Promise<void> {
 
 /** 커밋 우클릭 → 현재 브랜치를 해당 커밋으로 reset */
 export async function resetToCommit(hash: string): Promise<void> {
-  const headBranch = graphStore.graph()?.headBranch ?? 'HEAD'
+  const graph = graphStore.graph()
+  const headBranch = graph?.headBranch ?? 'HEAD'
+  // 흔한 함정: 되돌리고 싶은 커밋 자체를 우클릭하면 이미 HEAD라 아무것도 바뀌지 않는다
+  const isAlreadyHead = graph?.headHash === hash
   const values = await formDialog({
     title: `Reset ${headBranch} to ${hash.slice(0, 8)}`,
+    note: `${headBranch} 브랜치가 이 커밋을 가리키도록 이동합니다. 이 커밋보다 위(이후)의 커밋들이 브랜치에서 제외됩니다.`,
     fields: [MODE_FIELD],
     confirmLabel: 'Reset',
-    warning: hardWarning,
+    warning: (v) => {
+      if (isAlreadyHead)
+        return '이 커밋은 이미 HEAD입니다 — reset해도 아무것도 바뀌지 않습니다. 마지막 커밋을 되돌리려면 바로 아래(부모) 커밋에서 reset 하세요.'
+      return hardWarning(v)
+    },
   })
   if (!values) return
   await runReset(hash, String(values.mode))

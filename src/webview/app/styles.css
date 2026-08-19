@@ -547,6 +547,12 @@ body {
   font-size: 12px;
 }
 
+.dialog-note {
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .dialog-warning {
   padding: 8px 10px;
   border-radius: 4px;

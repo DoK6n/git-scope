@@ -19,6 +19,8 @@ export type FormValues = Record<string, string | number | boolean>
 
 interface FormState {
   title: string
+  /** 다이얼로그 상단 설명 문구 */
+  note?: string
   fields: FieldSpec[]
   confirmLabel: string
   danger: boolean
@@ -41,6 +43,7 @@ const [confirmState, setConfirmState] = createSignal<ConfirmState | null>(null)
 /** 입력 폼 다이얼로그를 띄우고 값을 받는다. 취소하면 null */
 export function formDialog(opts: {
   title: string
+  note?: string
   fields: FieldSpec[]
   confirmLabel?: string
   danger?: boolean
@@ -49,6 +52,7 @@ export function formDialog(opts: {
   return new Promise((resolve) => {
     setFormState({
       title: opts.title,
+      note: opts.note,
       fields: opts.fields,
       confirmLabel: opts.confirmLabel ?? 'OK',
       danger: opts.danger ?? false,
@@ -164,6 +168,9 @@ function FormDialogView(props: { state: FormState }) {
         </>
       }
     >
+      <Show when={props.state.note}>
+        <div class="dialog-note">{props.state.note}</div>
+      </Show>
       <For each={props.state.fields}>
         {(field) => (
           <div class="dialog-field">
