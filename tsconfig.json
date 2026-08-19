@@ -1,0 +1,18 @@
+{
+  // 에디터(tsserver)용 통합 설정 — IDE는 tsconfig.json 이름만 찾는다.
+  // CLI 검증(npm run typecheck)은 여전히 extension/webview 분리 설정을 쓴다.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "types": ["node", "vscode"]
+  },
+  "include": [
+    "src/**/*",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
+}
