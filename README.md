@@ -2,29 +2,34 @@
 
 > A clean-room reimplementation of the Git Graph concept, rebuilt from scratch with modern improvements. Not derived from the original source code.
 
-커밋 그래프 시각화 + 그래프에서 직접 git 액션을 실행하는 VS Code/Cursor 익스텐션.
-방치된 Git Graph(mhutchie)의 컨셉을 클린룸으로 재구현한 프로젝트입니다.
+A VS Code / Cursor extension that visualizes your commit graph and lets you run git actions directly from it.
 
-## 사용법
+## Usage
 
-명령 팔레트(`Cmd+Shift+P`) → **Git Scope: View Git Graph**
+Command Palette (`Cmd+Shift+P`) → **Git Scope: View Git Graph**
 
-## 기능
+## Features
 
-- 커밋 그래프: 브랜치 레인·색상, 브랜치/원격/태그 라벨, HEAD 표시, 스크롤 증분 로딩
-- 커밋 상세: 변경 파일 목록, 클릭으로 디프 열기
-- 액션: checkout, 브랜치 생성/삭제/rename, merge, tag — 위험 액션은 확인 다이얼로그
-- **git reset**: soft/mixed/hard 모드 + 커밋 타겟/HEAD~N 지정
-- **glob 검색·필터**: 커밋 검색과 브랜치 필터에 `feature/*` 같은 패턴 즉석 입력
-- **git fetch --prune**: fetch 버튼 우클릭으로 삭제된 원격 브랜치 참조 정리
-- **git worktree**: 목록/추가/제거 패널, 그래프 라벨에 ⊕ 뱃지, 새 창으로 열기
+- **Commit graph**: branch lanes & colors, local/remote/tag badges (combined `branch | origin` badges), HEAD indicator, incremental loading on scroll, line highlighting on hover/click
+- **Commit details**: inline expansion below the row, changed files as an icon-themed tree or flat list with `(+added | -removed)` line stats, click to open diffs, commit comparison via Ctrl/Cmd+click
+- **Actions**: checkout (double-click a badge to `git switch`), create/delete/rename branches, merge, rebase, cherry-pick, revert, drop, tag, stash, push/pull — destructive actions always require confirmation
+- **Enhanced git reset**: choose `--soft` / `--mixed` / `--hard` with a commit target or `HEAD~N`, plus an "undo this commit" shortcut
+- **Worktree management**: list/add/remove/move/lock worktrees, worktree badges on the graph, open in a new or current window
+- **Glob search & filters**: instant glob patterns (`feature/*`, `release-[0-9]*`) for commit search and branch filtering
+- **fetch --prune**: clean up deleted remote branch references right from the fetch button
+- **Avatars**: GitHub profile pictures (with disk cache and GitHub sign-in support), Gravatar fallback, and AI co-author icons for `Co-authored-by` trailers
+- Auto-refresh: the graph follows any `.git` change — actions in the app or commands in your terminal
 
-## 개발
+## Development
 
 ```bash
 npm install
-npm run build      # host(esbuild) + webview(vite)
-npm test           # vitest
+npm run build      # host (esbuild) + webview (vite)
+npm run check      # typecheck + lint + tests
 ```
 
-로컬 패키징: `npx @vscode/vsce package --no-dependencies`
+Local packaging: `npx @vscode/vsce package --no-dependencies`
+
+## License
+
+MIT
