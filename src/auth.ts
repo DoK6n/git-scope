@@ -8,3 +8,9 @@ export function loadToken(path: string): string | null {
     return null
   }
 }
+
+/** 토큰 만료(발급 후 30일) 검사 */
+export function isExpired(issuedAt: string): boolean {
+  const age = Date.now() - new Date(issuedAt).getTime()
+  return age > 30 * 24 * 60 * 60 * 1000
+}
