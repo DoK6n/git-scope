@@ -261,6 +261,7 @@ body {
   top: 0;
   left: 0;
   pointer-events: none;
+  z-index: 2;
 }
 
 /* .color-N 팔레트의 fill이 path를 채우지 않도록 반드시 무효화 (선 굵기 왜곡의 원인) */
@@ -269,6 +270,30 @@ path.graph-line {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+  transition: opacity 0.12s, stroke-width 0.12s;
+}
+
+/* 라인 강조: hover/클릭된 라인은 굵게, 나머지는 흐리게 */
+path.graph-line.active {
+  stroke-width: 3.5;
+}
+
+path.graph-line.dimmed,
+.graph-node.dimmed {
+  opacity: 0.25;
+}
+
+/* 보이지 않는 넓은 히트 영역 — 선 hover/클릭용 */
+path.graph-line-hit {
+  fill: none !important;
+  stroke: transparent;
+  stroke-width: 10;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.graph-node {
+  transition: opacity 0.12s;
 }
 
 .graph-node.uncommitted {
@@ -402,9 +427,10 @@ path.graph-line {
   padding: 1px 5px 1px 2px;
 }
 
+/* hover: 브랜치색 35% 배경 — 뚜렷하게 보이도록 */
 .ref-local-part:hover,
 .ref-remote-part:hover {
-  background: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.1));
+  background: color-mix(in srgb, var(--ref-color, #888) 35%, transparent);
 }
 
 .ref-head {

@@ -64,7 +64,7 @@ export function RefBadge(props: RefBadgeProps) {
     <span
       class={`ref-badge ref-${gitRef().type}`}
       classList={{ 'ref-head': props.isHead }}
-      style={{ 'border-color': color() }}
+      style={{ 'border-color': color(), '--ref-color': color() }}
       onContextMenu={(e) => props.onContextMenu?.(e)}
     >
       <span class="ref-local-part">

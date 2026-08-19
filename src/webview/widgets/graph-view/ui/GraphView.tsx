@@ -33,6 +33,10 @@ export function GraphView() {
   let containerRef: HTMLDivElement | undefined
   const [scrollTop, setScrollTop] = createSignal(0)
   const [viewHeight, setViewHeight] = createSignal(600)
+  // 그래프 선 강조: hover는 일시적, 클릭은 고정(토글). seg.color가 라인 고유 id다
+  const [hoverLine, setHoverLine] = createSignal<number | null>(null)
+  const [pinnedLine, setPinnedLine] = createSignal<number | null>(null)
+  const activeLine = () => hoverLine() ?? pinnedLine()
 
   onMount(() => {
     if (!containerRef) return
@@ -124,39 +128,6 @@ export function GraphView() {
   return (
     <div class="graph-view" ref={containerRef} onScroll={onScroll}>
       <div class="graph-canvas" style={{ height: `${totalHeight()}px` }}>
-        <svg
-          class="graph-svg"
-          width={graphWidth()}
-          height={totalHeight()}
-          style={{ width: `${graphWidth()}px`, height: `${totalHeight()}px` }}
-        >
-          <For each={visibleSegments()}>
-            {(seg) => (
-              <path
-                d={segmentPath(seg, nodeY(seg.row), nodeY(seg.row + 1))}
-                class={`graph-line color-${seg.color % 8}`}
-                fill="none"
-              />
-            )}
-          </For>
-          <For each={visibleIndices()}>
-            {(i) => {
-              const row = () => graphStore.layout()?.rows[i]
-              const commit = () => commits()[i]
-              return (
-                <Show when={row() && commit()}>
-                  <circle
-                    cx={laneX(row()!.lane)}
-                    cy={nodeY(i)}
-                    r={NODE_R}
-                    class={`graph-node color-${row()!.color % 8}`}
-                    classList={{ uncommitted: commit()!.isUncommitted }}
-                  />
-                </Show>
-              )
-            }}
-          </For>
-        </svg>
         <For each={visibleIndices()}>
           {(i) => {
             const commit = () => commits()[i]
@@ -186,6 +157,63 @@ export function GraphView() {
             )
           }}
         </For>
+        {/* 그래프 SVG는 행 위 레이어 — 선의 hover/클릭 이벤트를 받기 위함.
+            svg 자체는 pointer-events: none이라 선 밖 클릭은 아래 행으로 통과한다 */}
+        <svg
+          class="graph-svg"
+          width={graphWidth()}
+          height={totalHeight()}
+          style={{ width: `${graphWidth()}px`, height: `${totalHeight()}px` }}
+        >
+          <For each={visibleSegments()}>
+            {(seg) => {
+              const d = () => segmentPath(seg, nodeY(seg.row), nodeY(seg.row + 1))
+              return (
+                <>
+                  <path
+                    d={d()}
+                    class={`graph-line color-${seg.color % 8}`}
+                    classList={{
+                      active: activeLine() === seg.color,
+                      dimmed: activeLine() !== null && activeLine() !== seg.color,
+                    }}
+                    fill="none"
+                  />
+                  <path
+                    d={d()}
+                    class="graph-line-hit"
+                    onMouseEnter={() => setHoverLine(seg.color)}
+                    onMouseLeave={() => setHoverLine(null)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setPinnedLine(pinnedLine() === seg.color ? null : seg.color)
+                    }}
+                  />
+                </>
+              )
+            }}
+          </For>
+          <For each={visibleIndices()}>
+            {(i) => {
+              const row = () => graphStore.layout()?.rows[i]
+              const commit = () => commits()[i]
+              return (
+                <Show when={row() && commit()}>
+                  <circle
+                    cx={laneX(row()!.lane)}
+                    cy={nodeY(i)}
+                    r={activeLine() === row()!.color ? NODE_R + 1 : NODE_R}
+                    class={`graph-node color-${row()!.color % 8}`}
+                    classList={{
+                      uncommitted: commit()!.isUncommitted,
+                      dimmed: activeLine() !== null && activeLine() !== row()!.color,
+                    }}
+                  />
+                </Show>
+              )
+            }}
+          </For>
+        </svg>
         <Show when={selectedIndex() !== null}>
           <InlineDetails top={(selectedIndex()! + 1) * ROW_H} />
         </Show>
