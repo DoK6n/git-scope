@@ -378,39 +378,42 @@ path.graph-line {
   color: var(--vscode-descriptionForeground);
 }
 
-/* ── 레퍼런스 라벨 ─────────────────────────────── */
+/* ── 레퍼런스 라벨 ───────────────────────────────
+   어두운 배경 + 브랜치색 테두리(인라인) + 색상 아이콘 칩. Git Graph 스타일 */
 .ref-badge {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  padding: 0 6px;
-  border-radius: 8px;
+  gap: 4px;
+  padding: 1px 6px 1px 2px;
+  border-radius: 4px;
   font-size: 11px;
-  line-height: 16px;
+  line-height: 15px;
   flex-shrink: 0;
-  border: 1px solid transparent;
+  border: 1px solid var(--vscode-badge-background, #4d4d4d);
+  background: var(--vscode-editor-background);
+  color: var(--vscode-foreground);
 }
 
 .ref-head {
   font-weight: 600;
 }
 
-/* 브랜치 뱃지 배경색은 이름 해시 기반으로 인라인 지정된다 (RefBadge) */
-.ref-badge.ref-head,
-.ref-badge.ref-remote {
+.ref-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
   color: #1e1e1e;
-  font-weight: 600;
+  flex-shrink: 0;
 }
 
-.ref-badge.ref-remote {
-  opacity: 0.85;
-}
-
-.ref-badge.ref-tag {
-  border-radius: 2px;
-  background: transparent;
-  border-color: var(--vscode-badge-background, #4d4d4d);
-  color: var(--vscode-foreground);
+.ref-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+  white-space: nowrap;
 }
 
 .ref-head-dot {
@@ -423,11 +426,11 @@ path.graph-line {
 
 /* 합쳐진 뱃지의 원격 세그먼트: "이름 | origin" */
 .ref-remote-part {
-  margin-left: 4px;
+  margin-left: 1px;
   padding-left: 5px;
-  border-left: 1px solid rgba(0, 0, 0, 0.35);
+  border-left: 1px solid;
   font-style: italic;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 .ref-remote-mark {
