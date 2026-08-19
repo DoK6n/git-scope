@@ -41,3 +41,5 @@ GitScope 기능 명세의 목차이자 구현 상태 대시보드. 각 영역의
 - GitLens 수준의 blame/코드렌즈 — 그래프에 집중
 - GUI conflict 해결 — VS Code 내장 merge editor에 위임
 - 원본 설정의 1:1 재현 — 각 문서에서 `[skip]` 태그된 항목들
+
+변경됨
