@@ -36,6 +36,23 @@ describe('parseLog', () => {
     })
   })
 
+  it('Co-authored-by 트레일러를 파싱한다', () => {
+    const line = [
+      'aaaa', 'pppp', 'A', 'a@x', '1', '2', 'feat: pair work',
+      'Claude Fable 5 <noreply@anthropic.com>\x01Kim Dokyun <dokyun@example.com>',
+    ].join(NUL)
+    const commits = parseLog(line + '\n')
+    expect(commits[0]!.coAuthors).toEqual([
+      { name: 'Claude Fable 5', email: 'noreply@anthropic.com' },
+      { name: 'Kim Dokyun', email: 'dokyun@example.com' },
+    ])
+  })
+
+  it('트레일러가 없으면 coAuthors는 undefined', () => {
+    const line = ['aaaa', '', 'A', 'a@x', '1', '2', 'no trailer', ''].join(NUL)
+    expect(parseLog(line + '\n')[0]!.coAuthors).toBeUndefined()
+  })
+
   it('루트 커밋(부모 없음)은 빈 parents', () => {
     const line = ['aaaa', '', 'A', 'a@x', '1', '2', 'root'].join(NUL)
     expect(parseLog(line + '\n')[0]!.parents).toEqual([])

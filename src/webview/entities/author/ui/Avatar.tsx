@@ -11,6 +11,8 @@ export function AuthorAvatar(props: {
   email: string
   commitHash: string
   size?: number
+  /** co-author 여부 — GitHub 커밋 API 대신 Gravatar/번들 아이콘만 사용 */
+  isCoAuthor?: boolean
 }) {
   const [failed, setFailed] = createSignal(false)
   const [url] = createResource(
@@ -19,8 +21,9 @@ export function AuthorAvatar(props: {
       email: props.email,
       hash: props.commitHash,
       size: props.size ?? 16,
+      viaGitHub: !props.isCoAuthor,
     }),
-    (source) => fetchAvatar(source.repo, source.email, source.hash, source.size),
+    (source) => fetchAvatar(source.repo, source.email, source.hash, source.size, source.viaGitHub),
   )
 
   const initial = () => (props.name.trim()[0] ?? props.email[0] ?? '?').toUpperCase()
@@ -43,6 +46,7 @@ export function AuthorAvatar(props: {
         width={props.size ?? 16}
         height={props.size ?? 16}
         alt=""
+        title={`${props.name} <${props.email}>`}
         loading="lazy"
         onError={() => setFailed(true)}
       />

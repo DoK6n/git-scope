@@ -395,6 +395,21 @@ path.graph-line-hit {
   flex-shrink: 0;
 }
 
+/* co-author 아바타 겹침 (GitHub 스타일) */
+.avatar-stack {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.avatar-stack .author-avatar {
+  box-shadow: 0 0 0 1.5px var(--vscode-editor-background);
+}
+
+.avatar-stack .author-avatar:not(:first-child) {
+  margin-left: -6px;
+}
+
 .author-avatar-letter {
   display: inline-flex;
   align-items: center;

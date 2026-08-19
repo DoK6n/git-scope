@@ -10,6 +10,8 @@ export interface Commit {
   /** unix seconds */
   commitDate: number
   subject: string
+  /** Co-authored-by 트레일러의 공동 작성자들 */
+  coAuthors?: { name: string; email: string }[]
   /** 워킹트리 변경사항을 나타내는 합성 노드 (그래프 최상단) */
   isUncommitted?: boolean
   /** 스태시 노드면 "stash@{N}" 셀렉터 */

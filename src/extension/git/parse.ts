@@ -8,8 +8,23 @@ import type {
 
 const NUL = '\0'
 
-/** git log --format에 쓰는 포맷 문자열. 필드는 NUL로 구분, 레코드는 개행. */
-export const LOG_FORMAT = '%H%x00%P%x00%an%x00%ae%x00%at%x00%ct%x00%s'
+/**
+ * git log --format에 쓰는 포맷 문자열. 필드는 NUL로 구분, 레코드는 개행.
+ * 마지막 필드는 Co-authored-by 트레일러 값들 (\x01 구분)
+ */
+export const LOG_FORMAT =
+  '%H%x00%P%x00%an%x00%ae%x00%at%x00%ct%x00%s%x00%(trailers:key=Co-authored-by,valueonly=true,separator=%x01)'
+
+/** "Name <email>" 형태의 트레일러 값 파싱 */
+function parseCoAuthors(raw: string | undefined): Commit['coAuthors'] {
+  if (!raw) return undefined
+  const coAuthors: NonNullable<Commit['coAuthors']> = []
+  for (const value of raw.split('\x01')) {
+    const match = /^(.*)<([^<>]+)>\s*$/.exec(value.trim())
+    if (match) coAuthors.push({ name: match[1]!.trim(), email: match[2]!.trim() })
+  }
+  return coAuthors.length > 0 ? coAuthors : undefined
+}
 
 /** `git log --format=LOG_FORMAT` 출력 파싱 */
 export function parseLog(output: string): Commit[] {
@@ -18,9 +33,7 @@ export function parseLog(output: string): Commit[] {
     if (line === '') continue
     const fields = line.split(NUL)
     if (fields.length < 7) continue
-    const [hash, parents, author, authorEmail, authorDate, commitDate] = fields
-    // subject 자체에 NUL이 들어올 일은 없지만, 방어적으로 나머지를 합친다
-    const subject = fields.slice(6).join(NUL)
+    const [hash, parents, author, authorEmail, authorDate, commitDate, subject] = fields
     commits.push({
       hash: hash!,
       parents: parents === '' ? [] : parents!.split(' '),
@@ -28,7 +41,8 @@ export function parseLog(output: string): Commit[] {
       authorEmail: authorEmail!,
       authorDate: Number(authorDate),
       commitDate: Number(commitDate),
-      subject,
+      subject: subject ?? '',
+      coAuthors: parseCoAuthors(fields[7]),
     })
   }
   return commits

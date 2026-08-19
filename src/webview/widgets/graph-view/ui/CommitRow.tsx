@@ -96,12 +96,25 @@ export function CommitRow(props: CommitRowProps) {
       <Show when={!props.commit.isUncommitted}>
         <div class="col-author" title={props.commit.authorEmail}>
           <Show when={graphStore.currentRepo()}>
-            <AuthorAvatar
-              repo={graphStore.currentRepo()!}
-              name={props.commit.author}
-              email={props.commit.authorEmail}
-              commitHash={props.commit.hash}
-            />
+            <span class="avatar-stack">
+              <AuthorAvatar
+                repo={graphStore.currentRepo()!}
+                name={props.commit.author}
+                email={props.commit.authorEmail}
+                commitHash={props.commit.hash}
+              />
+              <For each={props.commit.coAuthors ?? []}>
+                {(coAuthor) => (
+                  <AuthorAvatar
+                    repo={graphStore.currentRepo()!}
+                    name={coAuthor.name}
+                    email={coAuthor.email}
+                    commitHash={props.commit.hash}
+                    isCoAuthor
+                  />
+                )}
+              </For>
+            </span>
           </Show>
           <span class="author-name">{props.commit.author}</span>
         </div>
