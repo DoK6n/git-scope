@@ -359,7 +359,7 @@ path.graph-line-hit {
 }
 
 .col-author {
-  width: 130px;
+  width: var(--col-author-w, 130px);
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -391,16 +391,69 @@ path.graph-line-hit {
 }
 
 .col-date {
-  width: 120px;
+  width: var(--col-date-w, 120px);
   flex-shrink: 0;
+  overflow: hidden;
+  white-space: nowrap;
   color: var(--vscode-descriptionForeground);
 }
 
 .col-hash {
-  width: 70px;
+  width: var(--col-hash-w, 70px);
   flex-shrink: 0;
+  overflow: hidden;
+  white-space: nowrap;
   font-family: var(--vscode-editor-font-family, monospace);
   color: var(--vscode-descriptionForeground);
+}
+
+/* ── 테이블 헤더 ───────────────────────────────── */
+.graph-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+  padding-right: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--vscode-descriptionForeground);
+  background: var(--vscode-editor-background);
+  border-bottom: 1px solid var(--vscode-panel-border, #444);
+  user-select: none;
+}
+
+.hcell {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  padding-left: 2px;
+}
+
+.hcell-flex {
+  flex: 1;
+  min-width: 0;
+}
+
+.col-divider {
+  position: absolute;
+  right: -4px;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 1;
+}
+
+.col-divider:hover {
+  background: var(--vscode-focusBorder, #007acc);
+  opacity: 0.6;
 }
 
 /* ── 레퍼런스 라벨 ───────────────────────────────
@@ -618,7 +671,7 @@ path.graph-line-hit {
 /* ── 커밋 상세 (선택한 행 아래로 인라인 확장) ───── */
 .commit-details-inline {
   position: absolute;
-  left: 0;
+  /* left는 그래프 컬럼 너비만큼 인라인으로 지정된다 — 그래프 라인을 가리지 않는다 */
   right: 0;
   height: 300px;
   display: flex;
@@ -626,6 +679,7 @@ path.graph-line-hit {
   background: var(--vscode-editorWidget-background, #252526);
   border-top: 1px solid var(--vscode-panel-border, #444);
   border-bottom: 1px solid var(--vscode-panel-border, #444);
+  border-left: 1px solid var(--vscode-panel-border, #444);
   overflow: hidden;
 }
 

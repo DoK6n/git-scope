@@ -5,6 +5,7 @@ import type { Segment } from '../../../entities/graph'
 import { searchStore } from '../../../features/search'
 import { CommitRow } from './CommitRow'
 import { DETAILS_H, InlineDetails } from './InlineDetails'
+import { columnStore } from '../model/columns'
 import { buildRowMenu } from '../model/rowMenu'
 import { openContextMenu } from '../../../shared/ui'
 
@@ -107,8 +108,10 @@ export function GraphView() {
   })
 
   // 로드된 커밋 전체의 최대 레인 수에 맞춰 늘어난다 — 무한 스크롤로 추가 로드되면
-  // 레이아웃이 재계산되면서 자동으로 갱신된다
+  // 레이아웃이 재계산되면서 자동으로 갱신된다. 헤더 드래그로 수동 조절 가능
   const graphWidth = createMemo(() => {
+    const manual = columnStore.graphManual()
+    if (manual !== null) return manual
     const lanes = graphStore.layout()?.laneCount ?? 1
     return lanes * LANE_W + 8
   })
@@ -125,8 +128,65 @@ export function GraphView() {
     }
   }
 
+  const dividerFor = (column: 'author' | 'date' | 'hash') => (
+    <div
+      class="col-divider"
+      onMouseDown={(e) =>
+        columnStore.startDrag(
+          e,
+          () => columnStore.widths()[column],
+          (px) => columnStore.setWidth(column, px),
+          -1, // 컬럼의 왼쪽 경계 — 왼쪽으로 끌면 넓어진다
+        )
+      }
+      onDblClick={() => containerRef && columnStore.autoFit(containerRef, column)}
+    />
+  )
+
   return (
-    <div class="graph-view" ref={containerRef} onScroll={onScroll}>
+    <div
+      class="graph-view"
+      ref={containerRef}
+      onScroll={onScroll}
+      style={{
+        '--col-author-w': `${columnStore.widths().author}px`,
+        '--col-date-w': `${columnStore.widths().date}px`,
+        '--col-hash-w': `${columnStore.widths().hash}px`,
+      }}
+    >
+      <div class="graph-header">
+        <div class="hcell" style={{ width: `${graphWidth()}px` }}>
+          Graph
+          <div
+            class="col-divider"
+            onMouseDown={(e) =>
+              columnStore.startDrag(
+                e,
+                graphWidth,
+                (px) => columnStore.setGraphManual(Math.max(24, Math.round(px))),
+                1, // 오른쪽 경계 — 오른쪽으로 끌면 넓어진다
+              )
+            }
+            onDblClick={() => columnStore.setGraphManual(null)}
+            title="더블클릭: 레인 수에 맞춤"
+          />
+        </div>
+        <div class="hcell hcell-flex">
+          Commit
+          {dividerFor('author')}
+        </div>
+        <div class="hcell" style={{ width: 'var(--col-author-w)' }}>
+          Author
+          {dividerFor('date')}
+        </div>
+        <div class="hcell" style={{ width: 'var(--col-date-w)' }}>
+          Date
+          {dividerFor('hash')}
+        </div>
+        <div class="hcell" style={{ width: 'var(--col-hash-w)' }}>
+          Hash
+        </div>
+      </div>
       <div class="graph-canvas" style={{ height: `${totalHeight()}px` }}>
         <For each={visibleIndices()}>
           {(i) => {
@@ -216,7 +276,7 @@ export function GraphView() {
           </For>
         </svg>
         <Show when={selectedIndex() !== null}>
-          <InlineDetails top={(selectedIndex()! + 1) * ROW_H} />
+          <InlineDetails top={(selectedIndex()! + 1) * ROW_H} left={graphWidth()} />
         </Show>
       </div>
       <Show when={graphStore.loading()}>

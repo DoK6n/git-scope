@@ -23,8 +23,11 @@ const STATUS_LABEL: Record<string, string> = {
 /** 파일 목록 표시 모드 — 모듈 레벨이라 다른 커밋을 열어도 유지된다. 기본 tree */
 const [filesView, setFilesView] = createSignal<'tree' | 'list'>('tree')
 
-/** 선택한 커밋 행 바로 아래로 펼쳐지는 상세 패널 (원본 Git Graph의 inline 방식) */
-export function InlineDetails(props: { top: number }) {
+/**
+ * 선택한 커밋 행 바로 아래로 펼쳐지는 상세 패널 (inline 방식).
+ * 그래프 컬럼은 가리지 않고 Commit 컬럼부터 시작한다 — 그래프 라인은 왼쪽으로 계속 흐른다.
+ */
+export function InlineDetails(props: { top: number; left: number }) {
   const [details] = createResource(
     () => {
       const repo = graphStore.currentRepo()
@@ -48,7 +51,10 @@ export function InlineDetails(props: { top: number }) {
   }
 
   return (
-    <div class="commit-details-inline" style={{ top: `${props.top}px` }}>
+    <div
+      class="commit-details-inline"
+      style={{ top: `${props.top}px`, left: `${props.left}px` }}
+    >
       <button class="details-close" onClick={() => graphStore.setSelectedCommit(null)}>
         ✕
       </button>
