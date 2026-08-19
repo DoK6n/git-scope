@@ -47,7 +47,7 @@ vi.stubGlobal('acquireVsCodeApi', () => ({
 }
 
 const { PromptHost } = await import('../../shared/ui')
-const { resetToCommit, resetHeadN } = await import('./index')
+const { resetToCommit, resetHeadN, undoCommitsFrom } = await import('./index')
 const { graphStore } = await import('../../entities/graph')
 
 function flush(): Promise<void> {
@@ -124,6 +124,39 @@ describe('reset 흐름', () => {
     await flush()
     expect(sent.some((m) => m.command === 'getGraph'), '성공 후 그래프 재조회').toBe(true)
     await done
+  })
+
+  it('커밋 undo: 부모 커밋으로 reset 한다 (git reset HEAD~1 상당)', async () => {
+    await graphStore.switchRepo('/fake/repo')
+    sent.length = 0
+
+    const done = undoCommitsFrom('childhash1234567', ['parenthash7654321'])
+    await flush()
+
+    const confirmBtn = [...document.querySelectorAll<HTMLButtonElement>('.dialog-footer button')]
+      .find((b) => b.textContent === 'Undo')!
+    confirmBtn.click()
+    await flush()
+
+    const resetReq = sent.find((m) => m.command === 'reset')
+    expect(resetReq).toBeTruthy()
+    // 클릭한 커밋이 아니라 그 부모로 reset해야 커밋이 되돌려진다
+    expect(resetReq!.params).toEqual({
+      repo: '/fake/repo',
+      to: 'parenthash7654321',
+      mode: 'mixed',
+    })
+    respond(resetReq!.id, { ok: true })
+    await done
+  })
+
+  it('루트 커밋 undo는 에러 안내 후 중단된다', async () => {
+    await graphStore.switchRepo('/fake/repo')
+    sent.length = 0
+    await undoCommitsFrom('roothash', [])
+    expect(sent.some((m) => m.command === 'reset')).toBe(false)
+    expect(graphStore.error()).toContain('루트 커밋')
+    graphStore.setError(null)
   })
 
   it('HEAD~N reset: N 입력이 타겟에 반영된다', async () => {

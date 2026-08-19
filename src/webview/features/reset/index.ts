@@ -1,1 +1,1 @@
-export { resetToCommit, resetHeadN } from './model/reset'
+export { resetToCommit, resetHeadN, undoCommitsFrom } from './model/reset'

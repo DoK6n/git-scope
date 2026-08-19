@@ -53,6 +53,28 @@ export async function resetToCommit(hash: string): Promise<void> {
   await runReset(hash, String(values.mode))
 }
 
+/**
+ * 커밋 우클릭 → 이 커밋(과 그 위)을 되돌리기 = 부모로 reset.
+ * HEAD 커밋에서 실행하면 터미널의 `git reset --<mode> HEAD~1`과 동일하다.
+ */
+export async function undoCommitsFrom(hash: string, parents: string[]): Promise<void> {
+  const parent = parents[0]
+  if (parent === undefined) {
+    graphStore.setError('루트 커밋은 부모가 없어 이 방식으로 되돌릴 수 없습니다.')
+    return
+  }
+  const headBranch = graphStore.graph()?.headBranch ?? 'HEAD'
+  const values = await formDialog({
+    title: `Undo commits from ${hash.slice(0, 8)}`,
+    note: `${hash.slice(0, 8)}부터 HEAD까지의 커밋이 브랜치에서 제외되고, ${headBranch}는 부모 커밋(${parent.slice(0, 8)})을 가리킵니다. HEAD 커밋에서 실행하면 git reset HEAD~1과 같습니다.`,
+    fields: [MODE_FIELD],
+    confirmLabel: 'Undo',
+    warning: hardWarning,
+  })
+  if (!values) return
+  await runReset(parent, String(values.mode))
+}
+
 /** 툴바 → HEAD~N 타겟 reset */
 export async function resetHeadN(): Promise<void> {
   const values = await formDialog({

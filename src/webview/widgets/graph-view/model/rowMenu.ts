@@ -2,7 +2,7 @@ import type { Commit } from '@shared-types/domain'
 import { createBranchAt } from '../../../features/branch'
 import { checkoutCommit } from '../../../features/checkout'
 import { mergeInto } from '../../../features/merge'
-import { resetToCommit } from '../../../features/reset'
+import { resetToCommit, undoCommitsFrom } from '../../../features/reset'
 import { createTagAt } from '../../../features/tag'
 import { request } from '../../../shared/api'
 import type { MenuItem } from '../../../shared/ui'
@@ -20,9 +20,14 @@ export function buildRowMenu(commit: Commit): MenuItem[] {
       onClick: () => void mergeInto(hash),
     },
     {
-      label: 'Reset Current Branch to This Commit…',
+      label: 'Undo This Commit & Above… (reset to parent)',
       danger: true,
       separatorBefore: true,
+      onClick: () => void undoCommitsFrom(hash, commit.parents),
+    },
+    {
+      label: 'Reset Current Branch to This Commit… (keep this)',
+      danger: true,
       onClick: () => void resetToCommit(hash),
     },
     {
