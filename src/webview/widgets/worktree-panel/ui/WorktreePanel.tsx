@@ -30,6 +30,26 @@ function buildWorktreeMenu(worktree: Worktree): MenuItem[] {
   return items
 }
 
+/** codicon 스타일의 열린 폴더 아이콘 (새 창으로 열기) */
+function FolderOpenIcon() {
+  return (
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.2">
+      <path d="M1.5 12.5 V3.5 h4.2 L7.2 5.2 h6.3 V6.8" stroke-linejoin="round" />
+      <path d="M1.5 12.5 L3.6 7 h11.2 l-2.1 5.5 Z" stroke-linejoin="round" />
+    </svg>
+  )
+}
+
+/** 오른쪽 화살표 아이콘 (현재 창에서 열기) */
+function ArrowRightIcon() {
+  return (
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4">
+      <path d="M2.5 8 H13" stroke-linecap="round" />
+      <path d="M9.5 4.5 L13 8 l-3.5 3.5" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  )
+}
+
 /** worktree 목록 패널 — ✓ 현재 / ▢ 기타 / ✨ 메인, hover 시 열기 액션 */
 export function WorktreePanel() {
   const isCurrent = (worktree: Worktree) => worktree.path === graphStore.currentRepo()
@@ -79,7 +99,7 @@ export function WorktreePanel() {
                         void worktreeStore.openWorktree(worktree.path, true)
                       }}
                     >
-                      📂
+                      <FolderOpenIcon />
                     </button>
                     <button
                       class="worktree-action-btn"
@@ -89,7 +109,7 @@ export function WorktreePanel() {
                         void worktreeStore.openWorktree(worktree.path, false)
                       }}
                     >
-                      →
+                      <ArrowRightIcon />
                     </button>
                   </span>
                 </div>

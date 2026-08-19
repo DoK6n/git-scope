@@ -963,13 +963,21 @@ path.graph-line-hit {
 }
 
 .worktree-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 20px;
   background: none;
   border: none;
-  color: var(--vscode-foreground);
+  color: var(--vscode-descriptionForeground);
   cursor: pointer;
-  padding: 0 4px;
-  font-size: 13px;
+  padding: 0;
   border-radius: 3px;
+}
+
+.worktree-action-btn:hover {
+  color: var(--vscode-foreground);
 }
 
 .worktree-action-btn:hover {
