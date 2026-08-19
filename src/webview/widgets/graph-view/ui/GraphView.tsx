@@ -14,8 +14,6 @@ const NODE_R = 4
 const OVERSCAN = 10
 /** 인라인 상세 패널로 밀려난 행까지 커버하는 추가 오버스캔 */
 const DETAILS_ROWS = Math.ceil(DETAILS_H / ROW_H)
-/** 그래프 컬럼이 무한히 넓어지지 않도록 표시 레인 수 제한 */
-const MAX_VISIBLE_LANES = 16
 
 function laneX(lane: number): number {
   return lane * LANE_W + LANE_W / 2 + 4
@@ -104,8 +102,10 @@ export function GraphView() {
     return layout.segments.filter((s) => s.row >= start - 1 && s.row < end)
   })
 
+  // 로드된 커밋 전체의 최대 레인 수에 맞춰 늘어난다 — 무한 스크롤로 추가 로드되면
+  // 레이아웃이 재계산되면서 자동으로 갱신된다
   const graphWidth = createMemo(() => {
-    const lanes = Math.min(graphStore.layout()?.laneCount ?? 1, MAX_VISIBLE_LANES)
+    const lanes = graphStore.layout()?.laneCount ?? 1
     return lanes * LANE_W + 8
   })
 
