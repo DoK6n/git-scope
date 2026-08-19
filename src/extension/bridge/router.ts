@@ -195,6 +195,11 @@ export class Router {
       getAvatar: async (p) => ({
         dataUri: await this.avatars.getAvatar(p.repo, p.email, p.commitHash),
       }),
+      notify: async (p) => {
+        if (p.level === 'error') void vscode.window.showErrorMessage(`Git Scope: ${p.message}`)
+        else void vscode.window.showInformationMessage(`Git Scope: ${p.message}`)
+        return { ok: true }
+      },
       copyToClipboard: async (p) => {
         await vscode.env.clipboard.writeText(p.text)
         return { ok: true }

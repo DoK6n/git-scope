@@ -11,22 +11,6 @@ export function App() {
   return (
     <div class="app">
       <Toolbar />
-      <Show when={graphStore.error()}>
-        <div class="error-banner">
-          <span class="error-text">{graphStore.error()}</span>
-          <button class="error-dismiss" onClick={() => graphStore.setError(null)}>
-            ✕
-          </button>
-        </div>
-      </Show>
-      <Show when={graphStore.notice()}>
-        <div class="notice-banner">
-          <span class="error-text">✓ {graphStore.notice()}</span>
-          <button class="error-dismiss" onClick={() => graphStore.setNotice(null)}>
-            ✕
-          </button>
-        </div>
-      </Show>
       <div class="main">
         <Show
           when={graphStore.repos().length > 0}

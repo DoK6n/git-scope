@@ -178,6 +178,9 @@ export interface RequestMap {
     result: { dataUri: string | null }
   }
 
+  /** IDE 네이티브 알림 표시 */
+  notify: { params: { message: string; level: 'info' | 'error' }; result: ActionResult }
+
   /** 워킹트리 변경사항 stash 등 이후 확장용 자리 */
   copyToClipboard: { params: { text: string }; result: ActionResult }
 }

@@ -9,16 +9,22 @@ const [repos, setRepos] = createSignal<RepoInfo[]>([])
 const [currentRepo, setCurrentRepo] = createSignal<string | null>(null)
 const [graph, setGraph] = createSignal<GraphData | null>(null)
 const [loading, setLoading] = createSignal(false)
-const [error, setError] = createSignal<string | null>(null)
+const [error, setErrorRaw] = createSignal<string | null>(null)
+
+/** 에러 알림 — IDE 네이티브 에러 알림으로 표시 (git stderr 그대로) */
+function setError(message: string | null): void {
+  setErrorRaw(message)
+  if (message !== null) {
+    void request('notify', { message, level: 'error' }).catch(() => {})
+  }
+}
 const [notice, setNoticeRaw] = createSignal<string | null>(null)
 
-let noticeTimer: ReturnType<typeof setTimeout> | undefined
-/** 액션 성공 토스트 — 4초 후 자동 사라짐 */
+/** 액션 성공 알림 — IDE 네이티브 알림으로 표시 (webview 배너 없음) */
 function setNotice(message: string | null): void {
-  if (noticeTimer !== undefined) clearTimeout(noticeTimer)
   setNoticeRaw(message)
   if (message !== null) {
-    noticeTimer = setTimeout(() => setNoticeRaw(null), 4000)
+    void request('notify', { message, level: 'info' }).catch(() => {})
   }
 }
 const [maxCommits, setMaxCommits] = createSignal(initialSettings().initialLoadCommits)
