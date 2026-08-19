@@ -395,7 +395,7 @@ path.graph-line-hit {
   flex-shrink: 0;
 }
 
-/* co-author 아바타 겹침 (GitHub 스타일) */
+/* co-author 아바타 겹침 (GitHub 스타일) — hover 시 옆으로 펼쳐진다 */
 .avatar-stack {
   display: inline-flex;
   align-items: center;
@@ -404,10 +404,15 @@ path.graph-line-hit {
 
 .avatar-stack .author-avatar {
   box-shadow: 0 0 0 1.5px var(--vscode-editor-background);
+  transition: margin-left 0.18s ease;
 }
 
 .avatar-stack .author-avatar:not(:first-child) {
-  margin-left: -6px;
+  margin-left: -7px;
+}
+
+.avatar-stack:hover .author-avatar:not(:first-child) {
+  margin-left: 3px;
 }
 
 .author-avatar-letter {
