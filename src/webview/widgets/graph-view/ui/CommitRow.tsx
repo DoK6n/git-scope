@@ -3,7 +3,7 @@ import type { Commit, GitRef } from '@shared-types/domain'
 import { AuthorAvatar } from '../../../entities/author'
 import { groupRefs, RefBadge } from '../../../entities/ref'
 import { graphStore } from '../../../entities/graph'
-import { formatDate, shortHash } from '../../../shared/lib'
+import { BRANCH_PALETTE, formatDate, shortHash } from '../../../shared/lib'
 import { openContextMenu } from '../../../shared/ui'
 import { buildRefMenu } from '../model/refMenu'
 
@@ -12,6 +12,8 @@ interface CommitRowProps {
   top: number
   graphWidth: number
   refs: GitRef[]
+  /** 이 커밋이 놓인 그래프 라인의 색상 인덱스 (layout rows[i].color) */
+  colorIndex: number
   selected: boolean
   searchMatch?: boolean
   searchCurrent?: boolean
@@ -27,6 +29,9 @@ export function CommitRow(props: CommitRowProps) {
 
   // 로컬 브랜치 + 같은 커밋의 대응 원격을 한 뱃지로 합친다
   const refGroups = createMemo(() => groupRefs(props.refs))
+
+  // 뱃지 색 = 이 커밋이 속한 그래프 라인의 색 (원본 Git Graph와 동일한 규칙)
+  const lineColor = () => BRANCH_PALETTE[props.colorIndex % BRANCH_PALETTE.length]!
 
   return (
     <div
@@ -47,6 +52,7 @@ export function CommitRow(props: CommitRowProps) {
           {(group) => (
             <RefBadge
               group={group}
+              color={lineColor()}
               isHead={
                 group.ref.type === 'head' && group.ref.name === graphStore.graph()?.headBranch
               }

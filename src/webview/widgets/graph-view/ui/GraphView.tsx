@@ -138,6 +138,7 @@ export function GraphView() {
                   top={rowTop(i)}
                   graphWidth={graphWidth()}
                   refs={refsByHash().get(commit()!.hash) ?? []}
+                  colorIndex={graphStore.layout()?.rows[i]?.color ?? 0}
                   selected={graphStore.selectedCommit() === commit()!.hash}
                   searchMatch={searchStore.matchSet().has(i)}
                   searchCurrent={searchStore.currentRow() === i}

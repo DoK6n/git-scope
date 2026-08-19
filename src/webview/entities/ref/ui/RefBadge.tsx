@@ -1,19 +1,6 @@
 import type { GitRef } from '@shared-types/domain'
 import { For, Show } from 'solid-js'
-import { hashColor } from '../../../shared/lib'
 import type { RefGroup } from '../lib/group'
-
-/**
- * ref 이름 → 뱃지 색상. 원격 브랜치는 remote 접두사를 떼고 계산하므로
- * origin/main은 main과 항상 같은 색이 된다.
- */
-function badgeColor(gitRef: GitRef): string {
-  const name =
-    gitRef.type === 'remote' && gitRef.remote
-      ? gitRef.name.slice(gitRef.remote.length + 1)
-      : gitRef.name
-  return hashColor(name)
-}
 
 /** 칩 안에 그리는 미니 브랜치 글리프 */
 function BranchGlyph() {
@@ -44,6 +31,8 @@ function TagGlyph() {
 
 interface RefBadgeProps {
   group: RefGroup
+  /** 이 ref가 놓인 커밋의 그래프 라인 색상 */
+  color: string
   /** 현재 체크아웃된 브랜치인지 */
   isHead?: boolean
   /** worktree에 체크아웃되어 있는 브랜치인지 */
@@ -59,7 +48,7 @@ interface RefBadgeProps {
  */
 export function RefBadge(props: RefBadgeProps) {
   const gitRef = () => props.group.ref
-  const color = () => badgeColor(gitRef())
+  const color = () => props.color
   return (
     <span
       class={`ref-badge ref-${gitRef().type}`}
