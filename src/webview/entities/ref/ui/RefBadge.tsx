@@ -38,6 +38,8 @@ interface RefBadgeProps {
   /** worktree에 체크아웃되어 있는 브랜치인지 */
   isWorktree?: boolean
   onContextMenu?: (e: MouseEvent) => void
+  /** 더블클릭 — 브랜치 switch 용 */
+  onDblClick?: () => void
   /** 합쳐진 원격 세그먼트 우클릭 */
   onRemoteContextMenu?: (remote: GitRef, e: MouseEvent) => void
 }
@@ -55,6 +57,11 @@ export function RefBadge(props: RefBadgeProps) {
       classList={{ 'ref-head': props.isHead }}
       style={{ 'border-color': color(), '--ref-color': color() }}
       onContextMenu={(e) => props.onContextMenu?.(e)}
+      onDblClick={(e) => {
+        e.stopPropagation()
+        props.onDblClick?.()
+      }}
+      title={props.onDblClick ? '더블클릭: git switch' : undefined}
     >
       <span class="ref-local-part">
         <span class="ref-icon" style={{ 'background-color': color() }}>

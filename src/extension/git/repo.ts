@@ -172,11 +172,11 @@ export class GitRepo {
   // ── 기본 액션 (M3) ────────────────────────────────
 
   checkoutBranch(name: string): Promise<ActionResult> {
-    return this.action(['checkout', name])
+    return this.action(['switch', name])
   }
 
   checkoutRemoteBranch(remoteName: string, localName: string): Promise<ActionResult> {
-    return this.action(['checkout', '-b', localName, '--track', remoteName])
+    return this.action(['switch', '-c', localName, '--track', remoteName])
   }
 
   checkoutCommit(hash: string): Promise<ActionResult> {

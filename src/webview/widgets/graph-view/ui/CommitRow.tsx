@@ -3,6 +3,7 @@ import type { Commit, GitRef } from '@shared-types/domain'
 import { AuthorAvatar } from '../../../entities/author'
 import { groupRefs, RefBadge } from '../../../entities/ref'
 import { graphStore } from '../../../entities/graph'
+import { checkoutBranch, checkoutRemoteBranch } from '../../../features/checkout'
 import { BRANCH_PALETTE, formatDate, shortHash } from '../../../shared/lib'
 import { openContextMenu } from '../../../shared/ui'
 import { buildRefMenu } from '../model/refMenu'
@@ -71,6 +72,22 @@ export function CommitRow(props: CommitRowProps) {
                 const items = buildRefMenu(remote)
                 if (items.length > 0) openContextMenu(e, items)
               }}
+              onDblClick={
+                group.ref.type === 'tag'
+                  ? undefined
+                  : () => {
+                      // 더블클릭 = git switch. 이미 체크아웃됐거나 worktree에 있으면 무시
+                      const isCheckedOut =
+                        group.ref.type === 'head' &&
+                        group.ref.name === graphStore.graph()?.headBranch
+                      const inWorktree =
+                        group.ref.type === 'head' &&
+                        (graphStore.graph()?.worktreeBranches ?? []).includes(group.ref.name)
+                      if (isCheckedOut || inWorktree) return
+                      if (group.ref.type === 'head') void checkoutBranch(group.ref.name)
+                      else void checkoutRemoteBranch(group.ref.name)
+                    }
+              }
             />
           )}
         </For>

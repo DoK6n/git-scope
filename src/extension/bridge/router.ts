@@ -1,3 +1,4 @@
+import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as vscode from 'vscode'
 import type { ActionResult, RepoInfo } from '@shared-types/domain'
@@ -19,11 +20,52 @@ export class Router {
 
   /** 절대 fsPath → webview URI 변환기 — GraphPanel이 webview 생성 시 주입 */
   uriMapper: ((fsPath: string) => string) | null = null
+  /** 리포의 .git 변경 감지 콜백 — GraphPanel이 주입 (webview에 repoChanged 전달) */
+  onRepoActivity: (() => void) | null = null
+
+  private watchers = new Map<string, fs.FSWatcher>()
 
   constructor(
     readonly avatars: AvatarService,
     readonly icons: FileIconService,
   ) {}
+
+  dispose(): void {
+    for (const watcher of this.watchers.values()) watcher.close()
+    this.watchers.clear()
+  }
+
+  /**
+   * .git 디렉토리 감시 — 앱 내 액션이든 터미널 작업이든 HEAD/refs/index가 바뀌면
+   * 디바운스 후 그래프를 자동 갱신하게 한다. (objects/logs 쓰기는 무시)
+   */
+  private watchRepo(root: string): void {
+    if (this.watchers.has(root)) return
+    try {
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const watcher = fs.watch(
+        path.join(root, '.git'),
+        { recursive: true },
+        (_event, filename) => {
+          const name = filename?.toString() ?? ''
+          if (name.startsWith('objects') || name.startsWith('logs')) return
+          const relevant =
+            name === '' ||
+            name === 'HEAD' ||
+            name === 'index' ||
+            name === 'packed-refs' ||
+            name.startsWith('refs') ||
+            name.endsWith('_HEAD')
+          if (!relevant) return
+          clearTimeout(timer)
+          timer = setTimeout(() => this.onRepoActivity?.(), 400)
+        },
+      )
+      this.watchers.set(root, watcher)
+    } catch {
+      // 감시 실패는 치명적이지 않다 — 수동 새로고침으로 대체
+    }
+  }
 
   private mapIconUri(spec: IconSpec | null): IconSpec | null {
     if (!spec) return null
@@ -36,6 +78,7 @@ export class Router {
     if (!repo) {
       repo = new GitRepo(root)
       this.repos.set(root, repo)
+      this.watchRepo(root)
     }
     return repo
   }

@@ -41,6 +41,9 @@ export class GraphPanel {
   ) {
     panel.webview.html = this.buildHtml(context)
 
+    // .git 변경 감지 → webview에 갱신 신호 (액션·터미널 작업 모두 커버)
+    router.onRepoActivity = () => this.post({ kind: 'event', event: 'repoChanged' })
+
     panel.webview.onDidReceiveMessage(
       async (message: BridgeRequest) => {
         if (message?.kind !== 'request') return
@@ -72,6 +75,7 @@ export class GraphPanel {
 
     panel.onDidDispose(() => {
       GraphPanel.current = undefined
+      router.onRepoActivity = null
       for (const d of this.disposables) d.dispose()
     })
   }

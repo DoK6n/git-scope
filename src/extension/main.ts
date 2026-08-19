@@ -26,6 +26,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const router = new Router(avatars, new FileIconService())
 
   context.subscriptions.push(
+    { dispose: () => router.dispose() },
     vscode.commands.registerCommand('gitScope.view', () => {
       GraphPanel.show(context, router)
     }),
