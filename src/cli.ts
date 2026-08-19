@@ -21,3 +21,5 @@ switch (command) {
   default:
     console.log('taskly <add|list|done> — 자세한 사용법은 README 참고')
 }
+
+// TODO: done/remove 는 id 안정화 후 서브커맨드 모듈로 분리
