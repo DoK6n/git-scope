@@ -1,5 +1,5 @@
 import type { GitRef } from '@shared-types/domain'
-import { deleteBranch, renameBranch } from '../../../features/branch'
+import { createBranchAt, deleteBranch, renameBranch } from '../../../features/branch'
 import { checkoutBranch, checkoutRemoteBranch } from '../../../features/checkout'
 import { rebaseOnto } from '../../../features/commit-actions'
 import { mergeInto } from '../../../features/merge'
@@ -49,6 +49,10 @@ export function buildRefMenu(ref: GitRef): MenuItem[] {
     const branchName = ref.name.slice(remote.length + 1)
     return [
       { label: 'Checkout as Local Branch…', onClick: () => void checkoutRemoteBranch(ref.name) },
+      {
+        label: 'Create Branch from Here…',
+        onClick: () => void createBranchAt(ref.name, ref.name),
+      },
       { label: 'Merge into Current Branch…', onClick: () => void mergeInto(ref.name) },
       { label: 'Pull into Current Branch…', onClick: () => void pullBranch(remote, branchName) },
       {
@@ -80,6 +84,10 @@ export function buildRefMenu(ref: GitRef): MenuItem[] {
       onClick: () => void worktreeStore.openWorktreeForBranch(ref.name),
     })
   }
+  items.push({
+    label: 'Create Branch from Here…',
+    onClick: () => void createBranchAt(ref.name, ref.name),
+  })
   items.push({ label: 'Rename Branch…', onClick: () => void renameBranch(ref.name) })
   if (!isCheckedOut) {
     items.push(

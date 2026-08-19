@@ -2,12 +2,13 @@ import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
 import { formDialog } from '../../../shared/ui'
 
-/** 특정 커밋에서 브랜치 생성 (+선택적으로 checkout) */
-export async function createBranchAt(hash: string): Promise<void> {
+/** 특정 커밋/브랜치에서 새 브랜치 생성 (+선택적으로 checkout). label은 다이얼로그 표기용 */
+export async function createBranchAt(at: string, label?: string): Promise<void> {
   const repo = graphStore.currentRepo()
   if (!repo) return
+  const from = label ?? at.slice(0, 8)
   const values = await formDialog({
-    title: `Create Branch at ${hash.slice(0, 8)}`,
+    title: `Create Branch from ${from}`,
     fields: [
       { kind: 'text', name: 'name', label: 'Branch name', placeholder: 'feature/…' },
       { kind: 'checkbox', name: 'checkout', label: 'Check out after creating', initial: true },
@@ -19,9 +20,10 @@ export async function createBranchAt(hash: string): Promise<void> {
     request('createBranch', {
       repo,
       name: String(values.name).trim(),
-      at: hash,
+      at,
       checkout: Boolean(values.checkout),
     }),
+    `브랜치 ${values.name} 생성 완료 (from ${from})`,
   )
 }
 
