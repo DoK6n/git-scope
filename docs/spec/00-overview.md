@@ -24,7 +24,7 @@ GitScope 기능 명세의 목차이자 구현 상태 대시보드. 각 영역의
 | M2 | 그래프 MVP — 로딩·레인 배치·렌더링·증분 로딩·커밋 상세 | ✅ 완료 |
 | M3 | 기본 액션 — checkout / branch / merge / tag + 확인 다이얼로그 | ✅ 완료 |
 | M4 | 신규 기능 — reset → glob 필터 → fetch --prune → worktree | ✅ 완료 |
-| M5 | 패리티 보강 — rebase, cherry-pick, stash, 비교 뷰 | `[todo]` |
+| M5 | 패리티 보강 — rebase, cherry-pick, stash, 비교 뷰 | ✅ 완료 |
 | M6 | 첫 배포 (이번 사이클에서는 진행하지 않음) | — |
 
 ## 원본과 의도적으로 다른 지점 (`[changed]` 요약)

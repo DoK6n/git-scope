@@ -130,6 +130,45 @@ export function parseNumstat(output: string): Map<string, NumstatEntry> {
   return result
 }
 
+export interface StashEntry {
+  hash: string
+  /** "stash@{0}" */
+  selector: string
+  /** 스태시가 만들어진 베이스 커밋 (parents[0]) */
+  baseHash: string
+  author: string
+  authorEmail: string
+  authorDate: number
+  commitDate: number
+  subject: string
+}
+
+/** stash list --format 문자열 (LOG_FORMAT + %gd 셀렉터) */
+export const STASH_FORMAT = '%H%x00%gd%x00%P%x00%an%x00%ae%x00%at%x00%ct%x00%s'
+
+/** `git stash list --format=STASH_FORMAT` 출력 파싱 */
+export function parseStashList(output: string): StashEntry[] {
+  const stashes: StashEntry[] = []
+  for (const line of output.split('\n')) {
+    if (line === '') continue
+    const fields = line.split(NUL)
+    if (fields.length < 8) continue
+    const parents = fields[2] === '' ? [] : fields[2]!.split(' ')
+    if (parents.length === 0) continue
+    stashes.push({
+      hash: fields[0]!,
+      selector: fields[1]!,
+      baseHash: parents[0]!,
+      author: fields[3]!,
+      authorEmail: fields[4]!,
+      authorDate: Number(fields[5]),
+      commitDate: Number(fields[6]),
+      subject: fields.slice(7).join(NUL),
+    })
+  }
+  return stashes
+}
+
 /** `git status --porcelain -z` 출력에서 변경 파일 수를 센다 */
 export function countPorcelainEntries(output: string): number {
   let count = 0

@@ -1,1 +1,1 @@
-export { createTagAt, deleteTag } from './model/tag'
+export { createTagAt, deleteTag, viewTagDetails } from './model/tag'

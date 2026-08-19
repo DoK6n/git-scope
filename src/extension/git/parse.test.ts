@@ -116,6 +116,35 @@ describe('countPorcelainEntries', () => {
   })
 })
 
+describe('parseStashList', () => {
+  it('stash 항목을 파싱한다', async () => {
+    const { parseStashList } = await import('./parse')
+    const line = [
+      'aaaa1111',
+      'stash@{0}',
+      'base1111 index2222',
+      'Kim',
+      'k@x',
+      '1723500000',
+      '1723500000',
+      'WIP on main: 1234 feat',
+    ].join(NUL)
+    const stashes = parseStashList(line + '\n')
+    expect(stashes).toHaveLength(1)
+    expect(stashes[0]).toMatchObject({
+      hash: 'aaaa1111',
+      selector: 'stash@{0}',
+      baseHash: 'base1111',
+      subject: 'WIP on main: 1234 feat',
+    })
+  })
+
+  it('빈 출력이면 빈 배열', async () => {
+    const { parseStashList } = await import('./parse')
+    expect(parseStashList('')).toEqual([])
+  })
+})
+
 describe('parseWorktrees', () => {
   it('porcelain -z 출력을 파싱한다', () => {
     const main = ['worktree /repo', 'HEAD aaa', 'branch refs/heads/main'].join(NUL)

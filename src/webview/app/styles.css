@@ -333,9 +333,29 @@ path.graph-line-hit {
   color: var(--vscode-list-activeSelectionForeground);
 }
 
-.commit-row.uncommitted .commit-subject {
+.commit-row.uncommitted .commit-subject,
+.commit-row.stash .commit-subject {
   font-style: italic;
   color: var(--vscode-descriptionForeground);
+}
+
+.commit-row.compared {
+  background: var(--vscode-list-inactiveSelectionBackground, rgba(255, 255, 255, 0.08));
+  outline: 1px dashed var(--vscode-focusBorder, #007acc);
+  outline-offset: -1px;
+}
+
+.graph-node.stash {
+  fill: var(--vscode-editor-background);
+  stroke-width: 2;
+}
+
+.details-compare {
+  margin-bottom: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--vscode-inputValidation-infoBackground, #063b49);
+  font-size: 12px;
 }
 
 .col-graph {

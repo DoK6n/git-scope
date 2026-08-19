@@ -9,7 +9,7 @@
 | 태그 | 의미 |
 |---|---|
 | `[todo]` | 구현 예정 — M3 기본 액션 범위 |
-| `[todo]` (M5) | 구현 예정 — M5 패리티 보강 단계로 미룸 |
+| `[done]` | 구현 예정 — M5 패리티 보강 단계로 미룸 |
 | `[changed]` | 원본과 다르게 구현 (확장·개선) |
 | `[skip]` | 구현하지 않음 |
 
@@ -60,11 +60,11 @@
 | 1 | Add Tag... | `[todo]` | ↓ 1.1 |
 | 2 | Create Branch... | `[todo]` | ↓ 1.2 |
 | 3 | Checkout... | `[todo]` | ↓ 1.3 |
-| 4 | Cherry Pick... | `[todo]` (M5) | ↓ 1.4 |
-| 5 | Revert... | `[todo]` (M5) | ↓ 1.5 |
-| 6 | Drop... | `[todo]` (M5) | ↓ 1.6 |
+| 4 | Cherry Pick... | `[done]` | ↓ 1.4 |
+| 5 | Revert... | `[done]` | ↓ 1.5 |
+| 6 | Drop... | `[done]` | ↓ 1.6 |
 | 7 | Merge into current branch... | `[todo]` | ↓ 1.7 |
-| 8 | Rebase current branch on this Commit... | `[todo]` (M5) | ↓ 1.8 |
+| 8 | Rebase current branch on this Commit... | `[done]` | ↓ 1.8 |
 | 9 | Reset current branch to this Commit... | `[changed]` | ↓ 1.9 |
 | 10 | Copy Commit Hash to Clipboard | `[todo]` | 즉시 실행, 갱신 없음 |
 | 11 | Copy Commit Subject to Clipboard | `[todo]` | 즉시 실행, 갱신 없음 |
@@ -95,7 +95,7 @@
 
 커밋을 직접 체크아웃하므로 결과는 **detached HEAD** 상태다. 확인 다이얼로그에서 이 사실을 사용자에게 알려야 한다. 실행 후 HEAD 표시가 해당 커밋으로 이동한 상태로 그래프 갱신.
 
-### 1.4 Cherry Pick... `[todo]` (M5)
+### 1.4 Cherry Pick... `[done]`
 
 우클릭 → `Cherry Pick...` → 다이얼로그:
 
@@ -105,7 +105,7 @@
 
 확정 → 실행 → 현재 브랜치 끝에 새 커밋이 생긴 상태로 그래프 갱신. 충돌 시 git이 충돌 상태를 남기고, 해결은 VS Code 내장 merge editor에 위임한다 (Plan 비목표: GUI 충돌 해결 안 함).
 
-### 1.5 Revert... `[todo]` (M5)
+### 1.5 Revert... `[done]`
 
 우클릭 → `Revert...` → 다이얼로그:
 
@@ -114,7 +114,7 @@
 
 확정 → 실행 → 되돌리는 새 커밋이 추가된 상태로 그래프 갱신.
 
-### 1.6 ⚠️ Drop... `[todo]` (M5)
+### 1.6 ⚠️ Drop... `[done]`
 
 우클릭 → `Drop...` → 확인 다이얼로그 (필수 — 커밋이 이력에서 제거됨) → 실행 → 그래프 갱신.
 
@@ -131,7 +131,7 @@
 
 확정 → 실행 → 머지 커밋(또는 fast-forward 결과)이 반영된 상태로 그래프 갱신. 충돌 시 내장 merge editor에 위임.
 
-### 1.8 Rebase current branch on this Commit... `[todo]` (M5)
+### 1.8 Rebase current branch on this Commit... `[done]`
 
 우클릭 → `Rebase current branch on this Commit...` → 다이얼로그:
 
@@ -158,12 +158,12 @@
 
 | # | 메뉴 항목 | 상태 | 흐름 |
 |---|---|---|---|
-| 1 | Stash uncommitted changes... | `[todo]` (M5) | ↓ 2.1 |
+| 1 | Stash uncommitted changes... | `[done]` | ↓ 2.1 |
 | 2 | Reset uncommitted changes... | `[changed]` | ↓ 2.2 |
-| 3 | Clean untracked files... | `[todo]` (M5) | ↓ 2.3 |
+| 3 | Clean untracked files... | `[done]` | ↓ 2.3 |
 | 4 | Open Source Control View | `[todo]` | ↓ 2.4 |
 
-### 2.1 Stash uncommitted changes... `[todo]` (M5)
+### 2.1 Stash uncommitted changes... `[done]`
 
 우클릭 → `Stash uncommitted changes...` → 다이얼로그:
 
@@ -178,7 +178,7 @@
 
 `Hard` 선택 시 워킹 트리 변경이 소실되므로 확인 단계 필수. GitScope 확장 내용은 **`60-new-features.md`** 참조.
 
-### 2.3 ⚠️ Clean untracked files... `[todo]` (M5)
+### 2.3 ⚠️ Clean untracked files... `[done]`
 
 우클릭 → `Clean untracked files...` → 확인 다이얼로그 (필수 — 추적되지 않은 파일이 삭제되며 복구 불가) → 실행 → 그래프 갱신.
 
@@ -200,13 +200,13 @@
 | 2 | Rename Branch... | 표시 | `[todo]` | ↓ 3.2 |
 | 3 | Delete Branch... | 숨김 | `[todo]` | ↓ 3.3 |
 | 4 | Merge into current branch... | 숨김 | `[todo]` | 1.7과 동일 (대상만 브랜치) |
-| 5 | Rebase current branch on Branch... | 숨김 | `[todo]` (M5) | 1.8과 동일 (대상만 브랜치) |
-| 6 | Push Branch... | 표시 | `[todo]` (M5) | ↓ 3.4 |
+| 5 | Rebase current branch on Branch... | 숨김 | `[done]` | 1.8과 동일 (대상만 브랜치) |
+| 6 | Push Branch... | 표시 | `[done]` | ↓ 3.4 |
 | 7 | View Issue | 표시 | `[skip]` | ↓ 3.7 |
 | 8 | Create Pull Request... | 표시 | `[skip]` | ↓ 3.7 |
 | 9 | Create Archive | 표시 | `[skip]` | ↓ 3.7 |
-| 10 | Select in Branches Dropdown | 표시 | `[todo]` (M5) | ↓ 3.5 |
-| 11 | Unselect in Branches Dropdown | 표시 | `[todo]` (M5) | ↓ 3.5 |
+| 10 | Select in Branches Dropdown | 표시 | `[done]` | ↓ 3.5 |
+| 11 | Unselect in Branches Dropdown | 표시 | `[done]` | ↓ 3.5 |
 | 12 | Copy Branch Name to Clipboard | 표시 | `[todo]` | 즉시 실행, 갱신 없음 |
 
 ### 3.1 Checkout Branch `[todo]`
@@ -227,7 +227,7 @@
 
 **확인 필수 조건**: `Force Delete`가 체크된 경우 머지되지 않은 커밋이 참조를 잃을 수 있으므로, 강제 삭제임을 명시한 확인 단계를 반드시 거친다. 미체크 상태에서 머지되지 않아 삭제가 거부되면, 에러를 그대로 보여주고 force 재시도 여부를 사용자가 결정하게 한다.
 
-### 3.4 ⚠️ Push Branch... `[todo]` (M5)
+### 3.4 ⚠️ Push Branch... `[done]`
 
 우클릭 → `Push Branch...` → 다이얼로그:
 
@@ -240,7 +240,7 @@
 
 > force push 옵션의 존재 여부는 허용 소스(위키·README·`contributes`)에서 확인되지 않았다. GitScope에서 force push를 제공하는 경우 ⚠️ **확인 다이얼로그 필수**로 하고, 기본값은 항상 비활성으로 둔다.
 
-### 3.5 Select / Unselect in Branches Dropdown `[todo]` (M5)
+### 3.5 Select / Unselect in Branches Dropdown `[done]`
 
 우클릭 → 즉시 실행. 툴바 Branches 드롭다운의 필터 선택 상태에 해당 브랜치를 추가/제거한다. git 상태는 바꾸지 않지만 **표시되는 커밋 범위가 달라지므로 그래프는 다시 그려진다**. 필터 명세는 `30-search-filter.md` 참조.
 
@@ -262,14 +262,14 @@
 |---|---|---|---|
 | 1 | Checkout Branch... | `[todo]` | ↓ 4.1 |
 | 2 | Delete Remote Branch... | `[todo]` | ↓ 4.2 |
-| 3 | Fetch into local branch... | `[todo]` (M5) | ↓ 4.3 |
+| 3 | Fetch into local branch... | `[done]` | ↓ 4.3 |
 | 4 | Merge into current branch... | `[todo]` | 1.7과 동일 |
-| 5 | Pull into current branch... | `[todo]` (M5) | ↓ 4.4 |
+| 5 | Pull into current branch... | `[done]` | ↓ 4.4 |
 | 6 | View Issue | `[skip]` | 3.7과 동일 |
 | 7 | Create Pull Request | `[skip]` | 3.7과 동일 |
 | 8 | Create Archive | `[skip]` | 3.7과 동일 |
-| 9 | Select in Branches Dropdown | `[todo]` (M5) | 3.5와 동일 |
-| 10 | Unselect in Branches Dropdown | `[todo]` (M5) | 3.5와 동일 |
+| 9 | Select in Branches Dropdown | `[done]` | 3.5와 동일 |
+| 10 | Unselect in Branches Dropdown | `[done]` | 3.5와 동일 |
 | 11 | Copy Branch Name to Clipboard | `[todo]` | 즉시 실행, 갱신 없음 |
 
 ### 4.1 Checkout Branch... `[todo]`
@@ -282,7 +282,7 @@
 
 우클릭 → `Delete Remote Branch...` → **확인 다이얼로그 필수** (원격 이력에 영향을 주며 다른 사람에게 즉시 전파됨) → 실행 → 원격 브랜치 라벨이 제거된 상태로 그래프 갱신.
 
-### 4.3 ⚠️ Fetch into local branch... `[todo]` (M5)
+### 4.3 ⚠️ Fetch into local branch... `[done]`
 
 우클릭 → `Fetch into local branch...` → 다이얼로그:
 
@@ -292,7 +292,7 @@
 
 확정 → 실행 → 로컬 브랜치 위치가 이동한 상태로 그래프 갱신. `Force Fetch`는 로컬 브랜치 이력을 덮어쓸 수 있으므로 ⚠️ 체크 시 확인 단계를 둔다.
 
-### 4.4 Pull into current branch... `[todo]` (M5)
+### 4.4 Pull into current branch... `[done]`
 
 우클릭 → `Pull into current branch...` → 다이얼로그:
 
@@ -312,7 +312,7 @@
 |---|---|---|---|
 | 1 | View Details | `[todo]` | ↓ 5.1 |
 | 2 | Delete Tag... | `[todo]` | ↓ 5.2 |
-| 3 | Push Tag... | `[todo]` (M5) | ↓ 5.3 |
+| 3 | Push Tag... | `[done]` | ↓ 5.3 |
 | 4 | Create Archive | `[skip]` | 3.7과 동일 |
 | 5 | Copy Tag Name to Clipboard | `[todo]` | 즉시 실행, 갱신 없음 |
 
@@ -330,7 +330,7 @@
 
 확정 → 실행 → 태그 라벨이 제거된 상태로 그래프 갱신. 원격 삭제를 함께 수행하는 경우 되돌리기 어려우므로 확인 단계 필수.
 
-### 5.3 Push Tag... `[todo]` (M5)
+### 5.3 Push Tag... `[done]`
 
 우클릭 → `Push Tag...` → 다이얼로그에서 대상 원격 선택 → 확정 → 실행.
 
@@ -344,16 +344,16 @@
 
 | # | 메뉴 항목 | 상태 | 흐름 |
 |---|---|---|---|
-| 1 | Apply Stash... | `[todo]` (M5) | ↓ 6.1 |
-| 2 | Create Branch from Stash... | `[todo]` (M5) | ↓ 6.2 |
-| 3 | Pop Stash... | `[todo]` (M5) | ↓ 6.3 |
-| 4 | Drop Stash... | `[todo]` (M5) | ↓ 6.4 |
-| 5 | Copy Stash Name to Clipboard | `[todo]` (M5) | 즉시 실행, 갱신 없음 |
-| 6 | Copy Stash Hash to Clipboard | `[todo]` (M5) | 즉시 실행, 갱신 없음 |
+| 1 | Apply Stash... | `[done]` | ↓ 6.1 |
+| 2 | Create Branch from Stash... | `[done]` | ↓ 6.2 |
+| 3 | Pop Stash... | `[done]` | ↓ 6.3 |
+| 4 | Drop Stash... | `[done]` | ↓ 6.4 |
+| 5 | Copy Stash Name to Clipboard | `[done]` | 즉시 실행, 갱신 없음 |
+| 6 | Copy Stash Hash to Clipboard | `[done]` | 즉시 실행, 갱신 없음 |
 
 > 스태시는 이름(`stash@{N}`)과 해시를 각각 별도 항목으로 복사할 수 있다 — 커밋(해시/제목)과는 다른 조합이다.
 
-### 6.1 Apply Stash... `[todo]` (M5)
+### 6.1 Apply Stash... `[done]`
 
 우클릭 → `Apply Stash...` → 다이얼로그:
 
@@ -361,11 +361,11 @@
 
 확정 → 실행 → 스태시는 **목록에 그대로 남고** uncommitted changes가 생긴 상태로 그래프 갱신.
 
-### 6.2 Create Branch from Stash... `[todo]` (M5)
+### 6.2 Create Branch from Stash... `[done]`
 
 우클릭 → `Create Branch from Stash...` → 다이얼로그에서 브랜치 이름 입력 → 확정 → 실행 → 새 브랜치가 체크아웃되고 해당 스태시가 목록에서 제거된 상태로 그래프 갱신.
 
-### 6.3 Pop Stash... `[todo]` (M5)
+### 6.3 Pop Stash... `[done]`
 
 우클릭 → `Pop Stash...` → 다이얼로그:
 
@@ -373,7 +373,7 @@
 
 확정 → 실행 → 변경이 워킹 트리에 적용되고 **스태시는 목록에서 제거된** 상태로 그래프 갱신. Apply와의 차이는 스태시 제거 여부뿐이다.
 
-### 6.4 ⚠️ Drop Stash... `[todo]` (M5)
+### 6.4 ⚠️ Drop Stash... `[done]`
 
 우클릭 → `Drop Stash...` → **확인 다이얼로그 필수** (스태시 내용이 폐기됨) → 실행 → 스태시 항목이 제거된 상태로 그래프 갱신.
 

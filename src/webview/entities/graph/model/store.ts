@@ -24,7 +24,14 @@ function setNotice(message: string | null): void {
 const [maxCommits, setMaxCommits] = createSignal(initialSettings().initialLoadCommits)
 /** null = 모든 브랜치, 아니면 선택된 ref 이름 목록 */
 const [branchFilter, setBranchFilter] = createSignal<string[] | null>(null)
-const [selectedCommit, setSelectedCommit] = createSignal<string | null>(null)
+const [selectedCommit, setSelectedCommitRaw] = createSignal<string | null>(null)
+/** Ctrl/Cmd+클릭으로 고른 비교 대상 커밋 (selectedCommit과 비교) */
+const [compareWith, setCompareWith] = createSignal<string | null>(null)
+
+function setSelectedCommit(hash: string | null): void {
+  setSelectedCommitRaw(hash)
+  setCompareWith(null)
+}
 
 onBridgeEvent((event) => {
   if (event.event === 'settings') setSettings(event.settings)
@@ -130,6 +137,8 @@ export const graphStore = {
   branchFilter,
   selectedCommit,
   setSelectedCommit,
+  compareWith,
+  setCompareWith,
   loadRepos,
   refresh,
   loadMore,

@@ -15,9 +15,10 @@ interface CommitRowProps {
   /** 이 커밋이 놓인 그래프 라인의 색상 인덱스 (layout rows[i].color) */
   colorIndex: number
   selected: boolean
+  compared?: boolean
   searchMatch?: boolean
   searchCurrent?: boolean
-  onClick: () => void
+  onClick: (e: MouseEvent) => void
   onContextMenu: (e: MouseEvent) => void
 }
 
@@ -38,12 +39,14 @@ export function CommitRow(props: CommitRowProps) {
       class="commit-row"
       classList={{
         selected: props.selected,
+        compared: props.compared,
         uncommitted: props.commit.isUncommitted,
+        stash: props.commit.stashSelector !== undefined,
         'search-match': props.searchMatch,
         'search-current': props.searchCurrent,
       }}
       style={{ top: `${props.top}px` }}
-      onClick={() => props.onClick()}
+      onClick={(e) => props.onClick(e)}
       onContextMenu={(e) => props.onContextMenu(e)}
     >
       <div class="col-graph" style={{ width: `${props.graphWidth}px` }} />

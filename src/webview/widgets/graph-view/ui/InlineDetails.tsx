@@ -29,13 +29,32 @@ const [filesView, setFilesView] = createSignal<'tree' | 'list'>('tree')
  * 그래프 컬럼은 가리지 않고 Commit 컬럼부터 시작한다 — 그래프 라인은 왼쪽으로 계속 흐른다.
  */
 export function InlineDetails(props: { top: number; left: number }) {
+  /** 비교 모드면 [과거, 최신] 해시 쌍 — 행 순서(아래=과거)로 결정 */
+  const comparePair = createMemo<[string, string] | null>(() => {
+    const selected = graphStore.selectedCommit()
+    const compare = graphStore.compareWith()
+    if (!selected || !compare) return null
+    const commits = graphStore.graph()?.commits ?? []
+    const selectedRow = commits.findIndex((c) => c.hash === selected)
+    const compareRow = commits.findIndex((c) => c.hash === compare)
+    return selectedRow > compareRow ? [selected, compare] : [compare, selected]
+  })
+
   const [details] = createResource(
     () => {
       const repo = graphStore.currentRepo()
       const hash = graphStore.selectedCommit()
-      return repo && hash ? { repo, hash } : null
+      if (!repo || !hash) return null
+      return { repo, hash, pair: comparePair() }
     },
-    (source) => request('getCommitDetails', source),
+    (source) =>
+      source.pair
+        ? request('getCommitComparison', {
+            repo: source.repo,
+            fromHash: source.pair[0],
+            toHash: source.pair[1],
+          })
+        : request('getCommitDetails', { repo: source.repo, hash: source.hash }),
   )
 
   // 상세가 로드되면 트리에 등장하는 파일/폴더 이름의 아이콘을 미리 로드
@@ -58,10 +77,11 @@ export function InlineDetails(props: { top: number; left: number }) {
     const repo = graphStore.currentRepo()
     const hash = graphStore.selectedCommit()
     if (!repo || !hash) return
+    const pair = comparePair()
     void request('openDiff', {
       repo,
-      hash,
-      baseHash: null,
+      hash: pair ? pair[1] : hash,
+      baseHash: pair ? pair[0] : null,
       path: file.path,
       oldPath: file.oldPath,
     })
@@ -79,6 +99,14 @@ export function InlineDetails(props: { top: number; left: number }) {
         {(d) => (
           <>
             <div class="details-meta">
+              <Show when={comparePair()}>
+                <div class="details-compare">
+                  Comparing{' '}
+                  <span class="details-hash">{comparePair()![0].slice(0, 8)}</span> ↔{' '}
+                  <span class="details-hash">{comparePair()![1].slice(0, 8)}</span> — 두 커밋
+                  사이의 모든 변경 파일
+                </div>
+              </Show>
               <div class="details-subject">{d().body.split('\n')[0]}</div>
               <div class="details-fields">
                 <span class="details-field">

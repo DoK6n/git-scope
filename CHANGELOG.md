@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added (M5 패리티 보강)
+
+- 커밋 액션: **Cherry Pick**(-x·--no-commit 옵션, merge는 -m 1), **Revert**, **Drop Commit**(rebase --onto) ⚠️, **Rebase**(커밋/브랜치 대상)
+- 원격 액션: **Push Branch**(-u·--force-with-lease), **Pull into current**, **Delete Remote Branch** ⚠️, **Fetch into local branch**, **Push Tag**
+- **스태시**: 그래프에 stash 노드 표시(베이스 커밋 연결, 속 빈 원), Apply/Pop(--index 옵션)/Drop ⚠️/Create Branch from Stash/이름·해시 복사
+- uncommitted 행 우클릭: **Stash**(untracked 포함 옵션), **Clean Untracked Files** ⚠️, **Discard All Changes** ⚠️, Open Source Control View
+- **커밋 비교**: 선택 후 Ctrl/Cmd+클릭 → 두 커밋 사이 변경 파일 목록 + 디프 (비교 대상 행 점선 표시)
+- 태그: **View Tag Details**(annotated tagger·메시지), 브랜치 라벨 **Select/Unselect in Branches Dropdown**
+
 ### Changed (branding·그래프 시각)
 
 - 표시 이름 GitScope → **Git Scope**

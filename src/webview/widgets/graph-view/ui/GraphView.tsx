@@ -200,13 +200,20 @@ export function GraphView() {
                   refs={refsByHash().get(commit()!.hash) ?? []}
                   colorIndex={graphStore.layout()?.rows[i]?.color ?? 0}
                   selected={graphStore.selectedCommit() === commit()!.hash}
+                  compared={graphStore.compareWith() === commit()!.hash}
                   searchMatch={searchStore.matchSet().has(i)}
                   searchCurrent={searchStore.currentRow() === i}
-                  onClick={() => {
-                    if (!commit()!.isUncommitted) {
-                      graphStore.setSelectedCommit(
-                        graphStore.selectedCommit() === commit()!.hash ? null : commit()!.hash,
+                  onClick={(e) => {
+                    const c = commit()!
+                    if (c.isUncommitted) return
+                    const selected = graphStore.selectedCommit()
+                    if ((e.ctrlKey || e.metaKey) && selected && selected !== c.hash) {
+                      // Ctrl/Cmd+클릭: 선택된 커밋과 비교
+                      graphStore.setCompareWith(
+                        graphStore.compareWith() === c.hash ? null : c.hash,
                       )
+                    } else {
+                      graphStore.setSelectedCommit(selected === c.hash ? null : c.hash)
                     }
                   }}
                   onContextMenu={(e) => {
@@ -267,6 +274,7 @@ export function GraphView() {
                     class={`graph-node color-${row()!.color % 8}`}
                     classList={{
                       uncommitted: commit()!.isUncommitted,
+                      stash: commit()!.stashSelector !== undefined,
                       dimmed: activeLine() !== null && activeLine() !== row()!.color,
                     }}
                   />

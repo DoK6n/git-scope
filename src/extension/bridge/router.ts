@@ -94,6 +94,30 @@ export class Router {
       merge: (p) => this.getRepo(p.repo).merge(p.target, p.noFf, p.squash),
       createTag: (p) => this.getRepo(p.repo).createTag(p.name, p.at, p.message),
       deleteTag: (p) => this.getRepo(p.repo).deleteTag(p.name),
+      cherryPick: (p) =>
+        this.getRepo(p.repo).cherryPick(p.hash, p.noCommit, p.recordOrigin, p.isMerge),
+      revert: (p) => this.getRepo(p.repo).revert(p.hash, p.isMerge),
+      dropCommit: (p) => this.getRepo(p.repo).dropCommit(p.hash),
+      rebase: (p) => this.getRepo(p.repo).rebase(p.target),
+      pushBranch: (p) =>
+        this.getRepo(p.repo).pushBranch(p.name, p.remote, p.setUpstream, p.force),
+      pullBranch: (p) => this.getRepo(p.repo).pullBranch(p.remote, p.branch),
+      deleteRemoteBranch: (p) => this.getRepo(p.repo).deleteRemoteBranch(p.remote, p.name),
+      fetchIntoLocal: (p) =>
+        this.getRepo(p.repo).fetchIntoLocal(p.remote, p.remoteBranch, p.localBranch),
+      pushTag: (p) => this.getRepo(p.repo).pushTag(p.name, p.remote),
+      getTagDetails: (p) => this.getRepo(p.repo).getTagDetails(p.name),
+      stashApply: (p) => this.getRepo(p.repo).stashApply(p.selector, p.reinstateIndex),
+      stashPop: (p) => this.getRepo(p.repo).stashPop(p.selector, p.reinstateIndex),
+      stashDrop: (p) => this.getRepo(p.repo).stashDrop(p.selector),
+      stashBranch: (p) => this.getRepo(p.repo).stashBranch(p.selector, p.branchName),
+      stashPush: (p) => this.getRepo(p.repo).stashPush(p.message, p.includeUntracked),
+      cleanUntracked: (p) => this.getRepo(p.repo).cleanUntracked(p.directories),
+      discardAllChanges: (p) => this.getRepo(p.repo).discardAllChanges(),
+      openScmView: async () => {
+        await vscode.commands.executeCommand('workbench.view.scm')
+        return { ok: true }
+      },
       reset: (p) => this.getRepo(p.repo).reset(p.to, p.mode),
       fetch: (p) => this.getRepo(p.repo).fetch(p.prune),
       listWorktrees: (p) => this.getRepo(p.repo).listWorktrees(),

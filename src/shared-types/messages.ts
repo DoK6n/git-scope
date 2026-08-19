@@ -4,6 +4,7 @@ import type {
   GraphData,
   IconSpec,
   RepoInfo,
+  TagDetails,
   Worktree,
 } from './domain'
 
@@ -78,6 +79,52 @@ export interface RequestMap {
     result: ActionResult
   }
   deleteTag: { params: { repo: string; name: string }; result: ActionResult }
+
+  // ── 패리티 보강 (M5) ───────────────────────────
+  cherryPick: {
+    params: { repo: string; hash: string; noCommit: boolean; recordOrigin: boolean; isMerge: boolean }
+    result: ActionResult
+  }
+  revert: { params: { repo: string; hash: string; isMerge: boolean }; result: ActionResult }
+  /** 커밋 하나를 히스토리에서 제거 (rebase --onto) ⚠️ */
+  dropCommit: { params: { repo: string; hash: string }; result: ActionResult }
+  rebase: { params: { repo: string; target: string }; result: ActionResult }
+  pushBranch: {
+    params: { repo: string; name: string; remote: string; setUpstream: boolean; force: boolean }
+    result: ActionResult
+  }
+  pullBranch: { params: { repo: string; remote: string; branch: string }; result: ActionResult }
+  deleteRemoteBranch: {
+    params: { repo: string; remote: string; name: string }
+    result: ActionResult
+  }
+  fetchIntoLocal: {
+    params: { repo: string; remote: string; remoteBranch: string; localBranch: string }
+    result: ActionResult
+  }
+  pushTag: { params: { repo: string; name: string; remote: string }; result: ActionResult }
+  getTagDetails: { params: { repo: string; name: string }; result: TagDetails }
+  stashApply: {
+    params: { repo: string; selector: string; reinstateIndex: boolean }
+    result: ActionResult
+  }
+  stashPop: {
+    params: { repo: string; selector: string; reinstateIndex: boolean }
+    result: ActionResult
+  }
+  stashDrop: { params: { repo: string; selector: string }; result: ActionResult }
+  stashBranch: {
+    params: { repo: string; selector: string; branchName: string }
+    result: ActionResult
+  }
+  stashPush: {
+    params: { repo: string; message: string; includeUntracked: boolean }
+    result: ActionResult
+  }
+  cleanUntracked: { params: { repo: string; directories: boolean }; result: ActionResult }
+  /** 워킹트리·인덱스 변경 전부 폐기 (reset --hard HEAD) ⚠️ */
+  discardAllChanges: { params: { repo: string }; result: ActionResult }
+  openScmView: { params: Record<string, never>; result: ActionResult }
 
   // ── 신규 기능 (M4) ─────────────────────────────
   reset: {

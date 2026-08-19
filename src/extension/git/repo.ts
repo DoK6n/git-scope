@@ -3,6 +3,7 @@ import type {
   Commit,
   CommitDetails,
   GraphData,
+  TagDetails,
   Worktree,
 } from '@shared-types/domain'
 import { execGit, GitError } from './exec'
@@ -13,8 +14,10 @@ import {
   parseNameStatus,
   parseNumstat,
   parseRefs,
+  parseStashList,
   parseWorktrees,
   REF_FORMAT,
+  STASH_FORMAT,
 } from './parse'
 
 /** git의 잘 알려진 빈 트리 해시 — 루트 커밋 디프의 베이스로 쓴다 */
@@ -63,10 +66,27 @@ export class GitRepo {
       this.git(['status', '--porcelain', '-z']),
       this.listWorktrees().catch(() => [] as Worktree[]),
     ])
+    const stashOut = await this.git(['stash', 'list', `--format=${STASH_FORMAT}`]).catch(() => '')
 
     let commits = parseLog(logOut)
     const moreAvailable = commits.length > maxCommits
     if (moreAvailable) commits = commits.slice(0, maxCommits)
+
+    // 스태시를 베이스 커밋 바로 위에 합성 노드로 끼워 넣는다 (베이스가 로드된 경우만)
+    for (const stash of parseStashList(stashOut)) {
+      const baseIndex = commits.findIndex((c) => c.hash === stash.baseHash)
+      if (baseIndex < 0) continue
+      commits.splice(baseIndex, 0, {
+        hash: stash.hash,
+        parents: [stash.baseHash],
+        author: stash.author,
+        authorEmail: stash.authorEmail,
+        authorDate: stash.authorDate,
+        commitDate: stash.commitDate,
+        subject: stash.subject,
+        stashSelector: stash.selector,
+      })
+    }
 
     const uncommittedCount = countPorcelainEntries(statusOut)
     if (uncommittedCount > 0 && headHash !== null) {
@@ -193,6 +213,123 @@ export class GitRepo {
 
   deleteTag(name: string): Promise<ActionResult> {
     return this.action(['tag', '-d', name])
+  }
+
+  // ── 패리티 보강 (M5) ──────────────────────────────
+
+  cherryPick(
+    hash: string,
+    noCommit: boolean,
+    recordOrigin: boolean,
+    isMerge: boolean,
+  ): Promise<ActionResult> {
+    const args = ['cherry-pick']
+    if (noCommit) args.push('--no-commit')
+    if (recordOrigin) args.push('-x')
+    if (isMerge) args.push('-m', '1')
+    args.push(hash)
+    return this.action(args)
+  }
+
+  revert(hash: string, isMerge: boolean): Promise<ActionResult> {
+    const args = ['revert', '--no-edit']
+    if (isMerge) args.push('-m', '1')
+    args.push(hash)
+    return this.action(args)
+  }
+
+  /** 커밋 하나를 현재 브랜치 히스토리에서 제거 ⚠️ */
+  dropCommit(hash: string): Promise<ActionResult> {
+    return this.action(['rebase', '--onto', `${hash}^`, hash])
+  }
+
+  rebase(target: string): Promise<ActionResult> {
+    return this.action(['rebase', target])
+  }
+
+  pushBranch(
+    name: string,
+    remote: string,
+    setUpstream: boolean,
+    force: boolean,
+  ): Promise<ActionResult> {
+    const args = ['push']
+    if (setUpstream) args.push('--set-upstream')
+    if (force) args.push('--force-with-lease')
+    args.push(remote, name)
+    return this.action(args)
+  }
+
+  pullBranch(remote: string, branch: string): Promise<ActionResult> {
+    return this.action(['pull', remote, branch])
+  }
+
+  deleteRemoteBranch(remote: string, name: string): Promise<ActionResult> {
+    return this.action(['push', remote, '--delete', name])
+  }
+
+  fetchIntoLocal(remote: string, remoteBranch: string, localBranch: string): Promise<ActionResult> {
+    return this.action(['fetch', remote, `${remoteBranch}:${localBranch}`])
+  }
+
+  pushTag(name: string, remote: string): Promise<ActionResult> {
+    return this.action(['push', remote, name])
+  }
+
+  async getTagDetails(name: string): Promise<TagDetails> {
+    const out = await this.git([
+      'for-each-ref',
+      `refs/tags/${name}`,
+      '--format=%(objecttype)%00%(objectname)%00%(*objectname)%00%(taggername)%00%(taggeremail)%00%(taggerdate:unix)%00%(contents)',
+    ])
+    const fields = out.replace(/\n$/, '').split('\0')
+    const isAnnotated = fields[0] === 'tag'
+    return {
+      name,
+      hash: isAnnotated ? fields[2]! : fields[1]!,
+      isAnnotated,
+      tagger: isAnnotated ? fields[3] : undefined,
+      taggerEmail: isAnnotated ? fields[4]?.replace(/[<>]/g, '') : undefined,
+      taggerDate: isAnnotated && fields[5] ? Number(fields[5]) : undefined,
+      message: isAnnotated ? fields.slice(6).join('\0').trim() : undefined,
+    }
+  }
+
+  stashApply(selector: string, reinstateIndex: boolean): Promise<ActionResult> {
+    const args = ['stash', 'apply']
+    if (reinstateIndex) args.push('--index')
+    args.push(selector)
+    return this.action(args)
+  }
+
+  stashPop(selector: string, reinstateIndex: boolean): Promise<ActionResult> {
+    const args = ['stash', 'pop']
+    if (reinstateIndex) args.push('--index')
+    args.push(selector)
+    return this.action(args)
+  }
+
+  stashDrop(selector: string): Promise<ActionResult> {
+    return this.action(['stash', 'drop', selector])
+  }
+
+  stashBranch(selector: string, branchName: string): Promise<ActionResult> {
+    return this.action(['stash', 'branch', branchName, selector])
+  }
+
+  stashPush(message: string, includeUntracked: boolean): Promise<ActionResult> {
+    const args = ['stash', 'push']
+    if (includeUntracked) args.push('--include-untracked')
+    if (message.trim() !== '') args.push('-m', message.trim())
+    return this.action(args)
+  }
+
+  cleanUntracked(directories: boolean): Promise<ActionResult> {
+    return this.action(['clean', '-f', ...(directories ? ['-d'] : [])])
+  }
+
+  discardAllChanges(): Promise<ActionResult> {
+    return this.action(['reset', '--hard', 'HEAD'])
   }
 
   // ── 신규 기능 (M4) ────────────────────────────────

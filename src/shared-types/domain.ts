@@ -12,6 +12,19 @@ export interface Commit {
   subject: string
   /** 워킹트리 변경사항을 나타내는 합성 노드 (그래프 최상단) */
   isUncommitted?: boolean
+  /** 스태시 노드면 "stash@{N}" 셀렉터 */
+  stashSelector?: string
+}
+
+/** annotated 태그의 상세 정보 (lightweight면 target 커밋 정보만) */
+export interface TagDetails {
+  name: string
+  hash: string
+  isAnnotated: boolean
+  tagger?: string
+  taggerEmail?: string
+  taggerDate?: number
+  message?: string
 }
 
 export type RefType = 'head' | 'remote' | 'tag'

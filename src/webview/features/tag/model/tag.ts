@@ -26,6 +26,27 @@ export async function createTagAt(hash: string): Promise<void> {
   )
 }
 
+/** 태그 상세 정보 (annotated: tagger·메시지) */
+export async function viewTagDetails(name: string): Promise<void> {
+  const repo = graphStore.currentRepo()
+  if (!repo) return
+  try {
+    const d = await request('getTagDetails', { repo, name })
+    const lines = [
+      `Tag: ${d.name}${d.isAnnotated ? ' (annotated)' : ' (lightweight)'}`,
+      `Commit: ${d.hash}`,
+      ...(d.tagger ? [`Tagger: ${d.tagger} <${d.taggerEmail ?? ''}>`] : []),
+      ...(d.taggerDate
+        ? [`Date: ${new Date(d.taggerDate * 1000).toLocaleString()}`]
+        : []),
+      ...(d.message ? ['', d.message] : []),
+    ]
+    await confirmDialog({ title: 'Tag Details', message: lines.join('\n'), confirmLabel: 'OK' })
+  } catch (e) {
+    graphStore.setError(e instanceof Error ? e.message : String(e))
+  }
+}
+
 /** 태그 삭제 */
 export async function deleteTag(name: string): Promise<void> {
   const repo = graphStore.currentRepo()

@@ -2,7 +2,7 @@
   "name": "git-scope",
   "displayName": "Git Scope",
   "description": "Commit graph visualization with git actions — view your repository history and act on it directly from the graph.",
-  "version": "0.0.21",
+  "version": "0.1.0",
   "publisher": "dok6n",
   "private": true,
   "license": "MIT",
