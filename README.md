@@ -1,5 +1,7 @@
 # Git Scope
 
+> A clean-room reimplementation of the Git Graph concept, rebuilt from scratch with modern improvements. Not derived from the original source code.
+
 커밋 그래프 시각화 + 그래프에서 직접 git 액션을 실행하는 VS Code/Cursor 익스텐션.
 방치된 Git Graph(mhutchie)의 컨셉을 클린룸으로 재구현한 프로젝트입니다.
 
