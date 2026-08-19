@@ -101,8 +101,13 @@ export class FileIconService {
     if (!def) return null
     if (def.iconPath) return { svg: path.join(theme.dir, def.iconPath) }
     if (def.fontCharacter !== undefined) {
+      // "\E058" 같은 이스케이프 표기는 실제 유니코드 문자로 변환 (Seti 등 폰트 테마)
+      const escaped = /^\\([0-9a-fA-F]{1,6})$/.exec(def.fontCharacter)
+      const fontChar = escaped
+        ? String.fromCodePoint(parseInt(escaped[1]!, 16))
+        : def.fontCharacter
       return {
-        fontChar: def.fontCharacter,
+        fontChar,
         fontColor: def.fontColor,
         fontSize: def.fontSize,
         fontId: def.fontId ?? theme.json.fonts?.[0]?.id,
