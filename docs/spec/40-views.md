@@ -45,7 +45,7 @@
   - 작성자·커밋터 아바타를 외부(GitHub / GitLab / Gravatar)에서 가져온다. 원본 설정 `repository.commits.fetchAvatars`, 기본 `false` — 활성화 시 이메일이 외부로 전송된다는 동의 문구가 붙어 있다. (출처: 원본 package.json) `[skip]` — 프라이버시 부담 대비 이득이 작음
   - `.mailmap`을 존중해 이름·이메일을 표시한다. 원본 설정 `repository.useMailmap`, 기본 `false`. (출처: 원본 package.json) `[skip]`
 
-### 40.1.4 변경 파일 목록 [todo]
+### 40.1.4 변경 파일 목록 [done]
 
 - 메타데이터 아래에 해당 커밋이 변경한 파일들이 표시된다. (출처: README — "View commit details and file changes")
 - 두 가지 표현 방식을 지원하며, 상세 뷰 우측 컨트롤로 전환한다. 원본 설정 키 `commitDetailsView.fileView.type`, 기본 `File Tree`. (출처: 위키 Extension Settings / 원본 package.json)

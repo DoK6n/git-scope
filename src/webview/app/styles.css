@@ -682,6 +682,42 @@ path.graph-line-hit {
   padding: 6px;
 }
 
+.files-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px 6px;
+  position: sticky;
+  top: 0;
+  background: var(--vscode-editorWidget-background, #252526);
+}
+
+.files-count {
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+}
+
+.files-view-toggle {
+  display: inline-flex;
+  gap: 2px;
+  margin-right: 22px; /* 닫기 버튼과 겹치지 않게 */
+}
+
+.files-view-toggle .toolbar-btn {
+  padding: 1px 8px;
+  font-size: 11px;
+}
+
+.file-tree-folder {
+  color: var(--vscode-descriptionForeground);
+}
+
+.folder-arrow {
+  width: 12px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
 .details-file {
   display: flex;
   align-items: center;
