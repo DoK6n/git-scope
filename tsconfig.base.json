@@ -10,9 +10,8 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "noEmit": true,
-    "baseUrl": ".",
     "paths": {
-      "@shared-types/*": ["src/shared-types/*"]
+      "@shared-types/*": ["./src/shared-types/*"]
     }
   }
 }
