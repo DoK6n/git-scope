@@ -1,7 +1,7 @@
-import { For, Show } from 'solid-js'
+import { createMemo, For, Show } from 'solid-js'
 import type { Commit, GitRef } from '@shared-types/domain'
 import { AuthorAvatar } from '../../../entities/author'
-import { RefBadge } from '../../../entities/ref'
+import { groupRefs, RefBadge } from '../../../entities/ref'
 import { graphStore } from '../../../entities/graph'
 import { formatDate, shortHash } from '../../../shared/lib'
 import { openContextMenu } from '../../../shared/ui'
@@ -25,6 +25,9 @@ export function CommitRow(props: CommitRowProps) {
       ? props.commit.commitDate
       : props.commit.authorDate
 
+  // 로컬 브랜치 + 같은 커밋의 대응 원격을 한 뱃지로 합친다
+  const refGroups = createMemo(() => groupRefs(props.refs))
+
   return (
     <div
       class="commit-row"
@@ -40,17 +43,23 @@ export function CommitRow(props: CommitRowProps) {
     >
       <div class="col-graph" style={{ width: `${props.graphWidth}px` }} />
       <div class="col-message">
-        <For each={props.refs}>
-          {(ref) => (
+        <For each={refGroups()}>
+          {(group) => (
             <RefBadge
-              gitRef={ref}
-              isHead={ref.type === 'head' && ref.name === graphStore.graph()?.headBranch}
+              group={group}
+              isHead={
+                group.ref.type === 'head' && group.ref.name === graphStore.graph()?.headBranch
+              }
               isWorktree={
-                ref.type === 'head' &&
-                (graphStore.graph()?.worktreeBranches ?? []).includes(ref.name)
+                group.ref.type === 'head' &&
+                (graphStore.graph()?.worktreeBranches ?? []).includes(group.ref.name)
               }
               onContextMenu={(e) => {
-                const items = buildRefMenu(ref)
+                const items = buildRefMenu(group.ref)
+                if (items.length > 0) openContextMenu(e, items)
+              }}
+              onRemoteContextMenu={(remote, e) => {
+                const items = buildRefMenu(remote)
                 if (items.length > 0) openContextMenu(e, items)
               }}
             />

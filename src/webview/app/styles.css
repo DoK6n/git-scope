@@ -263,7 +263,9 @@ body {
   pointer-events: none;
 }
 
-.graph-line {
+/* .color-N 팔레트의 fill이 path를 채우지 않도록 반드시 무효화 (선 굵기 왜곡의 원인) */
+path.graph-line {
+  fill: none !important;
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -417,6 +419,15 @@ body {
 
 .ref-worktree-mark {
   color: #4fc3c3;
+}
+
+/* 합쳐진 뱃지의 원격 세그먼트: "이름 | origin" */
+.ref-remote-part {
+  margin-left: 4px;
+  padding-left: 5px;
+  border-left: 1px solid rgba(0, 0, 0, 0.35);
+  font-style: italic;
+  opacity: 0.85;
 }
 
 .ref-remote-mark {
