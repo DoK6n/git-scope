@@ -138,6 +138,8 @@ export function PromptHost() {
 }
 
 function FormDialogView(props: { state: FormState }) {
+  // 다이얼로그가 열릴 때 한 번만 초기값을 계산한다 — 의도된 비반응성 읽기
+  // eslint-disable-next-line solid/reactivity
   const [values, setValues] = createSignal<FormValues>(initialValues(props.state.fields))
   const set = (name: string, value: string | number | boolean) =>
     setValues((v) => ({ ...v, [name]: value }))

@@ -14,8 +14,13 @@ export function AuthorAvatar(props: {
 }) {
   const [failed, setFailed] = createSignal(false)
   const [url] = createResource(
-    () => ({ repo: props.repo, email: props.email, hash: props.commitHash }),
-    (source) => fetchAvatar(source.repo, source.email, source.hash, props.size ?? 16),
+    () => ({
+      repo: props.repo,
+      email: props.email,
+      hash: props.commitHash,
+      size: props.size ?? 16,
+    }),
+    (source) => fetchAvatar(source.repo, source.email, source.hash, source.size),
   )
 
   const initial = () => (props.name.trim()[0] ?? props.email[0] ?? '?').toUpperCase()

@@ -154,7 +154,7 @@ export function GraphView() {
   return (
     <div
       class="graph-view"
-      ref={containerRef}
+      ref={(el) => (containerRef = el)}
       onScroll={onScroll}
       style={{
         '--col-author-w': `${columnStore.widths().author}px`,

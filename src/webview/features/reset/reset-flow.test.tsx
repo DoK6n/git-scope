@@ -66,9 +66,6 @@ describe('reset 흐름', () => {
   afterEach(() => dispose())
 
   it('커밋 reset: 다이얼로그 → hard 선택 시 경고 → 확인 → reset 요청 → 그래프 재조회', async () => {
-    // currentRepo가 있어야 runReset이 진행된다
-    ;(graphStore as unknown as { switchRepo: unknown }).switchRepo
-    // switchRepo는 refresh까지 하므로 직접 세팅 대신 listRepos 흐름을 흉내낸다
     const done = resetToCommit('abcdef1234567890')
 
     await flush()

@@ -127,7 +127,10 @@ export function Toolbar() {
           value={searchStore.query()}
           onInput={(e) => searchStore.search(e.currentTarget.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') e.shiftKey ? searchStore.prev() : searchStore.next()
+            if (e.key === 'Enter') {
+              if (e.shiftKey) searchStore.prev()
+              else searchStore.next()
+            }
             if (e.key === 'Escape') searchStore.search('')
           }}
         />
