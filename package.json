@@ -2,10 +2,14 @@
   "name": "git-scope",
   "displayName": "Git Scope",
   "description": "A clean-room reimplementation of the Git Graph concept, rebuilt from scratch with modern improvements — commit graph visualization with git actions, plus worktree management, glob search filters, an enhanced reset UI, and fetch --prune.",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "publisher": "dok6n",
   "private": true,
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DoK6n/git-scope.git"
+  },
   "engines": {
     "vscode": "^1.84.0"
   },

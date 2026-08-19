@@ -36,7 +36,7 @@ description: GitScope 기능 구현 워크플로우. 명세 확인 → FSD 배�
 ### 5. 마무리
 
 - `docs/spec/` 상태를 `[done]`으로 갱신
-- `CHANGELOG.md`의 `[Unreleased]` 섹션에 항목 추가
+- 체인지로그는 **두 파일에 모두** 추가한다: `CHANGELOG.md`(영문, 마켓플레이스 노출용)와 `CHANGELOG.ko.md`(한국어). 내용은 동일해야 하며 한쪽만 갱신하지 않는다
 - 커밋 메시지: `feat: ...` / `fix: ...` / `perf: ...` 컨벤션
 
 ## 우선순위 백로그

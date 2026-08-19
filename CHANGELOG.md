@@ -1,47 +1,60 @@
 # Changelog
 
+한국어 버전: [CHANGELOG.ko.md](CHANGELOG.ko.md)
+
 ## [Unreleased]
 
-### Added (M5 패리티 보강)
+### Added (UI & polish)
 
-- 커밋 액션: **Cherry Pick**(-x·--no-commit 옵션, merge는 -m 1), **Revert**, **Drop Commit**(rebase --onto) ⚠️, **Rebase**(커밋/브랜치 대상)
-- 원격 액션: **Push Branch**(-u·--force-with-lease), **Pull into current**, **Delete Remote Branch** ⚠️, **Fetch into local branch**, **Push Tag**
-- **스태시**: 그래프에 stash 노드 표시(베이스 커밋 연결, 속 빈 원), Apply/Pop(--index 옵션)/Drop ⚠️/Create Branch from Stash/이름·해시 복사
-- uncommitted 행 우클릭: **Stash**(untracked 포함 옵션), **Clean Untracked Files** ⚠️, **Discard All Changes** ⚠️, Open Source Control View
-- **커밋 비교**: 선택 후 Ctrl/Cmd+클릭 → 두 커밋 사이 변경 파일 목록 + 디프 (비교 대상 행 점선 표시)
-- 태그: **View Tag Details**(annotated tagger·메시지), 브랜치 라벨 **Select/Unselect in Branches Dropdown**
+- Table header (`Graph | Commit | Author | Date | Hash`) with drag-to-resize columns; double-click a divider to auto-fit the visible content (Graph resets to lane-based width)
+- Changed files as a **file tree** (default) or flat list, rendered with your IDE's **file icon theme** (SVG and font-glyph themes), with `(+added | -removed)` line stats per file
+- **Co-author avatars** from `Co-authored-by` trailers — GitHub-style overlapping stack that slides open on hover; bundled icons for AI co-authors (Claude, Codex)
+- Graph **line highlighting** on hover/click, and automatic highlight of the selected commit's line while details are open
+- Double-click a branch badge to `git switch` (remote badges create a tracking branch)
+- "Create Branch from Here…" on branch badge context menus
+- Worktree panel redesign: ✓ current / ✨ main / 🔒 locked indicators, hover actions (open in new/current window), context menu (Move / Repair / Remove / Lock)
+- Auto-refresh: a `.git` watcher keeps the graph in sync with any change — in-app actions or terminal commands
+- Notifications now use the IDE's native notification area (success and git stderr errors)
 
-### Changed (branding·그래프 시각)
+### Added (M5 parity)
 
-- 표시 이름 GitScope → **Git Scope**
-- 오리지널 커밋 그래프 아이콘 추가 — 익스텐션 로고(PNG)와 SCM 타이틀 버튼(SVG light/dark) 동일 글리프. 원본 Git Graph의 아이콘 자산은 클린룸 규칙상 복사하지 않음
-- 브랜치 뱃지 색상을 브랜치 이름 해시 기반으로 — 같은 이름이면 항상 같은 색, `origin/x`는 로컬 `x`와 동일 색
-- 그래프 레인 이동 곡선을 둥근 엘보(수직→수평→수직)로 변경 — 꺾이는 구간 선 굵기가 일정해짐
+- Commit actions: **Cherry Pick** (`-x`, `--no-commit`; merges use `-m 1`), **Revert**, **Drop Commit** (rebase --onto) ⚠️, **Rebase** (onto a commit or branch)
+- Remote actions: **Push Branch** (`-u`, `--force-with-lease`), **Pull into current**, **Delete Remote Branch** ⚠️, **Fetch into local branch**, **Push Tag**
+- **Stash**: stash nodes on the graph (linked to their base commit, hollow dot), Apply/Pop (`--index` option)/Drop ⚠️/Create Branch from Stash/copy name & hash
+- Uncommitted row context menu: **Stash** (include-untracked option), **Clean Untracked Files** ⚠️, **Discard All Changes** ⚠️, Open Source Control View
+- **Commit comparison**: Ctrl/Cmd+click a second commit → changed files between the two + diffs (compared row marked with a dashed outline)
+- Tags: **View Tag Details** (annotated tagger & message), branch label **Select/Unselect in Branches Dropdown**
 
-### Added (인증)
+### Changed (branding & graph visuals)
 
-- `GitScope: Sign in to GitHub` — Cursor/VS Code GitHub 로그인 플로우로 세션 생성, 성공 시 아바타 캐시 초기화 후 재조회
-- `GitScope: Set GitHub Token (PAT)` — 토큰을 SecretStorage에 저장 (빈 입력 = 삭제)
-- 토큰 우선순위: GitHub 세션 → SecretStorage PAT → `GITHUB_TOKEN` 환경변수
+- Display name GitScope → **Git Scope**
+- Original commit-graph icon — extension logo (PNG) and SCM title button (SVG light/dark) share the same glyph. The original Git Graph icon assets are not copied, per clean-room rules
+- Branch badges redesigned: dark background + branch-colored border + colored icon chip; badge color matches the commit's **graph line color**; combined `branch | origin` badges with per-segment hover
+- Lane-transition curves render at a constant stroke width (fixed a CSS fill bug that fattened curve interiors)
+- Graph column width follows the widest lane count and grows as more commits load
+
+### Added (authentication)
+
+- `Git Scope: Sign in to GitHub` — uses the editor's GitHub sign-in flow; clears the avatar cache on success
+- `Git Scope: Set GitHub Token (PAT)` — stores the token in SecretStorage (empty input deletes it)
+- Token priority: GitHub session → SecretStorage PAT → `GITHUB_TOKEN` environment variable
 
 ### Changed
 
-- Author 컬럼에 작성자 프로필 사진 표시 — GitHub 리포면 GitHub API로 실제 프로필을 가져와 디스크 캐시(14일 TTL), 아니면 Gravatar(identicon) 폴백, 오프라인 시 숨김. `GitScope: Clear Avatar Cache` 명령 추가
-
-- 커밋 상세를 하단 고정 패널에서 **선택한 행 바로 아래 인라인 확장**으로 변경 (원본 Git Graph의 inline 방식, 스펙 40.1)
+- Author column shows profile pictures — fetched via the GitHub API for GitHub repos (14-day disk cache), Gravatar (identicon) fallback otherwise, hidden when offline. Adds the `Git Scope: Clear Avatar Cache` command
+- Commit details moved from a fixed bottom panel to an **inline expansion right below the selected row**, starting after the graph column so lanes stay visible
 
 ### Added
 
-- 원격 브랜치 라벨 앞에 🔌 아이콘 표시 (로컬 브랜치와 한눈에 구분)
-- **git reset UI (M4)**: soft/mixed/hard 모드 선택 + 커밋 타겟 또는 HEAD~N 지정, hard 모드 시 취소 불가 경고 (끌 수 없음)
-- **검색·필터 glob 지원 (M4)**: 커밋 검색(메시지·작성자·해시)과 브랜치 필터에 즉석 glob 패턴(`*`, `?`, `[...]`) — 일치 하이라이트, 개수 표시, 이전/다음 이동
-- **git fetch --prune (M4)**: fetch 버튼 우클릭으로 prune 실행, `gitScope.fetchPruneByDefault` 설정 지원
-- **git worktree (M4)**: 목록/추가/제거 패널, 그래프 라벨에 worktree 뱃지(⊕), worktree 브랜치는 checkout 대신 "Open Worktree in New Window", 제거 실패 시 force 재확인
-- **기본 액션 (M3)**: 커밋/브랜치/태그 컨텍스트 메뉴 — checkout(브랜치·원격·커밋), 브랜치 생성/삭제/rename, merge(default/no-ff/squash), 태그 생성(lightweight/annotated)/삭제
-- 위험 액션 확인 다이얼로그(강제 삭제, detached HEAD 등) + 실패 시 git stderr 그대로 표시, 액션 후 그래프 자동 갱신
-- 체크아웃된 브랜치에는 checkout/delete/merge 메뉴를 숨기는 조건부 표시 (스펙 20-actions)
-- **그래프 MVP (M2)**: 커밋 그래프 렌더링 — 레인 배치·브랜치 색상·곡선 엣지, 브랜치/원격/태그 라벨, HEAD 표시, 가상 스크롤, 스크롤 시 증분 로딩
-- Uncommitted changes 합성 노드 표시 (HEAD와 연결, 속 빈 원)
-- 커밋 상세 패널: 메타데이터 + 변경 파일 목록, 파일 클릭 시 디프 에디터 열기
-- 툴바: 리포지토리 선택(멀티 리포), 브랜치 필터, fetch, refresh
-- git 계층: child_process 직접 spawn, NUL 구분 `--format` 파싱 (파서 fixture 테스트 포함)
+- **git reset UI**: choose soft/mixed/hard with a commit target or `HEAD~N`; hard mode always shows an irreversible-loss warning. Includes "Undo this Commit & above" (reset to parent)
+- **Glob search & filters**: instant glob patterns (`*`, `?`, `[...]`) for commit search (message/author/hash) and the branch filter — match highlighting, count, prev/next navigation
+- **git fetch --prune**: right-click the fetch button; `gitScope.fetchPruneByDefault` setting
+- **git worktree**: list/add/remove panel, worktree badges on graph labels, "Open Worktree in New Window" instead of checkout, force-remove reconfirmation on failure
+- **Core actions**: commit/branch/tag context menus — checkout (branch/remote/commit), create/delete/rename branches, merge (default/no-ff/squash), create (lightweight/annotated)/delete tags
+- Confirmation dialogs for destructive actions (force delete, detached HEAD, …); git stderr shown verbatim on failure; graph refreshes after actions
+- Checked-out branches hide checkout/delete/merge menu items
+- **Graph MVP**: commit graph rendering — lane layout, branch colors, curved edges, branch/remote/tag labels, HEAD indicator, virtual scrolling, incremental loading
+- Uncommitted-changes synthetic node (linked to HEAD, hollow dot)
+- Commit details: metadata + changed files, click a file to open its diff
+- Toolbar: repository picker (multi-repo), branch filter, fetch, refresh
+- Git layer: direct `child_process` spawn, NUL-delimited `--format` parsing (fixture-tested parsers)

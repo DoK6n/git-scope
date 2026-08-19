@@ -10,7 +10,7 @@ description: GitScope 릴리즈 절차. 버전 범프, 체인지로그 정리, v
 - [ ] `npm run build`(host esbuild + webview vite) 성공, 타입 에러 0
 - [ ] 테스트 통과
 - [ ] Extension Development Host에서 스모크 테스트: 그래프 로딩, 액션 1개 이상 실행
-- [ ] `CHANGELOG.md`의 `[Unreleased]`에 이번 릴리즈 내용이 정리되어 있음
+- [ ] `CHANGELOG.md`(영문)와 `CHANGELOG.ko.md`(한국어) **양쪽** `[Unreleased]`에 이번 릴리즈 내용이 동일하게 정리되어 있음
 - [ ] `README.md` 스크린샷/기능 목록이 현재 상태와 일치
 - [ ] 클린룸 확인: 이번 릴리즈에 원본 유래 코드가 없음 (cleanroom-guard 규칙 준수 여부)
 
@@ -18,7 +18,7 @@ description: GitScope 릴리즈 절차. 버전 범프, 체인지로그 정리, v
 
 1. **버전 범프** — semver. `package.json` version 수정
    - 신규 기능: minor / 버그픽스만: patch / 호환성 파괴: major
-2. **체인지로그** — `[Unreleased]` → `[x.y.z] - YYYY-MM-DD`로 승격, 새 `[Unreleased]` 섹션 생성
+2. **체인지로그** — `CHANGELOG.md`와 `CHANGELOG.ko.md` 양쪽에서 `[Unreleased]` → `[x.y.z] - YYYY-MM-DD`로 승격, 새 `[Unreleased]` 섹션 생성
 3. **패키징** — `npx vsce package` → `.vsix` 생성. 로컬 설치 테스트: `code --install-extension git-scope-x.y.z.vsix`
 4. **태그** — `git tag vx.y.z && git push --tags`
 5. **배포** — `npx vsce publish` (VSCE_PAT 필요). Open VSX도 배포하려면 `npx ovsx publish`
