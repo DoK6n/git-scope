@@ -382,9 +382,7 @@ path.graph-line {
    어두운 배경 + 브랜치색 테두리(인라인) + 색상 아이콘 칩. Git Graph 스타일 */
 .ref-badge {
   display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 1px 6px 1px 2px;
+  align-items: stretch;
   border-radius: 4px;
   font-size: 11px;
   line-height: 15px;
@@ -392,6 +390,21 @@ path.graph-line {
   border: 1px solid var(--vscode-badge-background, #4d4d4d);
   background: var(--vscode-editor-background);
   color: var(--vscode-foreground);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* 로컬 영역과 origin 세그먼트가 각각 독립적으로 hover 된다 */
+.ref-local-part {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 5px 1px 2px;
+}
+
+.ref-local-part:hover,
+.ref-remote-part:hover {
+  background: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.1));
 }
 
 .ref-head {
@@ -426,8 +439,9 @@ path.graph-line {
 
 /* 합쳐진 뱃지의 원격 세그먼트: "이름 | origin" */
 .ref-remote-part {
-  margin-left: 1px;
-  padding-left: 5px;
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
   border-left: 1px solid;
   font-style: italic;
   opacity: 0.9;

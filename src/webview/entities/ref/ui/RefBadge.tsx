@@ -67,22 +67,24 @@ export function RefBadge(props: RefBadgeProps) {
       style={{ 'border-color': color() }}
       onContextMenu={(e) => props.onContextMenu?.(e)}
     >
-      <span class="ref-icon" style={{ 'background-color': color() }}>
-        <Show when={gitRef().type === 'tag'} fallback={<BranchGlyph />}>
-          <TagGlyph />
+      <span class="ref-local-part">
+        <span class="ref-icon" style={{ 'background-color': color() }}>
+          <Show when={gitRef().type === 'tag'} fallback={<BranchGlyph />}>
+            <TagGlyph />
+          </Show>
+        </span>
+        <Show when={props.isHead}>
+          <span class="ref-head-dot">●</span>
         </Show>
-      </span>
-      <Show when={props.isHead}>
-        <span class="ref-head-dot">●</span>
-      </Show>
-      <Show when={props.isWorktree}>
-        <span class="ref-worktree-mark" title="checked out in a worktree">⊕</span>
-      </Show>
-      <span
-        class="ref-name"
-        title={gitRef().type === 'remote' ? `remote branch (${gitRef().remote})` : undefined}
-      >
-        {gitRef().name}
+        <Show when={props.isWorktree}>
+          <span class="ref-worktree-mark" title="checked out in a worktree">⊕</span>
+        </Show>
+        <span
+          class="ref-name"
+          title={gitRef().type === 'remote' ? `remote branch (${gitRef().remote})` : undefined}
+        >
+          {gitRef().name}
+        </span>
       </span>
       <For each={props.group.remotes}>
         {(remote) => (
