@@ -22,6 +22,7 @@ export class GraphPanel {
         localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'dist', 'webview')],
       },
     )
+    panel.iconPath = vscode.Uri.joinPath(context.extensionUri, 'resources', 'tab-icon.svg')
     GraphPanel.current = new GraphPanel(panel, context, router)
   }
 
