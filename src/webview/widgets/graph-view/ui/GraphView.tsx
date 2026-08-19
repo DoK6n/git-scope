@@ -34,10 +34,11 @@ export function GraphView() {
   let containerRef: HTMLDivElement | undefined
   const [scrollTop, setScrollTop] = createSignal(0)
   const [viewHeight, setViewHeight] = createSignal(600)
-  // 그래프 선 강조: hover는 일시적, 클릭은 고정(토글). seg.color가 라인 고유 id다
+  // 그래프 선 강조: hover는 일시적, 클릭은 고정(토글), 상세뷰가 열리면 그 커밋의 라인.
+  // seg.color가 라인 고유 id다
   const [hoverLine, setHoverLine] = createSignal<number | null>(null)
   const [pinnedLine, setPinnedLine] = createSignal<number | null>(null)
-  const activeLine = () => hoverLine() ?? pinnedLine()
+  const activeLine = () => hoverLine() ?? pinnedLine() ?? selectedLine()
 
   onMount(() => {
     if (!containerRef) return
@@ -55,6 +56,13 @@ export function GraphView() {
     if (hash === null) return null
     const idx = commits().findIndex((c) => c.hash === hash)
     return idx >= 0 ? idx : null
+  })
+
+  /** 상세뷰가 열린 커밋이 속한 라인 id */
+  const selectedLine = createMemo<number | null>(() => {
+    const index = selectedIndex()
+    if (index === null) return null
+    return graphStore.layout()?.rows[index]?.color ?? null
   })
 
   /** 행 i의 화면 y 오프셋 — 상세 패널 아래 행들은 패널 높이만큼 밀린다 */
