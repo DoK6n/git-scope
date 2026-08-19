@@ -12,3 +12,13 @@ export class TaskStore {
     return this.tasks
   }
 }
+
+import { readFileSync, writeFileSync } from 'node:fs'
+
+export function saveToFile(store: TaskStore, path: string): void {
+  writeFileSync(path, JSON.stringify(store.list(), null, 2))
+}
+
+export function loadFromFile(path: string): Task[] {
+  return JSON.parse(readFileSync(path, 'utf8')) as Task[]
+}
