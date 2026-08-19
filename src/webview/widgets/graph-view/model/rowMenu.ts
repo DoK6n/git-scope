@@ -60,43 +60,47 @@ export function buildRowMenu(commit: Commit): MenuItem[] {
     ]
   }
 
+  // 원본 Git Graph의 커밋 메뉴 이름·순서를 따른다 (Undo/Drop은 GitScope 고유 — reset 계열 옆)
   const hash = commit.hash
   return [
-    { label: 'Checkout Commit…', onClick: () => void checkoutCommit(hash) },
-    { label: 'Create Branch Here…', onClick: () => void createBranchAt(hash) },
-    { label: 'Create Tag Here…', onClick: () => void createTagAt(hash) },
-    { label: 'Merge into Current Branch…', onClick: () => void mergeInto(hash) },
+    { label: 'Add Tag...', onClick: () => void createTagAt(hash) },
+    { label: 'Create Branch...', onClick: () => void createBranchAt(hash) },
     {
-      label: 'Cherry Pick…',
+      label: 'Checkout...',
       separatorBefore: true,
-      onClick: () => void cherryPick(commit),
+      onClick: () => void checkoutCommit(hash),
     },
-    { label: 'Revert…', onClick: () => void revertCommit(commit) },
+    { label: 'Cherry Pick...', onClick: () => void cherryPick(commit) },
+    { label: 'Revert...', onClick: () => void revertCommit(commit) },
     {
-      label: 'Rebase Current Branch on This Commit…',
+      label: 'Merge into current branch...',
+      separatorBefore: true,
+      onClick: () => void mergeInto(hash),
+    },
+    {
+      label: 'Rebase current branch on this Commit...',
       onClick: () => void rebaseOnto(hash, hash.slice(0, 8)),
     },
     {
-      label: 'Drop Commit…',
-      danger: true,
-      separatorBefore: true,
-      onClick: () => void dropCommit(commit),
-    },
-    {
-      label: 'Undo This Commit & Above… (reset to parent)',
-      danger: true,
-      onClick: () => void undoCommitsFrom(hash, commit.parents),
-    },
-    {
-      label: 'Reset Current Branch to This Commit… (keep this)',
+      label: 'Reset current branch to this Commit...',
       danger: true,
       onClick: () => void resetToCommit(hash),
     },
     {
-      label: 'Copy Commit Hash',
+      label: 'Undo this Commit & above... (reset to parent)',
+      danger: true,
+      onClick: () => void undoCommitsFrom(hash, commit.parents),
+    },
+    {
+      label: 'Drop Commit...',
+      danger: true,
+      onClick: () => void dropCommit(commit),
+    },
+    {
+      label: 'Copy Commit Hash to Clipboard',
       separatorBefore: true,
       onClick: () => copy(hash),
     },
-    { label: 'Copy Commit Subject', onClick: () => copy(commit.subject) },
+    { label: 'Copy Commit Subject to Clipboard', onClick: () => copy(commit.subject) },
   ]
 }
