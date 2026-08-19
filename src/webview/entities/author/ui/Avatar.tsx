@@ -18,12 +18,14 @@ export function AuthorAvatar(props: {
   const [url] = createResource(
     () => ({
       repo: props.repo,
+      name: props.name,
       email: props.email,
       hash: props.commitHash,
       size: props.size ?? 16,
       viaGitHub: !props.isCoAuthor,
     }),
-    (source) => fetchAvatar(source.repo, source.email, source.hash, source.size, source.viaGitHub),
+    (source) =>
+      fetchAvatar(source.repo, source.name, source.email, source.hash, source.size, source.viaGitHub),
   )
 
   const initial = () => (props.name.trim()[0] ?? props.email[0] ?? '?').toUpperCase()

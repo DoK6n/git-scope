@@ -10,21 +10,31 @@ import { gravatarUrl } from '../../../shared/lib'
 const cache = new Map<string, Promise<string | null>>()
 
 import claudeIcon from '../assets/claude-icon.png'
+import codexIcon from '../assets/codex-icon.png'
 
-/** Claude 공동 작성 커밋의 noreply@anthropic.com — 번들된 아이콘 사용 */
-export function isClaudeEmail(email: string): boolean {
-  return /@anthropic\.com$/i.test(email.trim())
+/**
+ * AI 공동 작성자 전용 아이콘 — Co-authored-by 이름(claude/codex 포함 여부)
+ * 또는 이메일 도메인으로 판별한다.
+ */
+export function specialIcon(name: string, email: string): string | null {
+  const n = name.toLowerCase()
+  const e = email.trim().toLowerCase()
+  if (n.includes('claude') || e.endsWith('@anthropic.com')) return claudeIcon
+  if (n.includes('codex') || e.endsWith('@openai.com')) return codexIcon
+  return null
 }
 
 export function fetchAvatar(
   repo: string,
+  name: string,
   email: string,
   commitHash: string,
   size = 16,
   /** co-author는 커밋 API로 조회하면 주 작성자 아바타가 나오므로 Gravatar만 쓴다 */
   viaGitHub = true,
 ): Promise<string | null> {
-  if (isClaudeEmail(email)) return Promise.resolve(claudeIcon)
+  const icon = specialIcon(name, email)
+  if (icon) return Promise.resolve(icon)
   const key = email.trim().toLowerCase()
   if (key === '') return Promise.resolve(null)
   let promise = cache.get(key)
