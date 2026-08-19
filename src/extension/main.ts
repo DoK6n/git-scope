@@ -30,7 +30,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand('gitScope.clearAvatarCache', async () => {
       await avatars.clearCache()
-      void vscode.window.showInformationMessage('GitScope: avatar cache cleared.')
+      void vscode.window.showInformationMessage('Git Scope: avatar cache cleared.')
     }),
     vscode.commands.registerCommand('gitScope.signInGitHub', async () => {
       try {
@@ -40,17 +40,17 @@ export function activate(context: vscode.ExtensionContext): void {
         // 미인증 시절의 "아바타 없음" 네거티브 캐시를 비워 재조회하게 한다
         await avatars.clearCache()
         void vscode.window.showInformationMessage(
-          `GitScope: signed in as ${session.account.label}. Avatars will reload.`,
+          `Git Scope: signed in as ${session.account.label}. Avatars will reload.`,
         )
       } catch (e) {
         void vscode.window.showErrorMessage(
-          `GitScope: GitHub sign-in failed — ${e instanceof Error ? e.message : String(e)}`,
+          `Git Scope: GitHub sign-in failed — ${e instanceof Error ? e.message : String(e)}`,
         )
       }
     }),
     vscode.commands.registerCommand('gitScope.setGitHubToken', async () => {
       const token = await vscode.window.showInputBox({
-        title: 'GitScope: GitHub Personal Access Token',
+        title: 'Git Scope: GitHub Personal Access Token',
         prompt: '비공개 리포 아바타 조회용 PAT (classic: repo 스코프 / fine-grained: Contents read). 비워두면 저장된 토큰을 삭제합니다.',
         password: true,
         ignoreFocusOut: true,
@@ -58,12 +58,12 @@ export function activate(context: vscode.ExtensionContext): void {
       if (token === undefined) return // 취소
       if (token.trim() === '') {
         await context.secrets.delete(TOKEN_SECRET_KEY)
-        void vscode.window.showInformationMessage('GitScope: stored GitHub token removed.')
+        void vscode.window.showInformationMessage('Git Scope: stored GitHub token removed.')
       } else {
         await context.secrets.store(TOKEN_SECRET_KEY, token.trim())
         await avatars.clearCache()
         void vscode.window.showInformationMessage(
-          'GitScope: GitHub token saved (SecretStorage). Avatars will reload.',
+          'Git Scope: GitHub token saved (SecretStorage). Avatars will reload.',
         )
       }
     }),

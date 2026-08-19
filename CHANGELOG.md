@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed (branding·그래프 시각)
+
+- 표시 이름 GitScope → **Git Scope**
+- 오리지널 커밋 그래프 아이콘 추가 — 익스텐션 로고(PNG)와 SCM 타이틀 버튼(SVG light/dark) 동일 글리프. 원본 Git Graph의 아이콘 자산은 클린룸 규칙상 복사하지 않음
+- 브랜치 뱃지 색상을 브랜치 이름 해시 기반으로 — 같은 이름이면 항상 같은 색, `origin/x`는 로컬 `x`와 동일 색
+- 그래프 레인 이동 곡선을 둥근 엘보(수직→수평→수직)로 변경 — 꺾이는 구간 선 굵기가 일정해짐
+
 ### Added (인증)
 
 - `GitScope: Sign in to GitHub` — Cursor/VS Code GitHub 로그인 플로우로 세션 생성, 성공 시 아바타 캐시 초기화 후 재조회

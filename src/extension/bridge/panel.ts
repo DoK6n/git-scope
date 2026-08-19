@@ -14,7 +14,7 @@ export class GraphPanel {
     }
     const panel = vscode.window.createWebviewPanel(
       'gitScope.graph',
-      'GitScope',
+      'Git Scope',
       vscode.ViewColumn.One,
       {
         enableScripts: true,

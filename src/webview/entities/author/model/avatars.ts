@@ -28,13 +28,4 @@ export function fetchAvatar(
   return promise
 }
 
-/** 이메일 해시 → 이니셜 아바타 배경색 (그래프 팔레트와 동일한 8색) */
-const LETTER_COLORS = [
-  '#4e9de6', '#d9699e', '#53c17f', '#d9a03f', '#9d78d9', '#4fc3c3', '#d96c57', '#a8b840',
-]
-
-export function letterColor(email: string): string {
-  let hash = 0
-  for (let i = 0; i < email.length; i++) hash = (hash * 31 + email.charCodeAt(i)) | 0
-  return LETTER_COLORS[Math.abs(hash) % LETTER_COLORS.length]!
-}
+export { hashColor as letterColor } from '../../../shared/lib'

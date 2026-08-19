@@ -1,11 +1,11 @@
-# GitScope
+# Git Scope
 
 커밋 그래프 시각화 + 그래프에서 직접 git 액션을 실행하는 VS Code/Cursor 익스텐션.
 방치된 Git Graph(mhutchie)의 컨셉을 클린룸으로 재구현한 프로젝트입니다.
 
 ## 사용법
 
-명령 팔레트(`Cmd+Shift+P`) → **GitScope: View Git Graph**
+명령 팔레트(`Cmd+Shift+P`) → **Git Scope: View Git Graph**
 
 ## 기능
 

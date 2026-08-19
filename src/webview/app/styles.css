@@ -265,6 +265,8 @@ body {
 
 .graph-line {
   stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .graph-node.uncommitted {
@@ -391,17 +393,15 @@ body {
   font-weight: 600;
 }
 
-.ref-badge.ref-head {
-  /* type=head(로컬 브랜치) */
-}
-
-.ref-badge[class*='ref-'] {
-  background: var(--vscode-badge-background, #4d4d4d);
-  color: var(--vscode-badge-foreground, #fff);
+/* 브랜치 뱃지 배경색은 이름 해시 기반으로 인라인 지정된다 (RefBadge) */
+.ref-badge.ref-head,
+.ref-badge.ref-remote {
+  color: #1e1e1e;
+  font-weight: 600;
 }
 
 .ref-badge.ref-remote {
-  opacity: 0.75;
+  opacity: 0.85;
 }
 
 .ref-badge.ref-tag {

@@ -1,8 +1,8 @@
 {
   "name": "git-scope",
-  "displayName": "GitScope",
+  "displayName": "Git Scope",
   "description": "Commit graph visualization with git actions — view your repository history and act on it directly from the graph.",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "publisher": "dok6n",
   "private": true,
   "license": "MIT",
@@ -21,28 +21,32 @@
     "worktree"
   ],
   "main": "./dist/extension/main.js",
+  "icon": "resources/icon.png",
   "contributes": {
     "commands": [
       {
         "command": "gitScope.view",
         "title": "View Git Graph",
-        "category": "GitScope",
-        "icon": "$(git-branch)"
+        "category": "Git Scope",
+        "icon": {
+          "light": "resources/graph-light.svg",
+          "dark": "resources/graph-dark.svg"
+        }
       },
       {
         "command": "gitScope.clearAvatarCache",
         "title": "Clear Avatar Cache",
-        "category": "GitScope"
+        "category": "Git Scope"
       },
       {
         "command": "gitScope.signInGitHub",
         "title": "Sign in to GitHub (for avatars)",
-        "category": "GitScope"
+        "category": "Git Scope"
       },
       {
         "command": "gitScope.setGitHubToken",
         "title": "Set GitHub Token (PAT)",
-        "category": "GitScope"
+        "category": "Git Scope"
       }
     ],
     "menus": {

@@ -25,8 +25,19 @@ function segmentPath(seg: Segment, y1: number, y2: number): string {
   const x1 = laneX(seg.fromLane)
   const x2 = laneX(seg.toLane)
   if (x1 === x2) return `M ${x1} ${y1} L ${x2} ${y2}`
-  const midY = (y2 - y1) / 2
-  return `M ${x1} ${y1} C ${x1} ${y1 + midY}, ${x2} ${y2 - midY}, ${x2} ${y2}`
+  // 레인 이동은 수직→둥근 모서리→수평→둥근 모서리→수직 엘보로 그린다.
+  // 대각 베지어는 중간이 얇아 보이는 렌더링 문제가 있어 축 정렬 스트로크만 쓴다.
+  const midY = (y1 + y2) / 2
+  const dir = x2 > x1 ? 1 : -1
+  const radius = Math.min(8, Math.abs(x2 - x1) / 2, (y2 - y1) / 2)
+  return [
+    `M ${x1} ${y1}`,
+    `L ${x1} ${midY - radius}`,
+    `Q ${x1} ${midY} ${x1 + dir * radius} ${midY}`,
+    `L ${x2 - dir * radius} ${midY}`,
+    `Q ${x2} ${midY} ${x2} ${midY + radius}`,
+    `L ${x2} ${y2}`,
+  ].join(' ')
 }
 
 export function GraphView() {
