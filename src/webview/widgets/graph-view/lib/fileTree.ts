@@ -33,20 +33,20 @@ export function buildFileTree(files: FileChange[]): FileTreeFolder {
     node.files.push(file)
   }
 
-  return finalize(root)
+  return finalize(root, true)
 }
 
-function finalize(node: MutableFolder): FileTreeFolder {
+function finalize(node: MutableFolder, isRoot = false): FileTreeFolder {
   let name = node.name
   let current = node
-  // 파일 없이 하위 폴더 하나만 있는 체인은 "a/b/c"로 압축
-  while (current.files.length === 0 && current.children.size === 1) {
+  // 파일 없이 하위 폴더 하나뿐인 체인은 "a/b/c"로 압축한다 (루트는 압축하지 않음)
+  while (!isRoot && current.files.length === 0 && current.children.size === 1) {
     const child = [...current.children.values()][0]!
     name = name === '' ? child.name : `${name}/${child.name}`
     current = child
   }
   const folders = [...current.children.values()]
-    .map(finalize)
+    .map((child) => finalize(child))
     .sort((a, b) => a.name.localeCompare(b.name))
   const sortedFiles = [...current.files].sort((a, b) => a.path.localeCompare(b.path))
   return { name, folders, files: sortedFiles }

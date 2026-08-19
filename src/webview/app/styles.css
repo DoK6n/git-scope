@@ -663,8 +663,19 @@ path.graph-line-hit {
 
 .details-field b {
   display: inline-block;
-  width: 64px;
+  width: 72px;
   font-weight: 600;
+}
+
+.details-hash {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 11px;
+}
+
+.details-fields,
+.details-subject,
+.details-body {
+  user-select: text;
 }
 
 .details-body {

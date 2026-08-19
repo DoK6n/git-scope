@@ -2,7 +2,7 @@ import { createMemo, createResource, createSignal, For, Show } from 'solid-js'
 import type { FileChange } from '@shared-types/domain'
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
-import { formatDate, shortHash } from '../../../shared/lib'
+import { formatDate } from '../../../shared/lib'
 import { basename, buildFileTree } from '../lib/fileTree'
 import type { FileTreeFolder } from '../lib/fileTree'
 
@@ -59,13 +59,16 @@ export function InlineDetails(props: { top: number }) {
               <div class="details-subject">{d().body.split('\n')[0]}</div>
               <div class="details-fields">
                 <span class="details-field">
-                  <b>Commit</b> {shortHash(d().hash)}
+                  <b>Commit</b> <span class="details-hash">{d().hash}</span>
                 </span>
                 <span class="details-field">
-                  <b>Parents</b> {d().parents.map(shortHash).join(', ') || '—'}
+                  <b>Parents</b> <span class="details-hash">{d().parents.join(', ') || '—'}</span>
                 </span>
                 <span class="details-field">
                   <b>Author</b> {d().author} &lt;{d().authorEmail}&gt;
+                </span>
+                <span class="details-field">
+                  <b>Committer</b> {d().committer}
                 </span>
                 <span class="details-field">
                   <b>Date</b> {formatDate(d().authorDate)}
