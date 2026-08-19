@@ -19,6 +19,14 @@ export function App() {
           </button>
         </div>
       </Show>
+      <Show when={graphStore.notice()}>
+        <div class="notice-banner">
+          <span class="error-text">✓ {graphStore.notice()}</span>
+          <button class="error-dismiss" onClick={() => graphStore.setNotice(null)}>
+            ✕
+          </button>
+        </div>
+      </Show>
       <div class="main">
         <Show
           when={graphStore.repos().length > 0}

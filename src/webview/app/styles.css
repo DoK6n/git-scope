@@ -232,6 +232,17 @@ body {
   cursor: pointer;
 }
 
+.notice-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--vscode-inputValidation-infoBackground, #063b49);
+  color: var(--vscode-foreground);
+  border-bottom: 1px solid var(--vscode-inputValidation-infoBorder, #007acc);
+  flex-shrink: 0;
+}
+
 /* ── 그래프 뷰 ─────────────────────────────────── */
 .graph-view {
   flex: 1;

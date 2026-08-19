@@ -8,7 +8,10 @@ import { request } from '../../../shared/api'
 export async function fetchAll(prune: boolean): Promise<boolean> {
   const repo = graphStore.currentRepo()
   if (!repo) return false
-  return graphStore.runAction(request('fetch', { repo, prune }))
+  return graphStore.runAction(
+    request('fetch', { repo, prune }),
+    prune ? 'git fetch --all --prune 완료' : 'git fetch --all 완료',
+  )
 }
 
 /** 기본 fetch — 설정 gitScope.fetchPruneByDefault를 따른다 */

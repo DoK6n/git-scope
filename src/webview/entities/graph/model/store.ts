@@ -10,6 +10,17 @@ const [currentRepo, setCurrentRepo] = createSignal<string | null>(null)
 const [graph, setGraph] = createSignal<GraphData | null>(null)
 const [loading, setLoading] = createSignal(false)
 const [error, setError] = createSignal<string | null>(null)
+const [notice, setNoticeRaw] = createSignal<string | null>(null)
+
+let noticeTimer: ReturnType<typeof setTimeout> | undefined
+/** 액션 성공 토스트 — 4초 후 자동 사라짐 */
+function setNotice(message: string | null): void {
+  if (noticeTimer !== undefined) clearTimeout(noticeTimer)
+  setNoticeRaw(message)
+  if (message !== null) {
+    noticeTimer = setTimeout(() => setNoticeRaw(null), 4000)
+  }
+}
 const [maxCommits, setMaxCommits] = createSignal(initialSettings().initialLoadCommits)
 /** null = 모든 브랜치, 아니면 선택된 ref 이름 목록 */
 const [branchFilter, setBranchFilter] = createSignal<string[] | null>(null)
@@ -85,11 +96,15 @@ async function applyBranchFilter(refs: string[] | null): Promise<void> {
  * git 액션 실행 공통 흐름: 성공하면 그래프를 갱신하고 true,
  * 실패하면 git stderr를 에러로 노출하고 false.
  */
-async function runAction(action: Promise<ActionResult>): Promise<boolean> {
+async function runAction(
+  action: Promise<ActionResult>,
+  successMessage?: string,
+): Promise<boolean> {
   try {
     const result = await action
     if (result.ok) {
       await refresh()
+      if (successMessage) setNotice(successMessage)
       return true
     }
     setError(result.error)
@@ -102,6 +117,8 @@ async function runAction(action: Promise<ActionResult>): Promise<boolean> {
 
 export const graphStore = {
   runAction,
+  notice,
+  setNotice,
   settings,
   repos,
   currentRepo,

@@ -24,8 +24,11 @@ const hardWarning = (values: FormValues) =>
 async function runReset(to: string, mode: string): Promise<void> {
   const repo = graphStore.currentRepo()
   if (!repo) return
+  const target = to.startsWith('HEAD') ? to : to.slice(0, 8)
   await graphStore.runAction(
     request('reset', { repo, to, mode: mode as 'soft' | 'mixed' | 'hard' }),
+    // 원격 ref가 남아 있으면 그래프 행이 그대로라 실행 여부가 안 보인다 — 성공을 명시적으로 알린다
+    `git reset --${mode} ${target} 완료 — 브랜치 라벨과 HEAD(●) 위치가 이동했습니다`,
   )
 }
 
