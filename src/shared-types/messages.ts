@@ -2,6 +2,7 @@ import type {
   ActionResult,
   CommitDetails,
   GraphData,
+  IconSpec,
   RepoInfo,
   Worktree,
 } from './domain'
@@ -102,6 +103,18 @@ export interface RequestMap {
     result: ActionResult
   }
   openWorktree: { params: { path: string }; result: ActionResult }
+
+  /** 활성 파일 아이콘 테마에서 파일/폴더 아이콘 해석 (트리 뷰용) */
+  getFileIcons: {
+    params: { files: string[]; folders: string[] }
+    result: {
+      files: Record<string, IconSpec | null>
+      foldersCollapsed: Record<string, IconSpec | null>
+      foldersExpanded: Record<string, IconSpec | null>
+      /** 폰트 기반 테마의 @font-face 정보 (src는 webview URI) */
+      fonts: { id: string; src: string; format: string }[]
+    }
+  }
 
   /** 작성자 아바타 — GitHub API + 디스크 캐시, 없으면 null (webview가 Gravatar 폴백) */
   getAvatar: {

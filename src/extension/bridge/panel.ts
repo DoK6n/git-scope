@@ -12,6 +12,8 @@ export class GraphPanel {
       GraphPanel.current.panel.reveal()
       return
     }
+    // 아이콘 테마 익스텐션의 리소스(svg/폰트)를 webview가 로드할 수 있도록 루트에 포함
+    const iconThemeDir = router.icons.themeDir()
     const panel = vscode.window.createWebviewPanel(
       'gitScope.graph',
       'Git Scope',
@@ -19,10 +21,14 @@ export class GraphPanel {
       {
         enableScripts: true,
         retainContextWhenHidden: true,
-        localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'dist', 'webview')],
+        localResourceRoots: [
+          vscode.Uri.joinPath(context.extensionUri, 'dist', 'webview'),
+          ...(iconThemeDir ? [vscode.Uri.file(iconThemeDir)] : []),
+        ],
       },
     )
     panel.iconPath = vscode.Uri.joinPath(context.extensionUri, 'resources', 'tab-icon.svg')
+    router.uriMapper = (fsPath) => panel.webview.asWebviewUri(vscode.Uri.file(fsPath)).toString()
     GraphPanel.current = new GraphPanel(panel, context, router)
   }
 

@@ -82,3 +82,15 @@ export interface RepoInfo {
 }
 
 export type ActionResult = { ok: true } | { ok: false; error: string }
+
+/**
+ * 파일/폴더 아이콘 — 활성 아이콘 테마에서 해석.
+ * svg는 webview URI 문자열, 폰트 기반이면 fontChar+fontId(+색/크기)
+ */
+export interface IconSpec {
+  svg?: string
+  fontChar?: string
+  fontColor?: string
+  fontSize?: string
+  fontId?: string
+}

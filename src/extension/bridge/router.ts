@@ -6,6 +6,8 @@ import { AvatarService } from '../git/avatars'
 import { EMPTY_TREE_HASH, GitRepo } from '../git/repo'
 import { execGit } from '../git/exec'
 import { makeGitUri } from '../git/contentProvider'
+import type { FileIconService } from '../icons/fileIcons'
+import type { IconSpec } from '@shared-types/domain'
 
 type Handler<C extends RequestCommand> = (
   params: RequestMap[C]['params'],
@@ -15,7 +17,19 @@ type Handler<C extends RequestCommand> = (
 export class Router {
   private repos = new Map<string, GitRepo>()
 
-  constructor(readonly avatars: AvatarService) {}
+  /** 절대 fsPath → webview URI 변환기 — GraphPanel이 webview 생성 시 주입 */
+  uriMapper: ((fsPath: string) => string) | null = null
+
+  constructor(
+    readonly avatars: AvatarService,
+    readonly icons: FileIconService,
+  ) {}
+
+  private mapIconUri(spec: IconSpec | null): IconSpec | null {
+    if (!spec) return null
+    if (spec.svg && this.uriMapper) return { ...spec, svg: this.uriMapper(spec.svg) }
+    return spec
+  }
 
   getRepo(root: string): GitRepo {
     let repo = this.repos.get(root)
@@ -93,6 +107,20 @@ export class Router {
           { forceNewWindow: true },
         )
         return { ok: true }
+      },
+      getFileIcons: async (p) => {
+        const files: Record<string, IconSpec | null> = {}
+        const foldersCollapsed: Record<string, IconSpec | null> = {}
+        const foldersExpanded: Record<string, IconSpec | null> = {}
+        for (const name of p.files) files[name] = this.mapIconUri(this.icons.fileIcon(name))
+        for (const name of p.folders) {
+          foldersCollapsed[name] = this.mapIconUri(this.icons.folderIcon(name, false))
+          foldersExpanded[name] = this.mapIconUri(this.icons.folderIcon(name, true))
+        }
+        const fonts = this.icons
+          .fonts()
+          .map((f) => ({ ...f, src: this.uriMapper ? this.uriMapper(f.src) : f.src }))
+        return { files, foldersCollapsed, foldersExpanded, fonts }
       },
       getAvatar: async (p) => ({
         dataUri: await this.avatars.getAvatar(p.repo, p.email, p.commitHash),

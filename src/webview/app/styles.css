@@ -821,6 +821,21 @@ path.graph-line-hit {
   white-space: nowrap;
 }
 
+.tree-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tree-icon-font {
+  font-style: normal;
+  line-height: 16px;
+  text-align: center;
+}
+
 .file-linestat {
   flex-shrink: 0;
   font-size: 11px;
@@ -828,11 +843,13 @@ path.graph-line-hit {
 }
 
 .file-added {
-  color: var(--vscode-gitDecoration-addedResourceForeground, #53c17f);
+  color: #3fb950;
+  font-weight: 600;
 }
 
 .file-removed {
-  color: var(--vscode-gitDecoration-deletedResourceForeground, #d96c57);
+  color: #f85149;
+  font-weight: 600;
 }
 
 .details-loading {

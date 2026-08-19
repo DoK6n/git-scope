@@ -3,6 +3,7 @@ import { GraphPanel } from './bridge/panel'
 import { Router } from './bridge/router'
 import { AvatarService } from './git/avatars'
 import { GitContentProvider, GITSCOPE_SCHEME } from './git/contentProvider'
+import { FileIconService } from './icons/fileIcons'
 
 const GITHUB_SCOPES = ['repo']
 const TOKEN_SECRET_KEY = 'gitScope.githubToken'
@@ -22,7 +23,7 @@ export function activate(context: vscode.ExtensionContext): void {
     if (stored) return stored
     return process.env.GITHUB_TOKEN ?? null
   })
-  const router = new Router(avatars)
+  const router = new Router(avatars, new FileIconService())
 
   context.subscriptions.push(
     vscode.commands.registerCommand('gitScope.view', () => {

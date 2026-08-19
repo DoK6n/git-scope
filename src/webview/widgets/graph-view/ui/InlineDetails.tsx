@@ -1,10 +1,11 @@
-import { createMemo, createResource, createSignal, For, Show } from 'solid-js'
-import type { FileChange } from '@shared-types/domain'
+import { createEffect, createMemo, createResource, createSignal, For, Show } from 'solid-js'
+import type { FileChange, IconSpec } from '@shared-types/domain'
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
 import { formatDate } from '../../../shared/lib'
 import { basename, buildFileTree } from '../lib/fileTree'
 import type { FileTreeFolder } from '../lib/fileTree'
+import { ensureIcons, getFileIcon, getFolderIcon } from '../model/fileIcons'
 
 /** 인라인 상세 패널 높이 (GraphView의 행 배치 계산과 공유) */
 export const DETAILS_H = 300
@@ -36,6 +37,22 @@ export function InlineDetails(props: { top: number; left: number }) {
     },
     (source) => request('getCommitDetails', source),
   )
+
+  // 상세가 로드되면 트리에 등장하는 파일/폴더 이름의 아이콘을 미리 로드
+  createEffect(() => {
+    const d = details()
+    if (!d) return
+    const folderNames: string[] = []
+    const collect = (folder: FileTreeFolder) => {
+      if (folder.name !== '') folderNames.push(basename(folder.name))
+      folder.folders.forEach(collect)
+    }
+    collect(buildFileTree(d.files))
+    void ensureIcons(
+      d.files.map((f) => basename(f.path)),
+      folderNames,
+    )
+  })
 
   const openDiff = (file: FileChange) => {
     const repo = graphStore.currentRepo()
@@ -133,6 +150,33 @@ function fileLabel(file: FileChange): string {
   return file.oldPath ? `${file.oldPath} → ${file.path}` : file.path
 }
 
+/** 아이콘 테마의 svg 또는 폰트 글리프 렌더링. 테마가 없으면 표시 안 함 */
+function IconView(props: { spec: IconSpec | null | undefined }) {
+  return (
+    <Show when={props.spec}>
+      {(spec) => (
+        <Show
+          when={spec().svg}
+          fallback={
+            <span
+              class="tree-icon tree-icon-font"
+              style={{
+                color: spec().fontColor,
+                'font-family': spec().fontId ? `gs-fileicon-${spec().fontId}` : undefined,
+                'font-size': spec().fontSize ?? '14px',
+              }}
+            >
+              {spec().fontChar}
+            </span>
+          }
+        >
+          <img class="tree-icon" src={spec().svg} alt="" />
+        </Show>
+      )}
+    </Show>
+  )
+}
+
 function FileRow(props: {
   file: FileChange
   label: string
@@ -146,6 +190,7 @@ function FileRow(props: {
       title={`${fileLabel(props.file)} (${STATUS_LABEL[props.file.status] ?? props.file.status})`}
       onClick={() => props.onOpen(props.file)}
     >
+      <IconView spec={getFileIcon(basename(props.file.path))} />
       <span class={`file-status status-${props.file.status}`}>{props.file.status}</span>
       <span class="file-path">{props.label}</span>
       <Show when={props.file.additions !== undefined}>
@@ -176,6 +221,7 @@ function FolderView(props: {
           onClick={() => setCollapsed(!collapsed())}
         >
           <span class="folder-arrow">{collapsed() ? '▸' : '▾'}</span>
+          <IconView spec={getFolderIcon(basename(props.folder.name), !collapsed())} />
           <span class="file-path">{props.folder.name}</span>
         </button>
       </Show>
