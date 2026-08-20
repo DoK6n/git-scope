@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, Show } from 'solid-js'
+import { createMemo, createRenderEffect, createSignal, For, Show } from 'solid-js'
 import { graphStore } from '../../../entities/graph'
 import { fetchAll, fetchDefault } from '../../../features/fetch'
 import { resetHeadN } from '../../../features/reset'
@@ -6,6 +6,8 @@ import { searchStore } from '../../../features/search'
 import { worktreeStore } from '../../../features/worktree'
 import { makeMatcher } from '../../../shared/lib'
 import { openContextMenu } from '../../../shared/ui'
+import { branchLeafName, buildBranchTree, leafBranches } from '../lib/branchTree'
+import type { BranchTreeFolder } from '../lib/branchTree'
 
 /** 상단 툴바: 리포 선택, 브랜치 필터(glob), 검색(glob), reset, worktree, fetch, refresh */
 export function Toolbar() {
@@ -50,6 +52,83 @@ export function Toolbar() {
     setSelected(next)
   }
 
+  // ── 트리 뷰 (스펙 30-search-filter §30.4.2) ──
+  const [branchView, setBranchView] = createSignal<'list' | 'tree'>('list')
+  /** 접힌 폴더 path 집합 — 기본은 모두 펼침 */
+  const [collapsed, setCollapsed] = createSignal<Set<string>>(new Set())
+  const branchTree = createMemo(() => buildBranchTree(visibleBranchNames()))
+
+  const setMany = (names: string[], checked: boolean) => {
+    const next = new Set(selected())
+    for (const name of names) {
+      if (checked) next.add(name)
+      else next.delete(name)
+    }
+    setSelected(next)
+  }
+
+  const toggleCollapse = (path: string) => {
+    const next = new Set(collapsed())
+    if (next.has(path)) next.delete(path)
+    else next.add(path)
+    setCollapsed(next)
+  }
+
+  const BranchLeaf = (p: { name: string; depth: number }) => (
+    <label
+      class="branch-filter-item"
+      style={{ 'padding-left': `${4 + p.depth * 14}px` }}
+      title={p.name}
+    >
+      <input
+        type="checkbox"
+        checked={selected().has(p.name)}
+        onChange={() => toggleBranch(p.name)}
+      />
+      {branchLeafName(p.name)}
+    </label>
+  )
+
+  const BranchFolder = (p: { folder: BranchTreeFolder; depth: number }) => {
+    const isCollapsed = () => collapsed().has(p.folder.path)
+    const leaves = () => leafBranches(p.folder)
+    const selectedCount = () => leaves().filter((name) => selected().has(name)).length
+    return (
+      <>
+        <div
+          class="branch-filter-item branch-tree-folder"
+          style={{ 'padding-left': `${4 + p.depth * 14}px` }}
+        >
+          <span class="folder-arrow" onClick={() => toggleCollapse(p.folder.path)}>
+            {isCollapsed() ? '▸' : '▾'}
+          </span>
+          <input
+            type="checkbox"
+            checked={leaves().length > 0 && selectedCount() === leaves().length}
+            ref={(el) =>
+              // 부분 선택 상태는 attribute가 아니라 property라 반응형 이펙트로 반영한다
+              createRenderEffect(() => {
+                el.indeterminate = selectedCount() > 0 && selectedCount() < leaves().length
+              })
+            }
+            onChange={(e) => setMany(leaves(), e.currentTarget.checked)}
+          />
+          <span class="branch-tree-name" onClick={() => toggleCollapse(p.folder.path)}>
+            {p.folder.name}
+          </span>
+        </div>
+        <Show when={!isCollapsed()}>
+          <For each={p.folder.folders}>
+            {(child) => <BranchFolder folder={child} depth={p.depth + 1} />}
+          </For>
+          <For each={p.folder.branches}>
+            {(name) => <BranchLeaf name={name} depth={p.depth + 1} />}
+          </For>
+        </Show>
+      </>
+    )
+  }
+
   const openFetchMenu = (e: MouseEvent) => {
     openContextMenu(e, [
       { label: 'Fetch', onClick: () => void fetchAll(false) },
@@ -91,19 +170,52 @@ export function Toolbar() {
                 onInput={(e) => setBranchGlob(e.currentTarget.value)}
               />
             </div>
+            <div class="branch-filter-head">
+              <span class="branch-filter-count">{visibleBranchNames().length} branches</span>
+              <span class="files-view-toggle">
+                <button
+                  class="toolbar-btn"
+                  classList={{ primary: branchView() === 'tree' }}
+                  title="Tree view"
+                  onClick={() => setBranchView('tree')}
+                >
+                  Tree
+                </button>
+                <button
+                  class="toolbar-btn"
+                  classList={{ primary: branchView() === 'list' }}
+                  title="Flat list"
+                  onClick={() => setBranchView('list')}
+                >
+                  List
+                </button>
+              </span>
+            </div>
             <div class="branch-filter-list">
-              <For each={visibleBranchNames()}>
-                {(name) => (
-                  <label class="branch-filter-item">
-                    <input
-                      type="checkbox"
-                      checked={selected().has(name)}
-                      onChange={() => toggleBranch(name)}
-                    />
-                    {name}
-                  </label>
-                )}
-              </For>
+              <Show
+                when={branchView() === 'tree'}
+                fallback={
+                  <For each={visibleBranchNames()}>
+                    {(name) => (
+                      <label class="branch-filter-item">
+                        <input
+                          type="checkbox"
+                          checked={selected().has(name)}
+                          onChange={() => toggleBranch(name)}
+                        />
+                        {name}
+                      </label>
+                    )}
+                  </For>
+                }
+              >
+                <For each={branchTree().folders}>
+                  {(folder) => <BranchFolder folder={folder} depth={0} />}
+                </For>
+                <For each={branchTree().branches}>
+                  {(name) => <BranchLeaf name={name} depth={0} />}
+                </For>
+              </Show>
               <Show when={visibleBranchNames().length === 0}>
                 <div class="branch-filter-empty">일치하는 브랜치 없음</div>
               </Show>
@@ -164,14 +276,23 @@ export function Toolbar() {
       >
         ⊕ Worktrees
       </button>
-      <button
-        class="toolbar-btn"
-        onClick={() => void fetchDefault()}
-        onContextMenu={openFetchMenu}
-        title="git fetch --all (우클릭: prune 옵션)"
-      >
-        Fetch ▾
-      </button>
+      <div class="split-btn">
+        <button
+          class="toolbar-btn"
+          onClick={() => void fetchDefault()}
+          onContextMenu={openFetchMenu}
+          title="git fetch --all"
+        >
+          Fetch
+        </button>
+        <button
+          class="toolbar-btn split-caret"
+          onClick={openFetchMenu}
+          title="fetch 옵션 — prune (삭제된 원격 브랜치 참조 정리)"
+        >
+          ▾
+        </button>
+      </div>
       <button class="toolbar-btn icon-btn" onClick={() => void graphStore.refresh()} title="Refresh">
         ⟳
       </button>
