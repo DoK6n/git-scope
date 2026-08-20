@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-21
+
+### Changed
+
+- Changed the Marketplace extension identifier to `dok6n-git-scope` to use a globally unique name. The display name remains **Git Scope**.
+
 ## [0.3.0] - 2026-08-21
 
 ### Added
