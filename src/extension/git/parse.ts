@@ -3,6 +3,7 @@ import type {
   FileChange,
   FileChangeStatus,
   GitRef,
+  StashEntry,
   Worktree,
 } from '@shared-types/domain'
 
@@ -142,19 +143,6 @@ export function parseNumstat(output: string): Map<string, NumstatEntry> {
     }
   }
   return result
-}
-
-export interface StashEntry {
-  hash: string
-  /** "stash@{0}" */
-  selector: string
-  /** 스태시가 만들어진 베이스 커밋 (parents[0]) */
-  baseHash: string
-  author: string
-  authorEmail: string
-  authorDate: number
-  commitDate: number
-  subject: string
 }
 
 /** stash list --format 문자열 (LOG_FORMAT + %gd 셀렉터) */

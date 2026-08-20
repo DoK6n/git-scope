@@ -166,6 +166,7 @@ export class Router {
       },
       reset: (p) => this.getRepo(p.repo).reset(p.to, p.mode),
       fetch: (p) => this.getRepo(p.repo).fetch(p.prune),
+      listStashes: (p) => this.getRepo(p.repo).listStashes(),
       listWorktrees: (p) => this.getRepo(p.repo).listWorktrees(),
       addWorktree: (p) =>
         this.getRepo(p.repo).addWorktree(p.path, p.branch, p.createBranch, p.startPoint),

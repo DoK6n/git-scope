@@ -96,3 +96,15 @@ GitScope가 원본 Git Graph 대비 추가로 제공하는 신규 기능의 명�
    - **Merge source into target**: target이 현재 브랜치가 아니면 먼저 체크아웃 후 `git merge source` (HEAD 이동 힌트 표시)
    - **Rebase source onto target**: `git rebase target source` — source 커밋 해시 변경 ⚠️ 경고 표시. **원격 source에는 이 선택지를 제공하지 않는다** (detached HEAD 방지)
 4. 성공 시 그래프 갱신, 실패(충돌 등) 시 git stderr 그대로 표시
+
+## 8. 스태시 목록 패널 `[done]`
+
+원본은 스태시를 그래프 노드로만 보여준다. GitScope는 스태시만 모아 보는 전용 패널을 추가한다.
+
+### 동작
+
+- 툴바 **Stashes** 버튼으로 토글 (worktree 패널과 동일한 우측 부동 패널, 둘 다 열리면 왼쪽으로 비킴)
+- 각 행: `stash@{N}` 셀렉터 + 제목("On <브랜치>: <메시지>") + 날짜
+- 행 클릭 → 그래프에서 해당 스태시 커밋 선택 (로드된 범위에 있으면 상세뷰)
+- 행 우클릭 → Apply / Pop / Create Branch / Drop ⚠️ / Copy Hash — 그래프 스태시 노드 메뉴와 동일, 실행 후 목록·그래프 동시 갱신
+- 하단 **+ Stash Uncommitted Changes** 버튼 — 워킹트리 변경이 없으면 비활성화

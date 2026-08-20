@@ -109,3 +109,17 @@ export interface IconSpec {
   fontSize?: string
   fontId?: string
 }
+
+/** 스태시 한 건 — `git stash list` 파싱 결과 (그래프 합성 노드·스태시 패널 공용) */
+export interface StashEntry {
+  hash: string
+  /** "stash@{0}" */
+  selector: string
+  /** 스태시가 만들어진 베이스 커밋 (parents[0]) */
+  baseHash: string
+  author: string
+  authorEmail: string
+  authorDate: number
+  commitDate: number
+  subject: string
+}

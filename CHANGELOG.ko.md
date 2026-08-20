@@ -4,6 +4,11 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
+### Added
+
+- **스태시 목록 패널** — 툴바 "Stashes" 버튼으로 전체 스태시 목록(셀렉터·제목·날짜) 표시. 행 클릭 시 그래프에서 선택, 우클릭으로 Apply/Pop/Create Branch/Drop, 하단 버튼으로 워킹트리 변경 스태시 저장
+- 스태시 행에 **`stash@{N}` 라벨 뱃지** 표시 (상자 글리프, 클린룸 규칙에 따라 자체 제작 SVG). 색상은 브랜치 뱃지와 동일하게 커밋의 그래프 라인 색을 따름. 뱃지 우클릭 시 동일한 스태시 메뉴
+
 ## [0.2.0] - 2026-08-20
 
 ### Added

@@ -3,6 +3,7 @@ import type {
   Commit,
   CommitDetails,
   GraphData,
+  StashEntry,
   TagDetails,
   Worktree,
 } from '@shared-types/domain'
@@ -411,6 +412,12 @@ export class GitRepo {
     const args = ['fetch', '--all']
     if (prune) args.push('--prune')
     return this.action(args)
+  }
+
+  /** 스태시 목록 — 스태시 패널용 (커밋이 없는 리포는 빈 목록) */
+  async listStashes(): Promise<StashEntry[]> {
+    const out = await this.git(['stash', 'list', `--format=${STASH_FORMAT}`]).catch(() => '')
+    return parseStashList(out)
   }
 
   async listWorktrees(): Promise<Worktree[]> {

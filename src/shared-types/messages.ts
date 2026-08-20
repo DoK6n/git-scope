@@ -4,6 +4,7 @@ import type {
   GraphData,
   IconSpec,
   RepoInfo,
+  StashEntry,
   TagDetails,
   Worktree,
 } from './domain'
@@ -147,6 +148,8 @@ export interface RequestMap {
     result: ActionResult
   }
   fetch: { params: { repo: string; prune: boolean }; result: ActionResult }
+  /** 스태시 목록 (스태시 패널용) */
+  listStashes: { params: { repo: string }; result: StashEntry[] }
   listWorktrees: { params: { repo: string }; result: Worktree[] }
   addWorktree: {
     params: {

@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Stash list panel** — a "Stashes" toolbar button opens a dedicated panel listing all stashes (selector, subject, date); click a row to select it in the graph, right-click for Apply/Pop/Create Branch/Drop, and stash uncommitted changes from the footer button
+- Stash rows now show a **`stash@{N}` label badge** (box glyph, own SVG per clean-room rules) next to the stash subject, colored by the commit's graph line like branch badges; right-clicking the badge opens the same stash menu
+
 ## [0.2.0] - 2026-08-20
 
 ### Added

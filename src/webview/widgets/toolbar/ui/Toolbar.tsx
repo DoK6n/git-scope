@@ -3,6 +3,7 @@ import { graphStore } from '../../../entities/graph'
 import { fetchAll, fetchDefault } from '../../../features/fetch'
 import { resetHeadN } from '../../../features/reset'
 import { searchStore } from '../../../features/search'
+import { stashPanelStore } from '../../../features/stash'
 import { worktreeStore } from '../../../features/worktree'
 import { makeMatcher } from '../../../shared/lib'
 import { openContextMenu } from '../../../shared/ui'
@@ -267,6 +268,14 @@ export function Toolbar() {
 
       <button class="toolbar-btn" title="git reset --soft|mixed|hard HEAD~N" onClick={() => void resetHeadN()}>
         Reset…
+      </button>
+      <button
+        class="toolbar-btn"
+        title="Stashes"
+        classList={{ primary: stashPanelStore.panelOpen() }}
+        onClick={() => void stashPanelStore.togglePanel()}
+      >
+        ▤ Stashes
       </button>
       <button
         class="toolbar-btn"
