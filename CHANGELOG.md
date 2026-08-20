@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-08-21
+
+### Changed
+
+- Finalized the Marketplace listing as **Git Scope Pro** with extension identifier `dok6n.git-scope-pro`.
+
 ## [0.3.2] - 2026-08-21
 
 ### Changed

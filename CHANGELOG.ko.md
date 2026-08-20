@@ -4,6 +4,12 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-08-21
+
+### Changed
+
+- Marketplace 표시 이름을 **Git Scope Pro**, 확장 식별자를 `dok6n.git-scope-pro`로 최종 확정.
+
 ## [0.3.2] - 2026-08-21
 
 ### Changed
