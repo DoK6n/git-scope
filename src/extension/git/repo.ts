@@ -243,8 +243,77 @@ export class GitRepo {
     return this.action(['rebase', '--onto', `${hash}^`, hash])
   }
 
+  /**
+   * 커밋 메시지만 수정 ⚠️ — 내용(tree)·author는 보존.
+   * HEAD면 amend --only, 조상 커밋이면 commit-tree로 재작성 후 이후 커밋을 rebase로 재적용.
+   */
+  async rewordCommit(hash: string, message: string): Promise<ActionResult> {
+    try {
+      const head = (await this.git(['rev-parse', 'HEAD'])).trim()
+      if (head === hash) {
+        // --only: 스테이징된 변경을 끌어들이지 않고 메시지만 교체
+        return this.action(['commit', '--amend', '--only', '--allow-empty', '-m', message])
+      }
+
+      const isAncestor = await this.git(['merge-base', '--is-ancestor', hash, 'HEAD']).then(
+        () => true,
+        (e) => {
+          if (e instanceof GitError && e.exitCode === 1) return false
+          throw e
+        },
+      )
+      if (!isAncestor) {
+        return {
+          ok: false,
+          error: '현재 브랜치(HEAD)에서 도달할 수 없는 커밋은 메시지를 수정할 수 없습니다.',
+        }
+      }
+
+      // 동일 tree·부모·author를 유지한 채 메시지만 바꾼 커밋 객체를 만든다
+      const meta = await this.git(['log', '-1', '--format=%T%x00%P%x00%an%x00%ae%x00%aI', hash, '--'])
+      const fields = meta.replace(/\n$/, '').split('\0')
+      const parents = fields[1] === '' ? [] : fields[1]!.split(' ')
+      const args = ['commit-tree', fields[0]!]
+      for (const parent of parents) args.push('-p', parent)
+      args.push('-m', message)
+      const newHash = (
+        await execGit(args, {
+          cwd: this.root,
+          env: {
+            GIT_AUTHOR_NAME: fields[2]!,
+            GIT_AUTHOR_EMAIL: fields[3]!,
+            GIT_AUTHOR_DATE: fields[4]!,
+          },
+        })
+      ).trim()
+
+      // 이후 커밋들을 새 커밋 위로 재적용 — 머지 커밋·빈 커밋 보존
+      return this.action(['rebase', '--rebase-merges', '--empty=keep', '--onto', newHash, hash])
+    } catch (e) {
+      if (e instanceof GitError) return { ok: false, error: e.stderr.trim() || e.message }
+      return { ok: false, error: String(e) }
+    }
+  }
+
   rebase(target: string): Promise<ActionResult> {
     return this.action(['rebase', target])
+  }
+
+  /** source를 target 브랜치로 merge — target이 현재 브랜치가 아니면 먼저 체크아웃한다 */
+  async mergeBranchInto(source: string, target: string): Promise<ActionResult> {
+    const current = await this.git(['symbolic-ref', '--short', '-q', 'HEAD'], [1])
+      .then((s) => s.trim())
+      .catch(() => '')
+    if (current !== target) {
+      const switched = await this.action(['switch', target])
+      if (!switched.ok) return switched
+    }
+    return this.action(['merge', source])
+  }
+
+  /** branch를 onto 위로 rebase — git이 branch를 체크아웃하고 재적용한다 ⚠️ */
+  rebaseBranchOnto(branch: string, onto: string): Promise<ActionResult> {
+    return this.action(['rebase', onto, branch])
   }
 
   pushBranch(

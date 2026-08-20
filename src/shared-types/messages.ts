@@ -88,7 +88,22 @@ export interface RequestMap {
   revert: { params: { repo: string; hash: string; isMerge: boolean }; result: ActionResult }
   /** 커밋 하나를 히스토리에서 제거 (rebase --onto) ⚠️ */
   dropCommit: { params: { repo: string; hash: string }; result: ActionResult }
+  /** 커밋 메시지만 수정 — HEAD면 amend --only, 조상이면 commit-tree + rebase --onto ⚠️ */
+  rewordCommit: {
+    params: { repo: string; hash: string; message: string }
+    result: ActionResult
+  }
   rebase: { params: { repo: string; target: string }; result: ActionResult }
+  /** 드래그앤드롭: target 체크아웃(필요시) 후 source를 merge — HEAD가 target으로 이동 */
+  mergeBranchInto: {
+    params: { repo: string; source: string; target: string }
+    result: ActionResult
+  }
+  /** 드래그앤드롭: branch를 onto 위로 rebase (git rebase <onto> <branch>) ⚠️ HEAD가 branch로 이동 */
+  rebaseBranchOnto: {
+    params: { repo: string; branch: string; onto: string }
+    result: ActionResult
+  }
   pushBranch: {
     params: { repo: string; name: string; remote: string; setUpstream: boolean; force: boolean }
     result: ActionResult

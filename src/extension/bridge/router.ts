@@ -141,7 +141,10 @@ export class Router {
         this.getRepo(p.repo).cherryPick(p.hash, p.noCommit, p.recordOrigin, p.isMerge),
       revert: (p) => this.getRepo(p.repo).revert(p.hash, p.isMerge),
       dropCommit: (p) => this.getRepo(p.repo).dropCommit(p.hash),
+      rewordCommit: (p) => this.getRepo(p.repo).rewordCommit(p.hash, p.message),
       rebase: (p) => this.getRepo(p.repo).rebase(p.target),
+      mergeBranchInto: (p) => this.getRepo(p.repo).mergeBranchInto(p.source, p.target),
+      rebaseBranchOnto: (p) => this.getRepo(p.repo).rebaseBranchOnto(p.branch, p.onto),
       pushBranch: (p) =>
         this.getRepo(p.repo).pushBranch(p.name, p.remote, p.setUpstream, p.force),
       pullBranch: (p) => this.getRepo(p.repo).pullBranch(p.remote, p.branch),
