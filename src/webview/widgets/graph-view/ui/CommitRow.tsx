@@ -24,6 +24,18 @@ interface CommitRowProps {
   onContextMenu: (e: MouseEvent) => void
 }
 
+/** 스태시 뱃지용 상자 글리프 — 자체 제작 (클린룸: 원본 아이콘 자산 미사용) */
+function StashGlyph() {
+  return (
+    <svg viewBox="0 0 16 16" width="10" height="10">
+      <path
+        fill="currentColor"
+        d="M1.5 3h13a.5.5 0 0 1 .5.5V6h-14V3.5a.5.5 0 0 1 .5-.5zM2 7h12v5.5a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5V7zm4 1.5v1h4v-1H6z"
+      />
+    </svg>
+  )
+}
+
 export function CommitRow(props: CommitRowProps) {
   const date = () =>
     graphStore.settings().dateType === 'commit'
@@ -101,6 +113,22 @@ export function CommitRow(props: CommitRowProps) {
             />
           )}
         </For>
+        <Show when={props.commit.stashSelector}>
+          {(selector) => (
+            <span
+              class="ref-badge stash-badge"
+              style={{ 'border-color': lineColor(), '--ref-color': lineColor() }}
+              title={selector()}
+            >
+              <span class="ref-local-part">
+                <span class="ref-icon" style={{ 'background-color': lineColor() }}>
+                  <StashGlyph />
+                </span>
+                <span class="ref-name">{selector()}</span>
+              </span>
+            </span>
+          )}
+        </Show>
         <span class="commit-subject">{props.commit.subject}</span>
       </div>
       <Show when={!props.commit.isUncommitted}>

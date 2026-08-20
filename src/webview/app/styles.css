@@ -397,6 +397,37 @@ path.graph-line-hit {
   stroke-width: 2;
 }
 
+/* 스태시 라벨 뱃지 — 색상은 브랜치 뱃지와 동일하게 그래프 라인 색을 따른다 (인라인 style) */
+
+/* ── 스태시 목록 패널 — worktree 패널이 함께 열리면 그 왼쪽으로 비킨다 ───── */
+.stash-panel.shifted {
+  right: 400px;
+}
+
+.stash-item {
+  cursor: pointer;
+}
+
+.stash-item-selector {
+  flex-shrink: 0;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.stash-item-subject {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stash-item-date {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+
 .details-compare {
   margin-bottom: 6px;
   padding: 4px 8px;

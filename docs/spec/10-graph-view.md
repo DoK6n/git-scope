@@ -29,7 +29,10 @@ GitScope의 핵심 화면인 커밋 그래프 뷰의 **관찰 가능한 동작**
 - **G-11** `[todo]` 현재 체크아웃된 브랜치(HEAD)의 위치를 그래프에서 식별할 수 있어야 한다.
 - **G-12** `[skip]` 커밋 노드 호버 시 "이 커밋이 HEAD에 포함되는지"와 참조 목록을 보여주는 툴팁.
 - **G-13** `[skip]` 병합 커밋 / HEAD의 조상이 아닌 커밋의 텍스트를 흐리게(muted) 표시하는 옵션. (원본: `mute.mergeCommits` 기본 true, `mute.commitsThatAreNotAncestorsOfHead` 기본 false)
-- **G-14** `[skip]` 스태시(stash)를 그래프 노드로 표시하는 동작. (원본: `showStashes`) — MVP 이후.
+- **G-14** `[done]` 스태시(stash)를 그래프에 표시한다. (원본: `showStashes`)
+  - 베이스 커밋 바로 위에 합성 노드로 삽입, 노드는 속 빈 원으로 구분
+  - 행 왼쪽에 `stash@{N}` **라벨 뱃지** 표시 — 초록 칩 + 상자(box) 글리프, 제목은 `git stash list`의 원문("On <브랜치>: <메시지>") 그대로 (블랙박스 관찰로 원본과 동일한 표시 형식; 아이콘은 자체 제작 SVG)
+  - 뱃지/노드/행 어디를 우클릭해도 동일한 스태시 메뉴 (20-actions 참조)
 
 (출처: README, 위키 Extension Settings, 마켓플레이스 페이지)
 
