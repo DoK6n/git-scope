@@ -94,6 +94,16 @@ export interface RequestMap {
     params: { repo: string; hash: string; message: string }
     result: ActionResult
   }
+  /** 워킹트리 변경을 대상 커밋용 fixup 커밋으로 저장 (git commit --fixup) */
+  commitFixup: {
+    params: { repo: string; hash: string; includeAll: boolean }
+    result: ActionResult
+  }
+  /** fixup!/squash! 커밋들을 자동 배치·병합 — GIT_SEQUENCE_EDITOR 없이 rebase -i --autosquash ⚠️ */
+  autosquash: {
+    params: { repo: string; baseHash: string }
+    result: ActionResult
+  }
   rebase: { params: { repo: string; target: string }; result: ActionResult }
   /** 드래그앤드롭: target 체크아웃(필요시) 후 source를 merge — HEAD가 target으로 이동 */
   mergeBranchInto: {

@@ -142,6 +142,8 @@ export class Router {
       revert: (p) => this.getRepo(p.repo).revert(p.hash, p.isMerge),
       dropCommit: (p) => this.getRepo(p.repo).dropCommit(p.hash),
       rewordCommit: (p) => this.getRepo(p.repo).rewordCommit(p.hash, p.message),
+      commitFixup: (p) => this.getRepo(p.repo).commitFixup(p.hash, p.includeAll),
+      autosquash: (p) => this.getRepo(p.repo).autosquash(p.baseHash),
       rebase: (p) => this.getRepo(p.repo).rebase(p.target),
       mergeBranchInto: (p) => this.getRepo(p.repo).mergeBranchInto(p.source, p.target),
       rebaseBranchOnto: (p) => this.getRepo(p.repo).rebaseBranchOnto(p.branch, p.onto),

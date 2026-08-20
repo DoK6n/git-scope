@@ -5,6 +5,7 @@ import { groupRefs, RefBadge } from '../../../entities/ref'
 import { graphStore } from '../../../entities/graph'
 import { dropBranchOn, isBranchDrag, startBranchDrag } from '../../../features/branch-dnd'
 import { checkoutBranch, checkoutRemoteBranch } from '../../../features/checkout'
+import { fixupKind, scrollToFixupTarget } from '../../../features/fixup'
 import { BRANCH_PALETTE, formatDate, shortHash } from '../../../shared/lib'
 import { openContextMenu } from '../../../shared/ui'
 import { buildRefMenu } from '../model/refMenu'
@@ -22,6 +23,21 @@ interface CommitRowProps {
   searchCurrent?: boolean
   onClick: (e: MouseEvent) => void
   onContextMenu: (e: MouseEvent) => void
+}
+
+/** fixup 뱃지용 글리프 — 아래(대상 커밋)로 꺾여 들어가는 화살표 */
+function FixupGlyph() {
+  return (
+    <svg viewBox="0 0 16 16" width="10" height="10">
+      <path
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        d="M12 2.5 v4.5 a3.5 3.5 0 0 1 -3.5 3.5 H5.5"
+      />
+      <path fill="currentColor" d="M7.5 6.5 v8 L2 10.5 z" />
+    </svg>
+  )
 }
 
 /** 스태시 뱃지용 상자 글리프 — 자체 제작 (클린룸: 원본 아이콘 자산 미사용) */
@@ -125,6 +141,26 @@ export function CommitRow(props: CommitRowProps) {
                   <StashGlyph />
                 </span>
                 <span class="ref-name">{selector()}</span>
+              </span>
+            </span>
+          )}
+        </Show>
+        <Show when={fixupKind(props.commit.subject)}>
+          {(kind) => (
+            <span
+              class="ref-badge fixup-badge"
+              style={{ 'border-color': lineColor(), '--ref-color': lineColor() }}
+              title="클릭: 대상 커밋으로 이동 · 우클릭 메뉴에서 autosquash 실행"
+              onClick={(e) => {
+                e.stopPropagation()
+                scrollToFixupTarget(props.commit)
+              }}
+            >
+              <span class="ref-local-part">
+                <span class="ref-icon" style={{ 'background-color': lineColor() }}>
+                  <FixupGlyph />
+                </span>
+                <span class="ref-name">{kind()}</span>
               </span>
             </span>
           )}

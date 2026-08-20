@@ -244,6 +244,35 @@ export class GitRepo {
     return this.action(['rebase', '--onto', `${hash}^`, hash])
   }
 
+  /** 워킹트리 변경을 대상 커밋용 fixup 커밋으로 저장 */
+  commitFixup(hash: string, includeAll: boolean): Promise<ActionResult> {
+    const args = ['commit', `--fixup=${hash}`]
+    if (includeAll) args.push('-a')
+    return this.action(args)
+  }
+
+  /**
+   * fixup!/squash! 커밋 자동 배치·병합 ⚠️ — 에디터 없이 자동 배치된 todo를 그대로 적용.
+   * GIT_SEQUENCE_EDITOR=':'(no-op)로 interactive rebase를 비대화식으로 통과시킨다.
+   */
+  async autosquash(baseHash: string): Promise<ActionResult> {
+    try {
+      // 대상이 루트 커밋이면 <base>^가 없으므로 --root로 전체 범위 rebase
+      const hasParent = await this.git(['rev-parse', '--verify', '--quiet', `${baseHash}^`], [1])
+        .then((s) => s.trim() !== '')
+        .catch(() => false)
+      const range = hasParent ? [`${baseHash}^`] : ['--root']
+      await execGit(['rebase', '--interactive', '--autosquash', ...range], {
+        cwd: this.root,
+        env: { GIT_SEQUENCE_EDITOR: ':' },
+      })
+      return { ok: true }
+    } catch (e) {
+      if (e instanceof GitError) return { ok: false, error: e.stderr.trim() || e.message }
+      return { ok: false, error: String(e) }
+    }
+  }
+
   /**
    * 커밋 메시지만 수정 ⚠️ — 내용(tree)·author는 보존.
    * HEAD면 amend --only, 조상 커밋이면 commit-tree로 재작성 후 이후 커밋을 rebase로 재적용.

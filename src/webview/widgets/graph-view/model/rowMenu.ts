@@ -1,6 +1,8 @@
 import type { Commit } from '@shared-types/domain'
+import { graphStore } from '../../../entities/graph'
 import { createBranchAt } from '../../../features/branch'
 import { checkoutCommit } from '../../../features/checkout'
+import { applyAutosquash, createFixupCommit, fixupKind } from '../../../features/fixup'
 import {
   cherryPick,
   dropCommit,
@@ -68,7 +70,18 @@ export function buildRowMenu(commit: Commit): MenuItem[] {
 
   // 원본 Git Graph의 커밋 메뉴 이름·순서를 따른다 (Undo/Drop은 GitScope 고유 — reset 계열 옆)
   const hash = commit.hash
+  const uncommittedCount = graphStore.graph()?.uncommittedCount ?? 0
   return [
+    // fixup 커밋이면 autosquash가 주 액션 — 맨 위에 노출
+    ...(fixupKind(commit.subject)
+      ? [
+          {
+            label: 'Squash Fixups into Target... (autosquash)',
+            danger: true,
+            onClick: () => void applyAutosquash(commit),
+          } satisfies MenuItem,
+        ]
+      : []),
     { label: 'Add Tag...', onClick: () => void createTagAt(hash) },
     { label: 'Create Branch...', onClick: () => void createBranchAt(hash) },
     {
@@ -79,6 +92,15 @@ export function buildRowMenu(commit: Commit): MenuItem[] {
     { label: 'Cherry Pick...', onClick: () => void cherryPick(commit) },
     { label: 'Revert...', onClick: () => void revertCommit(commit) },
     { label: 'Edit Commit Message...', onClick: () => void rewordCommit(commit) },
+    // 워킹트리에 변경이 있을 때만 — 현재 작업분을 이 커밋용 fixup으로 저장
+    ...(uncommittedCount > 0
+      ? [
+          {
+            label: 'Create Fixup Commit... (--fixup)',
+            onClick: () => void createFixupCommit(commit),
+          } satisfies MenuItem,
+        ]
+      : []),
     {
       label: 'Merge into current branch...',
       separatorBefore: true,
