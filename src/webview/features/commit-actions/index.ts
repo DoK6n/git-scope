@@ -1,1 +1,1 @@
-export { cherryPick, revertCommit, dropCommit, rebaseOnto } from './model/commitActions'
+export { cherryPick, revertCommit, dropCommit, rebaseOnto, rewordCommit } from './model/commitActions'

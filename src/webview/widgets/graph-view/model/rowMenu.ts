@@ -1,7 +1,13 @@
 import type { Commit } from '@shared-types/domain'
 import { createBranchAt } from '../../../features/branch'
 import { checkoutCommit } from '../../../features/checkout'
-import { cherryPick, dropCommit, rebaseOnto, revertCommit } from '../../../features/commit-actions'
+import {
+  cherryPick,
+  dropCommit,
+  rebaseOnto,
+  revertCommit,
+  rewordCommit,
+} from '../../../features/commit-actions'
 import { mergeInto } from '../../../features/merge'
 import { resetToCommit, undoCommitsFrom } from '../../../features/reset'
 import {
@@ -72,6 +78,7 @@ export function buildRowMenu(commit: Commit): MenuItem[] {
     },
     { label: 'Cherry Pick...', onClick: () => void cherryPick(commit) },
     { label: 'Revert...', onClick: () => void revertCommit(commit) },
+    { label: 'Edit Commit Message...', onClick: () => void rewordCommit(commit) },
     {
       label: 'Merge into current branch...',
       separatorBefore: true,

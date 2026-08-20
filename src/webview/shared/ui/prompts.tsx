@@ -4,6 +4,7 @@ import { Dialog } from './Dialog'
 /** 폼 다이얼로그 필드 정의 */
 export type FieldSpec =
   | { kind: 'text'; name: string; label: string; placeholder?: string; initial?: string }
+  | { kind: 'textarea'; name: string; label: string; placeholder?: string; initial?: string; rows?: number }
   | { kind: 'number'; name: string; label: string; initial?: number; min?: number }
   | { kind: 'checkbox'; name: string; label: string; initial?: boolean }
   | {
@@ -162,7 +163,7 @@ function FormDialogView(props: { state: FormState }) {
             Cancel
           </button>
           <button
-            class={`toolbar-btn ${props.state.danger || warning() ? 'danger' : 'primary'}`}
+            class={`toolbar-btn ${props.state.danger ? 'danger' : 'primary'}`}
             onClick={() => close(values())}
           >
             {props.state.confirmLabel}
@@ -181,6 +182,15 @@ function FormDialogView(props: { state: FormState }) {
               <input
                 type="text"
                 placeholder={(field as Extract<FieldSpec, { kind: 'text' }>).placeholder}
+                value={String(values()[field.name] ?? '')}
+                onInput={(e) => set(field.name, e.currentTarget.value)}
+              />
+            </Show>
+            <Show when={field.kind === 'textarea'}>
+              <label>{field.label}</label>
+              <textarea
+                rows={(field as Extract<FieldSpec, { kind: 'textarea' }>).rows ?? 6}
+                placeholder={(field as Extract<FieldSpec, { kind: 'textarea' }>).placeholder}
                 value={String(values()[field.name] ?? '')}
                 onInput={(e) => set(field.name, e.currentTarget.value)}
               />

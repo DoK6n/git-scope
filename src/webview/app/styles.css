@@ -90,8 +90,28 @@ body {
 }
 
 .toolbar-btn.danger {
+  /* 배경과 글자색을 같은 계열(inputValidation)에서 짝 맞춤 — errorForeground는 배경과 겹칠 수 있다 */
   background: var(--vscode-inputValidation-errorBackground, #5a1d1d);
-  color: var(--vscode-errorForeground, #f48771);
+  color: var(--vscode-inputValidation-errorForeground, var(--vscode-foreground, #f48771));
+  /* border 대신 inset shadow — 다른 버튼과 높이가 달라지지 않게 */
+  box-shadow: inset 0 0 0 1px var(--vscode-inputValidation-errorBorder, transparent);
+}
+
+/* 스플릿 버튼: 본체 + 옵션 캐럿을 한 덩어리로 */
+.split-btn {
+  display: inline-flex;
+}
+
+.split-btn .toolbar-btn:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.split-btn .split-caret {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: 1px solid var(--vscode-panel-border, #444);
+  padding: 4px 6px;
 }
 
 .repo-select,
@@ -164,6 +184,33 @@ body {
   padding: 8px;
   color: var(--vscode-descriptionForeground);
   font-size: 12px;
+}
+
+/* 브랜치 필터 헤더: 개수 + list/tree 토글 */
+.branch-filter-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--vscode-panel-border, #444);
+}
+
+.branch-filter-head .files-view-toggle {
+  margin-right: 0;
+}
+
+.branch-filter-count {
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+}
+
+.branch-tree-folder {
+  color: var(--vscode-descriptionForeground);
+}
+
+.branch-tree-name {
+  cursor: pointer;
+  user-select: none;
 }
 
 .search-box {
@@ -405,7 +452,18 @@ path.graph-line-hit {
 .avatar-stack .author-avatar {
   box-shadow: 0 0 0 1.5px var(--vscode-editor-background);
   transition: margin-left 0.18s ease;
+  position: relative;
 }
+
+/* 커밋 author(첫 번째)가 맨 앞, co-author(AI 포함)는 순서대로 그 뒤에 깔린다 */
+.avatar-stack .author-avatar:nth-child(1) { z-index: 8; }
+.avatar-stack .author-avatar:nth-child(2) { z-index: 7; }
+.avatar-stack .author-avatar:nth-child(3) { z-index: 6; }
+.avatar-stack .author-avatar:nth-child(4) { z-index: 5; }
+.avatar-stack .author-avatar:nth-child(5) { z-index: 4; }
+.avatar-stack .author-avatar:nth-child(6) { z-index: 3; }
+.avatar-stack .author-avatar:nth-child(7) { z-index: 2; }
+.avatar-stack .author-avatar:nth-child(8) { z-index: 1; }
 
 .avatar-stack .author-avatar:not(:first-child) {
   margin-left: -7px;
@@ -511,6 +569,12 @@ path.graph-line-hit {
   overflow: hidden;
   cursor: pointer;
   user-select: none; /* 더블클릭(switch) 시 텍스트 블록 선택 방지 */
+}
+
+/* 브랜치 드래그 중 드롭 가능한 뱃지 위에 있을 때 */
+.ref-badge.drop-target {
+  outline: 2px dashed var(--ref-color, var(--vscode-focusBorder));
+  outline-offset: 1px;
 }
 
 /* 로컬 영역과 origin 세그먼트가 각각 독립적으로 hover 된다 */
@@ -672,7 +736,8 @@ path.graph-line-hit {
 }
 
 .dialog-field input[type='text'],
-.dialog-field input[type='number'] {
+.dialog-field input[type='number'],
+.dialog-field textarea {
   background: var(--vscode-input-background);
   color: var(--vscode-input-foreground);
   border: 1px solid var(--vscode-input-border, transparent);
@@ -680,6 +745,13 @@ path.graph-line-hit {
   padding: 5px 8px;
   font-family: inherit;
   font-size: inherit;
+}
+
+.dialog-field textarea {
+  resize: vertical;
+  min-height: 60px;
+  font-family: var(--vscode-editor-font-family, monospace);
+  line-height: 1.4;
 }
 
 .dialog-radio,
@@ -704,8 +776,11 @@ path.graph-line-hit {
 .dialog-warning {
   padding: 8px 10px;
   border-radius: 4px;
+  /* 배경과 글자색은 반드시 같은 계열(inputValidation)에서 짝을 맞춘다 —
+     editorWarning.foreground는 테마에 따라 배경과 같은 주황이라 묻힌다 */
   background: var(--vscode-inputValidation-warningBackground, #5a4a1d);
-  color: var(--vscode-editorWarning-foreground, #cca700);
+  border: 1px solid var(--vscode-inputValidation-warningBorder, #cca700);
+  color: var(--vscode-inputValidation-warningForeground, var(--vscode-foreground, #ccc));
   font-size: 12px;
 }
 

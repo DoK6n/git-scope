@@ -66,6 +66,42 @@ export async function dropCommit(commit: Commit): Promise<void> {
   )
 }
 
+/** 커밋 메시지만 수정 (reword) — HEAD가 아니면 rebase 기반이라 이후 해시가 바뀐다 ⚠️ */
+export async function rewordCommit(commit: Commit): Promise<void> {
+  const r = repo()
+  if (!r) return
+  // 기존 메시지 전문(%B)을 가져와 textarea에 미리 채운다
+  let original: string
+  try {
+    original = (await request('getCommitDetails', { repo: r, hash: commit.hash })).body
+  } catch (e) {
+    graphStore.setError(e instanceof Error ? e.message : String(e))
+    return
+  }
+  const isHead = graphStore.graph()?.headHash === commit.hash
+  const values = await formDialog({
+    title: `Edit Commit Message ${commit.hash.slice(0, 8)}`,
+    fields: [
+      { kind: 'textarea', name: 'message', label: 'Commit message', initial: original, rows: 8 },
+    ],
+    confirmLabel: 'Save',
+    warning: isHead
+      ? undefined
+      : () => 'HEAD가 아닌 커밋이므로 rebase로 다시 씁니다 — 이후 커밋들의 해시가 바뀝니다.',
+  })
+  if (!values) return
+  const message = String(values.message).trim()
+  if (message === '') {
+    graphStore.setError('커밋 메시지가 비어 있습니다.')
+    return
+  }
+  if (message === original) return
+  await graphStore.runAction(
+    request('rewordCommit', { repo: r, hash: commit.hash, message }),
+    `커밋 메시지 수정 완료 (${commit.hash.slice(0, 8)})`,
+  )
+}
+
 /** 현재 브랜치를 대상 커밋/브랜치 위로 rebase */
 export async function rebaseOnto(target: string, label: string): Promise<void> {
   const r = repo()
