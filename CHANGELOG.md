@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-08-21
+
+### Fixed
+
+- Renamed the status bar button from **Git Graph** to **Git Scope** so it matches the extension brand.
+
 ## [0.4.0] - 2026-08-21
 
 ### Added

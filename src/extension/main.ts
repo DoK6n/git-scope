@@ -39,7 +39,7 @@ export function activate(context: vscode.ExtensionContext): void {
     100,
   )
   graphStatusBarItem.name = 'Git Scope: View Git Graph'
-  graphStatusBarItem.text = '$(git-merge) Git Graph'
+  graphStatusBarItem.text = '$(git-merge) Git Scope'
   graphStatusBarItem.tooltip = 'Git Scope: View Git Graph'
   graphStatusBarItem.command = 'gitScope.view'
 

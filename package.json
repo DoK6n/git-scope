@@ -2,7 +2,7 @@
   "name": "git-scope-view-git-graph",
   "displayName": "Git Scope: View Git Graph",
   "description": "A clean-room reimplementation of the Git Graph concept, rebuilt from scratch with modern improvements — commit graph visualization with git actions, plus worktree management, glob search filters, an enhanced reset UI, and fetch --prune.",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "publisher": "dok6n",
   "private": true,
   "license": "MIT",
@@ -87,7 +87,7 @@
         "gitScope.showStatusBarItem": {
           "type": "boolean",
           "default": true,
-          "description": "Show a Git Graph button in the left side of the status bar."
+          "description": "Show a Git Scope button in the left side of the status bar."
         },
         "gitScope.fetchPruneByDefault": {
           "type": "boolean",

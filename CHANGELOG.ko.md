@@ -4,6 +4,12 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-08-21
+
+### Fixed
+
+- 확장 브랜드와 일치하도록 상태 표시줄 버튼 이름을 **Git Graph**에서 **Git Scope**로 변경.
+
 ## [0.4.0] - 2026-08-21
 
 ### Added

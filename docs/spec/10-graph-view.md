@@ -11,7 +11,7 @@ GitScope의 핵심 화면인 커밋 그래프 뷰의 **관찰 가능한 동작**
 
 - **G-01** `[todo]` 명령 팔레트의 "View Git Graph (git log)" 상당 명령으로 그래프 뷰가 **에디터 탭**으로 열린다. (원본 명령 ID `git-graph.view` → 우리는 `gitScope.view`)
 - **G-02** `[todo]` 뷰는 위에서부터 **상단 컨트롤 바 → 커밋 행 테이블(그래프 포함)** 순으로 배치된다. 커밋 목록은 세로 스크롤된다.
-- **G-03** `[done]` SCM 패널(소스 제어 타이틀 바)과 상태 표시줄 왼쪽 영역에 그래프 열기 버튼을 노출한다. 상태 표시줄 버튼은 `Git Graph`로 표시되고 클릭하면 `gitScope.view` 명령을 실행한다. `gitScope.showStatusBarItem` 설정으로 노출 여부를 바꿀 수 있다.
+- **G-03** `[done]` SCM 패널(소스 제어 타이틀 바)과 상태 표시줄 왼쪽 영역에 그래프 열기 버튼을 노출한다. 상태 표시줄 버튼은 `Git Scope`로 표시되고 클릭하면 `gitScope.view` 명령을 실행한다. `gitScope.showStatusBarItem` 설정으로 노출 여부를 바꿀 수 있다.
 - **G-04** `[skip]` 탭 아이콘 색상 테마 선택, 새 탭이 열릴 에디터 그룹 지정. (원본: `tabIconColourTheme`, `openNewTabEditorGroup`)
 
 (출처: 위키 Home, 원본 package.json contributes.commands / contributes.configuration)
