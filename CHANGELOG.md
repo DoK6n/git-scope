@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-08-21
+
+### Changed
+
+- Finalized the Marketplace listing as **Git Scope: View Git Graph** with extension identifier `dok6n.git-scope-view-git-graph`.
+
 ## [0.3.3] - 2026-08-21
 
 ### Changed

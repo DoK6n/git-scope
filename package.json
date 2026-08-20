@@ -1,8 +1,8 @@
 {
-  "name": "git-scope-pro",
-  "displayName": "Git Scope Pro",
+  "name": "git-scope-view-git-graph",
+  "displayName": "Git Scope: View Git Graph",
   "description": "A clean-room reimplementation of the Git Graph concept, rebuilt from scratch with modern improvements — commit graph visualization with git actions, plus worktree management, glob search filters, an enhanced reset UI, and fetch --prune.",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "publisher": "dok6n",
   "private": true,
   "license": "MIT",

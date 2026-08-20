@@ -4,6 +4,12 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-08-21
+
+### Changed
+
+- Marketplace 표시 이름을 **Git Scope: View Git Graph**, 확장 식별자를 `dok6n.git-scope-view-git-graph`로 최종 확정.
+
 ## [0.3.3] - 2026-08-21
 
 ### Changed
