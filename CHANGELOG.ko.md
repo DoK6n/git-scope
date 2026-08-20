@@ -4,6 +4,12 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-08-21
+
+### Fixed
+
+- 명령을 실행하기 전에도 상태 표시줄 버튼이 보이도록 IDE 시작 완료 후 Git Scope를 자동 활성화.
+
 ## [0.4.1] - 2026-08-21
 
 ### Fixed

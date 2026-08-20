@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-08-21
+
+### Fixed
+
+- Activate Git Scope after IDE startup so the status bar button is visible before any command is run.
+
 ## [0.4.1] - 2026-08-21
 
 ### Fixed

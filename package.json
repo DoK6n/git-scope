@@ -2,7 +2,7 @@
   "name": "git-scope-view-git-graph",
   "displayName": "Git Scope: View Git Graph",
   "description": "A clean-room reimplementation of the Git Graph concept, rebuilt from scratch with modern improvements — commit graph visualization with git actions, plus worktree management, glob search filters, an enhanced reset UI, and fetch --prune.",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "publisher": "dok6n",
   "private": true,
   "license": "MIT",
@@ -25,6 +25,9 @@
     "worktree"
   ],
   "main": "./dist/extension/main.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "icon": "resources/icon.png",
   "contributes": {
     "commands": [
