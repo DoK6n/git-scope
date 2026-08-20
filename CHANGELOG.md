@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-08-21
+
+### Changed
+
+- Changed the Marketplace display name to **DoK6n Git Scope** to use a globally unique listing name.
+
 ## [0.3.1] - 2026-08-21
 
 ### Changed

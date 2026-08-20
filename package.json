@@ -1,8 +1,8 @@
 {
   "name": "dok6n-git-scope",
-  "displayName": "Git Scope",
+  "displayName": "DoK6n Git Scope",
   "description": "A clean-room reimplementation of the Git Graph concept, rebuilt from scratch with modern improvements — commit graph visualization with git actions, plus worktree management, glob search filters, an enhanced reset UI, and fetch --prune.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "publisher": "dok6n",
   "private": true,
   "license": "MIT",

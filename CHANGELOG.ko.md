@@ -4,6 +4,12 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-08-21
+
+### Changed
+
+- 전역 고유 이름을 사용하도록 Marketplace 표시 이름을 **DoK6n Git Scope**로 변경.
+
 ## [0.3.1] - 2026-08-21
 
 ### Changed
