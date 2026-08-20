@@ -11,6 +11,7 @@ const cache = new Map<string, Promise<string | null>>()
 
 import claudeIcon from '../assets/claude-icon.png'
 import codexIcon from '../assets/codex-icon.png'
+import cursorIcon from '../assets/cursor-icon.png'
 
 /**
  * AI 공동 작성자 전용 아이콘 — Co-authored-by 이름(claude/codex 포함 여부)
@@ -21,6 +22,7 @@ export function specialIcon(name: string, email: string): string | null {
   const e = email.trim().toLowerCase()
   if (n.includes('claude') || e.endsWith('@anthropic.com')) return claudeIcon
   if (n.includes('codex') || e.endsWith('@openai.com')) return codexIcon
+  if (n.includes('cursor') || e.endsWith('@cursor.com')) return cursorIcon
   return null
 }
 
