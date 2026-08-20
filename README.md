@@ -6,7 +6,7 @@ A VS Code / Cursor extension that visualizes your commit graph and lets you run 
 
 ## Usage
 
-Command Palette (`Cmd+Shift+P`) → **Git Scope: View Git Graph**
+Click **Git Graph** in the left side of the status bar, or use Command Palette (`Cmd+Shift+P`) → **Git Scope: View Git Graph**.
 
 ## Features
 

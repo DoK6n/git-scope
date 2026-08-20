@@ -4,6 +4,12 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-21
+
+### Added
+
+- 상태 표시줄 왼쪽 영역에 그래프 뷰를 여는 **Git Graph** 버튼 추가. `gitScope.showStatusBarItem` 설정으로 숨길 수 있음.
+
 ## [0.3.4] - 2026-08-21
 
 ### Changed

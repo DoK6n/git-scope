@@ -33,8 +33,33 @@ export function activate(context: vscode.ExtensionContext): void {
   })
   const router = new Router(avatars, new FileIconService())
 
+  const graphStatusBarItem = vscode.window.createStatusBarItem(
+    'gitScope.viewStatusBar',
+    vscode.StatusBarAlignment.Left,
+    100,
+  )
+  graphStatusBarItem.name = 'Git Scope: View Git Graph'
+  graphStatusBarItem.text = '$(git-merge) Git Graph'
+  graphStatusBarItem.tooltip = 'Git Scope: View Git Graph'
+  graphStatusBarItem.command = 'gitScope.view'
+
+  const updateStatusBarVisibility = (): void => {
+    const visible = vscode.workspace
+      .getConfiguration('gitScope')
+      .get<boolean>('showStatusBarItem', true)
+    if (visible) graphStatusBarItem.show()
+    else graphStatusBarItem.hide()
+  }
+  updateStatusBarVisibility()
+
   context.subscriptions.push(
     { dispose: () => router.dispose() },
+    graphStatusBarItem,
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration('gitScope.showStatusBarItem')) {
+        updateStatusBarVisibility()
+      }
+    }),
     vscode.commands.registerCommand('gitScope.view', () => {
       GraphPanel.show(context, router)
     }),

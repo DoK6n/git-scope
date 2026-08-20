@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-21
+
+### Added
+
+- Added a left-aligned **Git Graph** status bar button that opens the graph view; it can be hidden with `gitScope.showStatusBarItem`.
+
 ## [0.3.4] - 2026-08-21
 
 ### Changed

@@ -193,7 +193,7 @@
 | `openToTheRepoOfTheActiveTextEditorDocument` | boolean | `false` | 뷰를 열 때 현재 활성 편집기 문서가 속한 리포를 선택 | [skip] |
 | `openNewTabEditorGroup` | enum | `Active` | Diff 뷰/파일 열기 시 사용할 편집기 그룹. `Active` / `Beside` / `One`~`Nine` | [skip] |
 | `retainContextWhenHidden` | boolean | `true` | 탭이 백그라운드로 가도 웹뷰 컨텍스트 유지. 재진입이 빠른 대신 메모리 사용 증가 | [skip] |
-| `showStatusBarItem` | boolean | `true` | 상태 표시줄에 뷰 열기 항목 노출 | [skip] |
+| `showStatusBarItem` | boolean | `true` | 상태 표시줄 왼쪽 영역에 `Git Graph` 뷰 열기 항목 노출 | [done] |
 | `sourceCodeProviderIntegrationLocation` | enum | `Inline` | SCM 제공자 타이틀에 액션을 인라인으로 둘지 More Actions 메뉴에 둘지 | [skip] |
 | `contextMenuActionsVisibility` | object | `{}` | 컨텍스트 메뉴 항목별 표시 여부를 중첩 객체로 제어. 예: `{"branch":{"rebase":false}}` | [skip] |
 | `keyboardShortcut.find` | enum | `CTRL/CMD + F` | 찾기 위젯 단축키 (UNASSIGNED + A~Z 조합 중 선택) | [skip] |
