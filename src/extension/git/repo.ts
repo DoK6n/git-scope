@@ -417,7 +417,24 @@ export class GitRepo {
   /** 스태시 목록 — 스태시 패널용 (커밋이 없는 리포는 빈 목록) */
   async listStashes(): Promise<StashEntry[]> {
     const out = await this.git(['stash', 'list', `--format=${STASH_FORMAT}`]).catch(() => '')
-    return parseStashList(out)
+    const stashes = parseStashList(out)
+    // 베이스 커밋이 브랜치/태그 어디에서도 도달 불가하면 고아 — 그래프에 표시될 수 없다
+    await Promise.all(
+      stashes.map(async (stash) => {
+        const refs = await this.git([
+          'for-each-ref',
+          '--count=1',
+          '--format=%(refname)',
+          '--contains',
+          stash.baseHash,
+          'refs/heads',
+          'refs/remotes',
+          'refs/tags',
+        ]).catch(() => null)
+        if (refs !== null) stash.isOrphan = refs.trim() === ''
+      }),
+    )
+    return stashes
   }
 
   async listWorktrees(): Promise<Worktree[]> {

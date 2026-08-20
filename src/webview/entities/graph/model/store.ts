@@ -39,6 +39,32 @@ function setSelectedCommit(hash: string | null): void {
   setCompareWith(null)
 }
 
+/** GraphView가 소비하는 스크롤 타겟 행 (검색 외 진입점용 — 스태시 패널 등) */
+const [scrollTargetRow, setScrollTargetRow] = createSignal<number | null>(null)
+
+/**
+ * 해시의 커밋 행으로 스크롤 요청.
+ * 로드된 범위 밖이면 커밋을 추가 로드하며 찾은 뒤 이동한다 (안전 상한 20회).
+ */
+async function scrollToHash(hash: string): Promise<void> {
+  const find = () => (graph()?.commits ?? []).findIndex((c) => c.hash === hash)
+  let index = find()
+  let rounds = 0
+  while (index < 0 && graph()?.moreAvailable && rounds < 20) {
+    const before = graph()?.commits.length ?? 0
+    await loadMore()
+    // 로드가 진행되지 않았으면(이미 로딩 중 등) 무한 루프 방지를 위해 중단
+    if ((graph()?.commits.length ?? 0) === before) break
+    index = find()
+    rounds++
+  }
+  if (index < 0) {
+    setNotice('해당 커밋을 그래프에서 찾을 수 없습니다.')
+    return
+  }
+  setScrollTargetRow(index)
+}
+
 onBridgeEvent((event) => {
   if (event.event === 'settings') setSettings(event.settings)
   if (event.event === 'repoChanged') void refresh()
@@ -145,6 +171,9 @@ export const graphStore = {
   setSelectedCommit,
   compareWith,
   setCompareWith,
+  scrollTargetRow,
+  consumeScrollTarget: () => setScrollTargetRow(null),
+  scrollToHash,
   loadRepos,
   refresh,
   loadMore,

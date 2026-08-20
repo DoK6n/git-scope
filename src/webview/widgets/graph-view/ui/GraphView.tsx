@@ -80,6 +80,14 @@ export function GraphView() {
     searchStore.consumeScrollTarget()
   })
 
+  // 외부(스태시 패널 등)에서 요청한 행 스크롤 — 검색과 동일하게 화면 중앙 정렬
+  createEffect(() => {
+    const target = graphStore.scrollTargetRow()
+    if (target === null || !containerRef) return
+    containerRef.scrollTop = Math.max(0, rowTop(target) - containerRef.clientHeight / 2)
+    graphStore.consumeScrollTarget()
+  })
+
   const refsByHash = createMemo(() => {
     const map = new Map<string, GitRef[]>()
     for (const ref of graphStore.graph()?.refs ?? []) {

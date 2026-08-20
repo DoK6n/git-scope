@@ -7,6 +7,8 @@
 ### Added
 
 - **Stash list panel** — a "Stashes" toolbar button opens a dedicated panel listing all stashes (selector, subject, date); click a row to select it in the graph, right-click for Apply/Pop/Create Branch/Drop, and stash uncommitted changes from the footer button
+- Clicking a stash in the panel now **scrolls the graph to that row** (centered, like search navigation) — if the stash is outside the loaded range, more commits are **loaded automatically until it's found**; rows also have **checkboxes for batch drop** — "Drop Selected (N)" deletes highest-index-first so remaining selectors stay valid
+- Stashes whose base commit is unreachable from any branch/tag (deleted or rebased-away branch) are marked with an **orphan chip** in the panel — they can't appear on the graph, but Apply/Drop still work
 - Stash rows now show a **`stash@{N}` label badge** (box glyph, own SVG per clean-room rules) next to the stash subject, colored by the commit's graph line like branch badges; right-clicking the badge opens the same stash menu
 
 ## [0.2.0] - 2026-08-20

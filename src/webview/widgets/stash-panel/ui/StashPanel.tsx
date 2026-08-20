@@ -62,10 +62,36 @@ export function StashPanel() {
               {(stash) => (
                 <div
                   class="worktree-item stash-item"
-                  onClick={() => graphStore.setSelectedCommit(stash.hash)}
+                  onClick={() => {
+                    // 고아 스태시는 베이스가 로그에 없어 그래프로 이동할 수 없다
+                    if (stash.isOrphan) {
+                      graphStore.setNotice(
+                        '고아 스태시 — 베이스 커밋이 삭제되어 그래프에 표시할 수 없습니다. Apply/Drop은 가능합니다.',
+                      )
+                      return
+                    }
+                    // 클릭 = 그래프에서 해당 스태시 선택 + 화면 중앙으로 스크롤 (범위 밖이면 추가 로드)
+                    graphStore.setSelectedCommit(stash.hash)
+                    void graphStore.scrollToHash(stash.hash)
+                  }}
                   onContextMenu={(e) => openContextMenu(e, buildStashMenu(stash))}
                 >
+                  <input
+                    type="checkbox"
+                    class="stash-item-check"
+                    checked={stashPanelStore.selected().has(stash.selector)}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={() => stashPanelStore.toggleSelected(stash.selector)}
+                  />
                   <span class="stash-item-selector">{stash.selector}</span>
+                  <Show when={stash.isOrphan}>
+                    <span
+                      class="stash-orphan-mark"
+                      title="베이스 커밋이 어떤 브랜치/태그에서도 도달할 수 없습니다 (브랜치 삭제 또는 rebase). 그래프에는 표시되지 않지만 Apply/Drop은 가능합니다."
+                    >
+                      orphan
+                    </span>
+                  </Show>
                   <span class="stash-item-subject" title={stash.subject}>
                     {stash.subject}
                   </span>
@@ -79,6 +105,15 @@ export function StashPanel() {
           </Show>
         </div>
         <div class="worktree-footer">
+          <Show when={stashPanelStore.selected().size > 0}>
+            <button
+              class="toolbar-btn danger"
+              onClick={() => void stashPanelStore.dropSelected()}
+              title="체크한 스태시 일괄 삭제"
+            >
+              Drop Selected ({stashPanelStore.selected().size})
+            </button>
+          </Show>
           <button
             class="toolbar-btn primary"
             onClick={() => withReload(stashPush())}

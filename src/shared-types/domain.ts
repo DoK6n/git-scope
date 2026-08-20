@@ -122,4 +122,9 @@ export interface StashEntry {
   authorDate: number
   commitDate: number
   subject: string
+  /**
+   * 베이스 커밋이 어떤 브랜치/태그에서도 도달 불가(고아) — 브랜치 삭제·rebase 후 남은 스태시.
+   * listStashes에서만 계산한다 (그래프 합성 경로는 미설정)
+   */
+  isOrphan?: boolean
 }
