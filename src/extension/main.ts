@@ -3,12 +3,20 @@ import { GraphPanel } from './bridge/panel'
 import { Router } from './bridge/router'
 import { AvatarService } from './git/avatars'
 import { GitContentProvider, GITSCOPE_SCHEME } from './git/contentProvider'
+import { setGitCommandLogger } from './git/exec'
 import { FileIconService } from './icons/fileIcons'
 
 const GITHUB_SCOPES = ['repo']
 const TOKEN_SECRET_KEY = 'gitScope.githubToken'
 
 export function activate(context: vscode.ExtensionContext): void {
+  // 실행되는 모든 git 명령을 Output 패널 "Git Scope" 채널에 기록
+  const gitOutput = vscode.window.createOutputChannel('Git Scope')
+  setGitCommandLogger((line) => gitOutput.appendLine(line))
+  context.subscriptions.push(gitOutput, {
+    dispose: () => setGitCommandLogger(null),
+  })
+
   const avatars = new AvatarService(context.globalStorageUri.fsPath, async () => {
     // 우선순위: GitHub 로그인 세션 → SecretStorage에 저장한 PAT → 환경변수
     try {
