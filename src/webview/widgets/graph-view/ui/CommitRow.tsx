@@ -3,6 +3,7 @@ import type { Commit, GitRef } from '@shared-types/domain'
 import { AuthorAvatar } from '../../../entities/author'
 import { groupRefs, RefBadge } from '../../../entities/ref'
 import { graphStore } from '../../../entities/graph'
+import { dropBranchOn, isBranchDrag, startBranchDrag } from '../../../features/branch-dnd'
 import { checkoutBranch, checkoutRemoteBranch } from '../../../features/checkout'
 import { BRANCH_PALETTE, formatDate, shortHash } from '../../../shared/lib'
 import { openContextMenu } from '../../../shared/ui'
@@ -72,6 +73,15 @@ export function CommitRow(props: CommitRowProps) {
                 const items = buildRefMenu(remote)
                 if (items.length > 0) openContextMenu(e, items)
               }}
+              onDragStart={
+                group.ref.type === 'tag' ? undefined : (e) => startBranchDrag(e, group.ref)
+              }
+              canDrop={group.ref.type === 'head' ? isBranchDrag : undefined}
+              onDrop={
+                group.ref.type === 'head'
+                  ? (e) => void dropBranchOn(e, group.ref.name)
+                  : undefined
+              }
               onDblClick={
                 group.ref.type === 'tag'
                   ? undefined

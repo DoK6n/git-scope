@@ -1,5 +1,5 @@
 import type { GitRef } from '@shared-types/domain'
-import { For, Show } from 'solid-js'
+import { createSignal, For, Show } from 'solid-js'
 import type { RefGroup } from '../lib/group'
 
 /** 칩 안에 그리는 미니 브랜치 글리프 */
@@ -42,6 +42,12 @@ interface RefBadgeProps {
   onDblClick?: () => void
   /** 합쳐진 원격 세그먼트 우클릭 */
   onRemoteContextMenu?: (remote: GitRef, e: MouseEvent) => void
+  /** 드래그 시작 — 지정하면 뱃지가 draggable이 된다 (브랜치 드래그앤드롭용) */
+  onDragStart?: (e: DragEvent) => void
+  /** 진행 중인 드래그를 이 뱃지에 드롭할 수 있는지 */
+  canDrop?: (e: DragEvent) => boolean
+  /** 드롭 처리 */
+  onDrop?: (e: DragEvent) => void
 }
 
 /**
@@ -51,10 +57,11 @@ interface RefBadgeProps {
 export function RefBadge(props: RefBadgeProps) {
   const gitRef = () => props.group.ref
   const color = () => props.color
+  const [dragOver, setDragOver] = createSignal(false)
   return (
     <span
       class={`ref-badge ref-${gitRef().type}`}
-      classList={{ 'ref-head': props.isHead }}
+      classList={{ 'ref-head': props.isHead, 'drop-target': dragOver() }}
       style={{ 'border-color': color(), '--ref-color': color() }}
       onClick={(e) => e.stopPropagation()} // 뱃지 클릭이 행 선택(상세뷰)으로 번지지 않게
       onContextMenu={(e) => props.onContextMenu?.(e)}
@@ -63,6 +70,28 @@ export function RefBadge(props: RefBadgeProps) {
         props.onDblClick?.()
       }}
       title={props.onDblClick ? '더블클릭: git switch' : undefined}
+      draggable={props.onDragStart !== undefined}
+      onDragStart={(e) => props.onDragStart?.(e)}
+      onDragEnter={(e) => {
+        if (props.canDrop?.(e)) setDragOver(true)
+      }}
+      onDragLeave={(e) => {
+        // 자식 요소로의 이동은 무시한다
+        if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node | null)) {
+          setDragOver(false)
+        }
+      }}
+      onDragOver={(e) => {
+        // preventDefault 해야 브라우저가 드롭을 허용한다
+        if (props.canDrop?.(e)) e.preventDefault()
+      }}
+      onDrop={(e) => {
+        setDragOver(false)
+        if (!props.onDrop) return
+        e.preventDefault()
+        e.stopPropagation()
+        props.onDrop(e)
+      }}
     >
       <span class="ref-local-part">
         <span class="ref-icon" style={{ 'background-color': color() }}>
