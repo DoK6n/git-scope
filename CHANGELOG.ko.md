@@ -4,6 +4,26 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-20
+
+### Added
+
+- 커밋 우클릭 메뉴에 **Edit Commit Message…** — HEAD에서 도달 가능한 임의 커밋의 메시지 수정(reword). 기존 메시지 전문이 채워진 textarea에서 편집하며, 메시지만 바뀌고 내용(tree)·author 정보는 보존. HEAD 커밋은 `commit --amend --only`, 조상 커밋은 `commit-tree` + `rebase --rebase-merges --onto`로 재작성 ⚠️ (이후 커밋 해시 변경 — 경고 표시)
+- **Git Scope Output 채널** — 익스텐션이 실행하는 모든 git 명령을 Output 패널에 기록 (명령줄·exit code·소요 시간·리포 경로, 실패 시 stderr)
+- Fetch 버튼을 **스플릿 버튼**으로 개편 — ▾ 캐럿 클릭으로 fetch 옵션 메뉴(**Fetch (prune)** — 원격에서 삭제된 브랜치 참조 정리)를 바로 열 수 있음 (기존에는 우클릭으로만 접근 가능)
+- Branches 필터 드롭다운에 **Tree | List** 뷰 토글 추가 — 트리는 브랜치명을 `/` 세그먼트로 그룹핑(단일 하위 폴더 체인 압축), 폴더 접기/펼치기, 폴더 체크박스로 하위 브랜치 일괄 선택/해제(부분 선택 시 indeterminate)
+- **브랜치 뱃지 드래그앤드롭** — 브랜치 뱃지(로컬·원격)를 로컬 브랜치 뱃지에 드롭하면 **Merge into**(필요 시 대상 브랜치 체크아웃 후 merge) 또는 **Rebase onto** ⚠️ 선택 실행 (rebase는 로컬 source만, 원격 source는 merge만 제공). 드래그 중 드롭 가능한 뱃지에 점선 아웃라인 표시
+
+### Fixed
+
+- 다이얼로그 경고 박스 글자가 일부 테마(경고 배경과 `editorWarning.foreground`가 모두 주황 계열)에서 안 보이던 문제 수정 — `inputValidation.warningBackground`와 짝이 맞는 foreground(없으면 일반 foreground 폴백) + 경고 테두리 적용
+- danger 버튼 글자색도 `inputValidation.errorBackground`와 짝이 맞는 foreground로 수정. 경고 문구가 표시된다는 이유만으로 확인 버튼이 붉게 바뀌던 동작 제거(경고 박스가 그 역할) — 명시적으로 위험한 다이얼로그만 붉은 버튼 유지
+
+### Changed
+
+- 아바타 스택 겹침 순서 변경: 커밋 **author가 맨 앞**, co-author(AI 포함) 아바타는 그 뒤에 깔리도록 수정
+- AI 공동 작성자 번들 아이콘에 **Cursor** 추가 (`Co-authored-by: Cursor <…@cursor.com>`) — Claude·Codex와 동일 방식
+
 ### Added (UI·폴리시)
 
 - 테이블 헤더(`Graph | Commit | Author | Date | Hash`) + 경계 드래그로 컬럼 폭 조절, 경계 더블클릭 시 보이는 콘텐츠에 자동 맞춤 (Graph는 레인 수 기준으로 리셋)

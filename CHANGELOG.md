@@ -4,6 +4,26 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-20
+
+### Added
+
+- **Edit Commit Message…** on the commit context menu — reword any commit reachable from HEAD. The dialog opens a textarea pre-filled with the full original message; only the message changes (tree and author info are preserved). HEAD commits use `commit --amend --only`; ancestor commits are rewritten via `commit-tree` + `rebase --rebase-merges --onto` ⚠️ (descendant hashes change — a warning is shown)
+- **Git Scope output channel** — every git command the extension runs is logged to the Output panel (command line, exit code, duration, repo path; stderr on failure)
+- Fetch is now a **split button** — the ▾ caret opens the fetch options menu (**Fetch (prune)** — clean up refs of remote branches deleted upstream), which was previously reachable only via right-click
+- Branches filter dropdown now has a **Tree | List** view toggle — tree groups branches by `/` segments (single-child folder chains compressed), folders collapse/expand, and a folder checkbox selects/unselects all branches beneath it (indeterminate when partial)
+- **Drag & drop branch badges** — drag a branch badge (local or remote) onto a local branch badge to choose **Merge into** (checks out the target first if needed) or **Rebase onto** ⚠️ (local sources only; remote sources offer merge only). Drop targets show a dashed outline while dragging
+
+### Fixed
+
+- Dialog warning box text was unreadable in themes where the warning background and `editorWarning.foreground` are both orange — now pairs `inputValidation.warningBackground` with its matching foreground (falling back to the normal foreground), plus a warning border
+- Danger buttons now pair `inputValidation.errorBackground` with its matching foreground for readability; a dialog's confirm button no longer turns red just because a warning is shown (the warning box is the signal) — only explicitly dangerous dialogs keep the red button
+
+### Changed
+
+- Avatar stack z-order: the commit **author is now in front**; co-author avatars (including AI co-authors) tuck behind it
+- Bundled AI co-author icons now include **Cursor** (`Co-authored-by: Cursor <…@cursor.com>`), alongside Claude and Codex
+
 ### Added (UI & polish)
 
 - Table header (`Graph | Commit | Author | Date | Hash`) with drag-to-resize columns; double-click a divider to auto-fit the visible content (Graph resets to lane-based width)
