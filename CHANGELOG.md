@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-21
+
 ### Added
 
 - **Stash list panel** — a "Stashes" toolbar button opens a dedicated panel listing all stashes (selector, subject, date); click a row to select it in the graph, right-click for Apply/Pop/Create Branch/Drop, and stash uncommitted changes from the footer button

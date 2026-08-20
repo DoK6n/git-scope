@@ -4,6 +4,8 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-21
+
 ### Added
 
 - **스태시 목록 패널** — 툴바 "Stashes" 버튼으로 전체 스태시 목록(셀렉터·제목·날짜) 표시. 행 클릭 시 그래프에서 선택, 우클릭으로 Apply/Pop/Create Branch/Drop, 하단 버튼으로 워킹트리 변경 스태시 저장
