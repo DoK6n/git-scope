@@ -4,6 +4,12 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-08-24
+
+### Changed
+
+- README 소개 영역에 커밋 그래프 이미지와 그래프 라인 하이라이팅·브랜치 드래그앤드롭 merge/rebase GIF 데모 추가.
+
 ## [0.4.2] - 2026-08-21
 
 ### Fixed

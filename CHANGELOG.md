@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-08-24
+
+### Changed
+
+- Expanded the README showcase with a commit graph screenshot and animated demos for graph-line highlighting and branch drag-and-drop merge/rebase.
+
 ## [0.4.2] - 2026-08-21
 
 ### Fixed
