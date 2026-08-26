@@ -14,6 +14,24 @@ type Handler<C extends RequestCommand> = (
   params: RequestMap[C]['params'],
 ) => Promise<RequestMap[C]['result']>
 
+const READ_ONLY_REQUESTS = new Set<RequestCommand>([
+  'listRepos',
+  'getGraph',
+  'getCommitDetails',
+  'getCommitComparison',
+  'openDiff',
+  'getTagDetails',
+  'openScmView',
+  'listStashes',
+  'listWorktrees',
+  'openWorktree',
+  'getFileIcons',
+  'getAvatar',
+  'notify',
+  'copyToClipboard',
+  'openFile',
+])
+
 /** webview 요청을 GitRepo/VS Code API 호출로 라우팅한다 */
 export class Router {
   private repos = new Map<string, GitRepo>()
@@ -24,10 +42,11 @@ export class Router {
   onRepoActivity: (() => void) | null = null
 
   private watchers = new Map<string, fs.FSWatcher[]>()
+  private worktreeWatchers = new Map<string, vscode.FileSystemWatcher>()
 
-  /** 처리 중인 webview 요청 수 / 마지막 요청 완료 시각 — 자기 유발 감시 이벤트 억제용 */
-  private running = 0
-  private lastRequestDone = 0
+  /** 처리 중인 변경 요청 수 / 마지막 변경 완료 시각 — 자기 유발 감시 이벤트 억제용 */
+  private runningMutations = 0
+  private lastMutationDone = 0
 
   constructor(
     readonly avatars: AvatarService,
@@ -37,6 +56,8 @@ export class Router {
   dispose(): void {
     for (const list of this.watchers.values()) for (const watcher of list) watcher.close()
     this.watchers.clear()
+    for (const watcher of this.worktreeWatchers.values()) watcher.dispose()
+    this.worktreeWatchers.clear()
   }
 
   /**
@@ -67,6 +88,13 @@ export class Router {
     const list = this.watchers.get(root)
     if (!list) return
     let timer: ReturnType<typeof setTimeout> | undefined
+    const scheduleActivity = (): void => {
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        if (this.runningMutations > 0 || Date.now() - this.lastMutationDone < 800) return
+        this.onRepoActivity?.()
+      }, 400)
+    }
     for (const dir of dirs) {
       try {
         const watcher = fs.watch(dir, { recursive: true }, (_event, filename) => {
@@ -82,20 +110,37 @@ export class Router {
             name.endsWith('_HEAD') ||
             name.endsWith('/HEAD') // 다른 worktree의 HEAD 이동 (commondir/worktrees/*/HEAD)
           if (!relevant) return
-          clearTimeout(timer)
-          timer = setTimeout(() => {
-            // 앱 자신이 실행한 액션(fetch 등)과 조회(status의 index 재작성)가 낸 이벤트로
-            // 다시 갱신하면 클릭 한 번에 그래프가 여러 번 리로드된다. 액션 후 갱신은
-            // runAction이 이미 하므로, 요청 처리 중이거나 직후의 이벤트는 무시한다.
-            if (this.running > 0 || Date.now() - this.lastRequestDone < 800) return
-            this.onRepoActivity?.()
-          }, 400)
+          // 앱 자신의 변경 요청이 낸 이벤트로 다시 갱신하면 클릭 한 번에 그래프가
+          // 여러 번 리로드된다. 액션 후 갱신은 runAction이 이미 처리한다.
+          scheduleActivity()
         })
         list.push(watcher)
       } catch {
         // 감시 실패는 치명적이지 않다 — 수동 새로고침으로 대체
       }
     }
+
+    // Source Control의 Discard Changes처럼 index를 건드리지 않고 working tree 파일만
+    // 바꾸는 작업도 감지한다. .git은 위의 전용 watcher가 처리하므로 여기서는 제외한다.
+    const worktreeWatcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(root, '**/*'),
+    )
+    const onWorktreeActivity = (uri: vscode.Uri): void => {
+      const relative = path.relative(root, uri.fsPath)
+      if (
+        relative === '' ||
+        relative === '.git' ||
+        relative.startsWith(`.git${path.sep}`) ||
+        relative.startsWith(`..${path.sep}`) ||
+        path.isAbsolute(relative)
+      )
+        return
+      scheduleActivity()
+    }
+    worktreeWatcher.onDidChange(onWorktreeActivity)
+    worktreeWatcher.onDidCreate(onWorktreeActivity)
+    worktreeWatcher.onDidDelete(onWorktreeActivity)
+    this.worktreeWatchers.set(root, worktreeWatcher)
   }
 
   private mapIconUri(spec: IconSpec | null): IconSpec | null {
@@ -152,12 +197,15 @@ export class Router {
   async handle<C extends RequestCommand>(
     request: BridgeRequest<C>,
   ): Promise<RequestMap[C]['result']> {
-    this.running++
+    const mutatesRepo = !READ_ONLY_REQUESTS.has(request.command)
+    if (mutatesRepo) this.runningMutations++
     try {
       return await this.dispatch(request)
     } finally {
-      this.running--
-      this.lastRequestDone = Date.now()
+      if (mutatesRepo) {
+        this.runningMutations--
+        this.lastMutationDone = Date.now()
+      }
     }
   }
 
