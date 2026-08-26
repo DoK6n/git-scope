@@ -2,6 +2,12 @@
 
 English version: [CHANGELOG.md](CHANGELOG.md)
 
+## [0.5.1] - 2026-08-26
+
+### Fixed
+
+- IDE Source Control의 **Discard Changes**처럼 working tree 파일만 바뀌는 작업도 수동 새로고침 없이 uncommitted 행에 자동 반영.
+
 ## [0.5.0] - 2026-08-26
 
 ### Added

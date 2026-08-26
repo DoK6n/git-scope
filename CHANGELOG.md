@@ -2,6 +2,12 @@
 
 한국어 버전: [CHANGELOG.ko.md](CHANGELOG.ko.md)
 
+## [0.5.1] - 2026-08-26
+
+### Fixed
+
+- Working-tree-only changes, including **Discard Changes** from the IDE Source Control view, now update the uncommitted row automatically without a manual refresh.
+
 ## [0.5.0] - 2026-08-26
 
 ### Added
