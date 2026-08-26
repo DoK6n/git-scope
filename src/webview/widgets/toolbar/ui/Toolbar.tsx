@@ -378,11 +378,6 @@ export function Toolbar() {
           </Show>
         </div>
 
-        <Show when={graphStore.graph()?.headBranch}>
-          <span class="head-branch" title="checked out branch">
-            ● {graphStore.graph()!.headBranch}
-          </span>
-        </Show>
       </div>
 
       {/* 네이티브 title 툴팁이 webview에서 안 뜨는 환경이 있어 data-tip 커스텀 툴팁 사용 */}

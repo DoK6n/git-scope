@@ -77,8 +77,15 @@ body {
   justify-content: flex-end;
 }
 
-.toolbar-center {
-  flex: 0 0 auto;
+/* IDE 네비게이션 액션처럼 평상시에는 배경 없는 버튼으로 표시 */
+.toolbar-right .toolbar-btn,
+.toolbar-right .toolbar-btn.primary {
+  background: transparent;
+  color: var(--vscode-icon-foreground, var(--vscode-foreground));
+}
+
+.toolbar-right .toolbar-btn:hover {
+  background: var(--vscode-toolbar-hoverBackground, rgba(90, 93, 94, 0.31));
 }
 
 .toolbar-btn {
@@ -188,11 +195,6 @@ body {
   font-size: inherit;
 }
 
-.head-branch {
-  color: var(--vscode-descriptionForeground);
-  margin-right: 6px;
-}
-
 .branch-filter {
   position: relative;
 }
@@ -228,7 +230,10 @@ body {
 }
 
 .branch-select-caret {
-  font-size: 10px;
+  width: 18px;
+  font-size: 18px;
+  line-height: 1;
+  text-align: center;
   color: var(--vscode-descriptionForeground);
 }
 
@@ -1003,7 +1008,7 @@ path.graph-line-hit {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 1px 5px 1px 2px;
+  padding: 0 5px 0 0;
 }
 
 /* hover: 브랜치색 35% 배경 — 뚜렷하게 보이도록 */
@@ -1028,9 +1033,10 @@ path.graph-line-hit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
+  width: 18px;
+  height: auto;
+  align-self: stretch;
+  border-radius: 0;
   color: #1e1e1e;
   flex-shrink: 0;
 }
