@@ -1,6 +1,7 @@
 **
 !dist/**
 !resources/**
+!images/preview.gif
 !package.json
 !README.md
 !CHANGELOG.md

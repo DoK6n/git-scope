@@ -2,6 +2,12 @@
 
 한국어 버전: [CHANGELOG.ko.md](CHANGELOG.ko.md)
 
+## [0.5.2] - 2026-08-26
+
+### Changed
+
+- Replaced the README's separate screenshots and demos with one up-to-date, 1.5× speed `preview.gif` at the top of the page.
+
 ## [0.5.1] - 2026-08-26
 
 ### Fixed

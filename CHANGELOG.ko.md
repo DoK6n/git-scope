@@ -2,6 +2,12 @@
 
 English version: [CHANGELOG.md](CHANGELOG.md)
 
+## [0.5.2] - 2026-08-26
+
+### Changed
+
+- README의 개별 스크린샷·데모를 제거하고, 페이지 최상단의 최신 1.5배속 `preview.gif` 하나로 교체.
+
 ## [0.5.1] - 2026-08-26
 
 ### Fixed
