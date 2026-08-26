@@ -2,7 +2,7 @@
 
 한국어 버전: [CHANGELOG.ko.md](CHANGELOG.ko.md)
 
-## [Unreleased]
+## [0.5.0] - 2026-08-26
 
 ### Added
 
@@ -12,6 +12,7 @@
 - New `gitScope.language` setting (`en`/`ko`, default `en`): UI text — tooltips, dialogs, notifications — is English by default and switches to Korean when set, applying live without reopening the view.
 - `origin/HEAD` is now shown as a badge on the commit it points to (right-click offers Copy only; it is excluded from the branch filter and branch actions).
 - Checkout failures (e.g. a branch already checked out in another worktree) now show an **Error: Unable to Checkout Branch** dialog with the git error message, instead of only a toast notification.
+- Added an IDE-style commit Find widget opened with `Cmd/Ctrl+F`, with result position, no-result feedback, match-case/whole-word/regex options, search history, keyboard navigation, and slide-in/out dismissal with `Escape`.
 
 ### Fixed
 
@@ -22,11 +23,14 @@
 ### Changed
 
 - Redesigned the branch dropdown: a select-style trigger showing the current state, a "Filter Branches…" glob input, a header with the Show Remote Branches toggle and the Tree/List switch, and checkmark rows applied instantly — both views are grouped as Show All ─ local branches ─ one group per remote (last), separated by dividers. The Tree view keeps folder grouping (larger fold arrows, remote prefix stripped inside its group) and uses the same ✓ checkmarks everywhere, with `–` marking partially selected folders; the Show Remote Branches toggle uses the ✓ style too.
-- The toolbar is now laid out in three sections: branch filter on the left, the search box centered, and action buttons on the right. The search match count and ↑/↓ controls always reserve their space, so the centered search box no longer shifts as a query is typed or cleared.
+- Removed the always-visible centered search field; commit search now opens as a top-right overlay.
 - Toolbar buttons and file-row actions use custom CSS tooltips (shown after a short hover delay), since native `title` tooltips do not appear in some webview environments.
 - The checked-out branch badge now shows a colored ○ marker outside the badge on the left, with the branch name in bold.
 - The Fetch and Refresh toolbar buttons are now icon buttons (cloud-download / circular arrow); the refresh icon spins while the graph is loading.
 - Stash panel bulk-select checkboxes now use the same checkmark style as the branch dropdown.
+- Toolbar action buttons now use transparent IDE-style backgrounds, and the branch filter caret is larger.
+- Reference badge icon segments now fill the badge's left edge, and the Open File action uses the VS Code `go-to-file` icon.
+- Removed the redundant checked-out branch text (`● branch`) from the toolbar; the graph's HEAD badge remains the current-branch indicator.
 
 ## [0.4.3] - 2026-08-24
 

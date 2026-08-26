@@ -8,7 +8,7 @@ A VS Code / Cursor extension that visualizes your commit graph and lets you run 
 
 ## Usage
 
-Click **Git Scope** in the left side of the status bar, or use Command Palette (`Cmd+Shift+P`) → **Git Scope: View Git Graph**.
+Click **Git Scope** in the left side of the status bar, or use Command Palette (`Cmd+Shift+P`) → **Git Scope: View Git Graph**. Press `Cmd/Ctrl+F` in the graph to open the Find widget; close it with `Escape` or the × button.
 
 ## Features
 
@@ -16,7 +16,7 @@ Click **Git Scope** in the left side of the status bar, or use Command Palette (
 
   ![Graph line highlighting on hover and detail view](https://github.com/DoK6n/git-scope/raw/main/images/graph-highlight.gif)
 
-- **Commit details**: inline expansion below the row, changed files as an icon-themed tree or flat list with `(+added | -removed)` line stats, click to open diffs, commit comparison via Ctrl/Cmd+click
+- **Commit details**: inline expansion below the row, changed files as an icon-themed tree or flat list with `(+added | -removed)` line stats, hover actions to copy a file's absolute path or open it in the editor, click to open diffs, commit comparison via Ctrl/Cmd+click
 - **Actions**: checkout (double-click a badge to `git switch`), create/delete/rename branches, merge, rebase, cherry-pick, revert, drop, tag, stash, push/pull — destructive actions always require confirmation
 - **Branch drag & drop**: drag a local or remote branch badge onto a local branch to merge or rebase
 
@@ -24,7 +24,8 @@ Click **Git Scope** in the left side of the status bar, or use Command Palette (
 
 - **Enhanced git reset**: choose `--soft` / `--mixed` / `--hard` with a commit target or `HEAD~N`, plus an "undo this commit" shortcut
 - **Worktree management**: list/add/remove/move/lock worktrees, worktree badges on the graph, open in a new or current window
-- **Glob search & filters**: instant glob patterns (`feature/*`, `release-[0-9]*`) for commit search and branch filtering
+- **IDE-style Find**: `Cmd/Ctrl+F` opens a top-right Find widget with result position, previous/next navigation, match-case, whole-word and regex options, search history, and no-result feedback
+- **Branch filters**: instant glob patterns (`feature/*`, `release-[0-9]*`), Tree/List views, and a Show Remote Branches toggle
 - **fetch --prune**: clean up deleted remote branch references right from the fetch button
 - **Avatars**: GitHub profile pictures (with disk cache and GitHub sign-in support), Gravatar fallback, and AI co-author icons for `Co-authored-by` trailers
 - Auto-refresh: the graph follows any `.git` change — actions in the app or commands in your terminal
