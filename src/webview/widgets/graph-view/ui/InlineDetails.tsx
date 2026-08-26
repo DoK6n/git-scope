@@ -3,6 +3,7 @@ import type { FileChange, IconSpec } from '@shared-types/domain'
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
 import { formatDate, t } from '../../../shared/lib'
+import { GoToFileIcon } from '../../../shared/ui'
 import { basename, buildFileTree } from '../lib/fileTree'
 import type { FileTreeFolder } from '../lib/fileTree'
 import { ensureIcons, getFileIcon, getFolderIcon } from '../model/fileIcons'
@@ -216,18 +217,6 @@ function CopyPathGlyph() {
   )
 }
 
-/** 파일 열기 글리프 — 모서리 접힌 문서 (자체 제작) */
-function OpenFileGlyph() {
-  return (
-    <svg viewBox="0 0 16 16" width="13" height="13">
-      <g fill="none" stroke="currentColor" stroke-width="1.4">
-        <path d="M3.4 2.6 H9.2 L12.6 6 V13.4 H3.4 Z" />
-        <path d="M9.2 2.6 V6 H12.6" />
-      </g>
-    </svg>
-  )
-}
-
 function FileRow(props: {
   file: FileChange
   label: string
@@ -272,7 +261,7 @@ function FileRow(props: {
         </span>
         <Show when={props.file.status !== 'D'}>
           <span class="file-action" data-tip={t('Open file')} onClick={openFile}>
-            <OpenFileGlyph />
+            <GoToFileIcon />
           </span>
         </Show>
       </span>

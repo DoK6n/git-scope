@@ -3,3 +3,4 @@ export { ContextMenuHost, openContextMenu, closeContextMenu } from './ContextMen
 export type { MenuItem } from './ContextMenu'
 export { PromptHost, formDialog, confirmDialog, errorDialog } from './prompts'
 export type { FieldSpec, FormValues } from './prompts'
+export { GoToFileIcon } from './icons/GoToFileIcon'
