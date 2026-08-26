@@ -31,6 +31,8 @@ body {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
 
 .empty-state {
@@ -59,7 +61,7 @@ body {
   flex-shrink: 0;
 }
 
-/* 3분할: [필터] · [검색(중앙)] · [상호작용 버튼] — 양끝 섹션이 같은 flex로 검색을 중앙에 고정 */
+/* [필터] · [상호작용 버튼] */
 .toolbar-section {
   display: flex;
   align-items: center;
@@ -67,8 +69,7 @@ body {
   min-width: 0;
 }
 
-.toolbar-left,
-.toolbar-right {
+.toolbar-left {
   flex: 1 1 0;
 }
 
@@ -410,39 +411,189 @@ body {
   text-overflow: ellipsis;
 }
 
-.search-box {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.search-box input {
-  width: 220px;
-  background: var(--vscode-input-background);
-  color: var(--vscode-input-foreground);
-  border: 1px solid var(--vscode-input-border, transparent);
-  border-radius: 3px;
-  padding: 3px 6px;
-  font-family: inherit;
-  font-size: inherit;
-}
-
-.search-controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* visibility로만 숨겨 자리를 유지한다 — 검색창 중앙 고정용 */
-.search-controls.hidden {
-  visibility: hidden;
-}
-
-.search-count {
-  color: var(--vscode-descriptionForeground);
+/* Cmd/Ctrl+F 검색 위젯 — IDE find widget처럼 그래프 우측 상단에 떠 있다 */
+.find-widget {
+  position: absolute;
+  top: -43px;
+  right: 14px;
+  z-index: 40;
+  width: 420px;
+  height: 33px;
+  max-width: calc(100% - 28px);
+  padding: 0 4px;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: var(--vscode-editorWidget-background, #252526);
+  color: var(--vscode-editorWidget-foreground, var(--vscode-foreground));
+  border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border, #454545));
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 0 8px 2px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.35));
   font-size: 12px;
-  min-width: 24px;
+  line-height: 19px;
+  pointer-events: none;
+  transition: top 0.2s linear;
+}
+
+.find-widget.open {
+  top: 0;
+  pointer-events: auto;
+}
+
+.find-widget-part {
+  display: flex;
+  align-items: center;
+  height: 25px;
+  margin: 3px 25px 0 4px;
+  box-sizing: content-box;
+}
+
+.find-widget-input-wrap {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  height: 25px;
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, transparent);
+  box-sizing: border-box;
+}
+
+.find-widget-input-wrap:focus-within {
+  outline: 1px solid var(--vscode-focusBorder, #007acc);
+  outline-offset: -1px;
+}
+
+.find-widget-input {
+  width: 100%;
+  min-width: 0;
+  height: 23px;
+  padding: 2px 65px 2px 6px;
+  background: transparent;
+  color: var(--vscode-input-foreground);
+  border: 0;
+  outline: none;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.find-widget-input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.find-widget-modifiers {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  height: 20px;
+}
+
+.find-modifier {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: transparent;
+  color: var(--vscode-input-foreground);
+  border: 0;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 20px;
   text-align: center;
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+.find-modifier:disabled {
+  cursor: default;
+}
+
+.find-modifier:hover,
+.find-modifier.active {
+  opacity: 1;
+}
+
+.find-modifier.active {
+  background: var(--vscode-inputOption-activeBackground);
+  outline: 1px solid var(--vscode-inputOption-activeBorder);
+  outline-offset: -1px;
+}
+
+.find-whole-word {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-size: 12px;
+}
+
+.find-regex {
+  font-size: 12px;
+}
+
+.find-widget-status {
+  width: 79px;
+  min-width: 79px;
+  height: 25px;
+  margin-left: 3px;
+  padding: 2px 0 0 5px;
+  box-sizing: border-box;
+  line-height: 23px;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--vscode-editorWidget-foreground, var(--vscode-foreground));
+  font-size: 12px;
+}
+
+.find-widget-status.no-results {
+  color: var(--vscode-errorForeground, #f48771);
+}
+
+.find-widget-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 3px;
+  padding: 3px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  background: none;
+  color: var(--vscode-icon-foreground, var(--vscode-foreground));
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.find-widget-action:hover:not(:disabled) {
+  background: var(--vscode-toolbar-hoverBackground, rgba(90, 93, 94, 0.31));
+}
+
+.find-widget-action:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.find-widget-action svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.find-widget-close {
+  position: absolute;
+  top: 5px;
+  right: 4px;
+  margin-left: 0;
+}
+
+.find-widget-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .find-widget {
+    transition: none;
+  }
 }
 
 .commit-row.search-match {

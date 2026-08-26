@@ -1,5 +1,6 @@
 import { onMount, Show } from 'solid-js'
 import { graphStore } from '../entities/graph'
+import { SearchWidget } from '../features/search'
 import { ContextMenuHost, PromptHost } from '../shared/ui'
 import { GraphView } from '../widgets/graph-view'
 import { StashPanel } from '../widgets/stash-panel'
@@ -17,7 +18,10 @@ export function App() {
           when={graphStore.repos().length > 0}
           fallback={<div class="empty-state">No git repository found in this workspace.</div>}
         >
-          <GraphView />
+          <>
+            <SearchWidget />
+            <GraphView />
+          </>
         </Show>
       </div>
       <WorktreePanel />

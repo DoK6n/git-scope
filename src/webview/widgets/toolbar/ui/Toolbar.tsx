@@ -2,7 +2,6 @@ import { createMemo, createSignal, For, Show } from 'solid-js'
 import { graphStore } from '../../../entities/graph'
 import { fetchAll, fetchDefault } from '../../../features/fetch'
 import { resetHeadN } from '../../../features/reset'
-import { searchStore } from '../../../features/search'
 import { stashPanelStore } from '../../../features/stash'
 import { worktreeStore } from '../../../features/worktree'
 import { makeMatcher, t } from '../../../shared/lib'
@@ -56,7 +55,7 @@ function RefreshGlyph() {
   )
 }
 
-/** 상단 툴바 — [필터] · [검색(중앙)] · [상호작용 버튼] 3분할 */
+/** 상단 툴바 — [필터] · [상호작용 버튼] */
 export function Toolbar() {
   const [filterOpen, setFilterOpen] = createSignal(false)
   const [branchQuery, setBranchQuery] = createSignal('')
@@ -384,38 +383,6 @@ export function Toolbar() {
             ● {graphStore.graph()!.headBranch}
           </span>
         </Show>
-      </div>
-
-      <div class="toolbar-section toolbar-center">
-        <div class="search-box">
-          <input
-            type="text"
-            placeholder={t('Search (glob: fix*, feat-?)')}
-            value={searchStore.query()}
-            onInput={(e) => searchStore.search(e.currentTarget.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                if (e.shiftKey) searchStore.prev()
-                else searchStore.next()
-              }
-              if (e.key === 'Escape') searchStore.search('')
-            }}
-          />
-          {/* 항상 렌더하고 visibility로만 숨긴다 — 검색어 유무에 따라 폭이 변해
-              가운데 정렬된 검색창이 덜컥거리지 않게 자리를 고정 */}
-          <span
-            class="search-controls"
-            classList={{ hidden: searchStore.query().trim() === '' }}
-          >
-            <span class="search-count">{searchStore.matchRows().length}</span>
-            <button class="toolbar-btn" title="Previous match (Shift+Enter)" onClick={searchStore.prev}>
-              ↑
-            </button>
-            <button class="toolbar-btn" title="Next match (Enter)" onClick={searchStore.next}>
-              ↓
-            </button>
-          </span>
-        </div>
       </div>
 
       {/* 네이티브 title 툴팁이 webview에서 안 뜨는 환경이 있어 data-tip 커스텀 툴팁 사용 */}
