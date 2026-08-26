@@ -152,7 +152,7 @@ describe('reset 흐름', () => {
     sent.length = 0
     await undoCommitsFrom('roothash', [])
     expect(sent.some((m) => m.command === 'reset')).toBe(false)
-    expect(graphStore.error()).toContain('루트 커밋')
+    expect(graphStore.error()).toContain('root commit')
     graphStore.setError(null)
   })
 

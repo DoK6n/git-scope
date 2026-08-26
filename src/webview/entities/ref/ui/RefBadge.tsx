@@ -1,5 +1,6 @@
 import type { GitRef } from '@shared-types/domain'
 import { createSignal, For, Show } from 'solid-js'
+import { t } from '../../../shared/lib'
 import type { RefGroup } from '../lib/group'
 
 /** 칩 안에 그리는 미니 브랜치 글리프 */
@@ -53,12 +54,21 @@ interface RefBadgeProps {
 /**
  * 브랜치/원격/태그 라벨 칩 — 어두운 배경 + 브랜치색 테두리 + 색상 아이콘 칩.
  * 로컬 브랜치와 같은 커밋의 대응 원격은 한 뱃지 안에 "이름 | origin" 형태로 합쳐진다.
+ * 체크아웃된 브랜치는 뱃지 왼쪽 바깥에 ○ 마커를 두고 이름을 굵게 표시한다.
  */
 export function RefBadge(props: RefBadgeProps) {
   const gitRef = () => props.group.ref
   const color = () => props.color
   const [dragOver, setDragOver] = createSignal(false)
   return (
+    <>
+    <Show when={props.isHead}>
+      <span class="ref-head-marker" style={{ color: color() }} title={t('HEAD — checked out branch')}>
+        <svg viewBox="0 0 12 12" width="11" height="11">
+          <circle cx="6" cy="6" r="3.4" fill="none" stroke="currentColor" stroke-width="2.2" />
+        </svg>
+      </span>
+    </Show>
     <span
       class={`ref-badge ref-${gitRef().type}`}
       classList={{ 'ref-head': props.isHead, 'drop-target': dragOver() }}
@@ -69,7 +79,7 @@ export function RefBadge(props: RefBadgeProps) {
         e.stopPropagation()
         props.onDblClick?.()
       }}
-      title={props.onDblClick ? '더블클릭: git switch' : undefined}
+      title={props.onDblClick ? t('Double-click: git switch') : undefined}
       draggable={props.onDragStart !== undefined}
       onDragStart={(e) => props.onDragStart?.(e)}
       onDragEnter={(e) => {
@@ -99,11 +109,8 @@ export function RefBadge(props: RefBadgeProps) {
             <TagGlyph />
           </Show>
         </span>
-        <Show when={props.isHead}>
-          <span class="ref-head-dot">●</span>
-        </Show>
         <Show when={props.isWorktree}>
-          <span class="ref-worktree-mark" title="checked out in a worktree">⊕</span>
+          <span class="ref-worktree-mark" title={t('checked out in a worktree')}>⊕</span>
         </Show>
         <span
           class="ref-name"
@@ -128,5 +135,6 @@ export function RefBadge(props: RefBadgeProps) {
         )}
       </For>
     </span>
+    </>
   )
 }

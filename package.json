@@ -96,6 +96,19 @@
           "type": "boolean",
           "default": false,
           "description": "Run fetch with --prune enabled by default."
+        },
+        "gitScope.language": {
+          "type": "string",
+          "enum": [
+            "en",
+            "ko"
+          ],
+          "enumDescriptions": [
+            "English",
+            "한국어 (Korean)"
+          ],
+          "default": "en",
+          "description": "Language for Git Scope UI text (tooltips, dialogs, notifications)."
         }
       }
     }

@@ -47,6 +47,10 @@ export function buildRefMenu(ref: GitRef): MenuItem[] {
   if (ref.type === 'remote') {
     const remote = ref.remote ?? 'origin'
     const branchName = ref.name.slice(remote.length + 1)
+    // origin/HEAD 심볼릭 참조는 브랜치 액션 대상이 아니다
+    if (branchName === 'HEAD') {
+      return [{ label: 'Copy Ref Name', onClick: () => copy(ref.name) }]
+    }
     return [
       { label: 'Checkout as Local Branch…', onClick: () => void checkoutRemoteBranch(ref.name) },
       {

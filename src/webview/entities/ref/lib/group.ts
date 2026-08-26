@@ -11,6 +11,11 @@ function strippedName(ref: GitRef): string {
   return ref.remote ? ref.name.slice(ref.remote.length + 1) : ref.name
 }
 
+/** origin/HEAD 같은 원격 심볼릭 HEAD 참조 — 뱃지로는 표시하되 checkout/삭제 대상은 아니다 */
+export function isRemoteHeadRef(ref: GitRef): boolean {
+  return ref.type === 'remote' && ref.remote !== undefined && ref.name === `${ref.remote}/HEAD`
+}
+
 /**
  * 같은 커밋의 로컬 브랜치와 이름이 대응하는 원격 브랜치를 한 뱃지로 합친다.
  * (예: main + origin/main → "main | origin") 대응이 없는 원격은 단독 뱃지.

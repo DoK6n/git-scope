@@ -38,8 +38,15 @@ interface ConfirmState {
   resolve: (ok: boolean) => void
 }
 
+interface ErrorState {
+  title: string
+  message: string
+  resolve: () => void
+}
+
 const [formState, setFormState] = createSignal<FormState | null>(null)
 const [confirmState, setConfirmState] = createSignal<ConfirmState | null>(null)
+const [errorState, setErrorState] = createSignal<ErrorState | null>(null)
 
 /** 입력 폼 다이얼로그를 띄우고 값을 받는다. 취소하면 null */
 export function formDialog(opts: {
@@ -60,6 +67,13 @@ export function formDialog(opts: {
       warning: opts.warning,
       resolve,
     })
+  })
+}
+
+/** 액션 실패 다이얼로그 — git stderr를 그대로 보여주고 Dismiss로 닫는다 */
+export function errorDialog(opts: { title: string; message: string }): Promise<void> {
+  return new Promise((resolve) => {
+    setErrorState({ title: opts.title, message: opts.message, resolve })
   })
 }
 
@@ -133,6 +147,28 @@ export function PromptHost() {
             <div style={{ 'white-space': 'pre-wrap' }}>{state().message}</div>
           </Dialog>
         )}
+      </Show>
+      <Show when={errorState()}>
+        {(state) => {
+          const close = () => {
+            state().resolve()
+            setErrorState(null)
+          }
+          return (
+            <Dialog
+              open
+              title={`⚠ Error: ${state().title}`}
+              onClose={close}
+              footer={
+                <button class="toolbar-btn" onClick={close}>
+                  Dismiss
+                </button>
+              }
+            >
+              <div class="dialog-error-message">{state().message}</div>
+            </Dialog>
+          )
+        }}
       </Show>
     </>
   )

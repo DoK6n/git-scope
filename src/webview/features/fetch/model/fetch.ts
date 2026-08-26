@@ -1,5 +1,6 @@
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
+import { t } from '../../../shared/lib'
 
 /**
  * 모든 원격에서 fetch. prune이면 원격에서 삭제된 브랜치 참조를 함께 정리한다.
@@ -10,7 +11,7 @@ export async function fetchAll(prune: boolean): Promise<boolean> {
   if (!repo) return false
   return graphStore.runAction(
     request('fetch', { repo, prune }),
-    prune ? 'git fetch --all --prune 완료' : 'git fetch --all 완료',
+    prune ? t('Fetched all remotes (prune)') : t('Fetched all remotes'),
   )
 }
 

@@ -59,8 +59,25 @@ body {
   flex-shrink: 0;
 }
 
-.toolbar-spacer {
-  flex: 1;
+/* 3분할: [필터] · [검색(중앙)] · [상호작용 버튼] — 양끝 섹션이 같은 flex로 검색을 중앙에 고정 */
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.toolbar-left,
+.toolbar-right {
+  flex: 1 1 0;
+}
+
+.toolbar-right {
+  justify-content: flex-end;
+}
+
+.toolbar-center {
+  flex: 0 0 auto;
 }
 
 .toolbar-btn {
@@ -84,9 +101,54 @@ body {
 }
 
 .toolbar-btn.icon-btn {
-  font-size: 18px;
-  line-height: 1;
-  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 7px;
+}
+
+.toolbar-btn.icon-btn svg {
+  display: block;
+}
+
+.toolbar-btn.spinning svg {
+  animation: gs-spin 0.9s linear infinite;
+}
+
+@keyframes gs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* data-tip 커스텀 툴팁 — webview에서 네이티브 title이 안 뜨는 환경 대응.
+   우측 정렬 요소 기준이라 오른쪽 끝에 앵커해 왼쪽으로 펼쳐진다 */
+[data-tip] {
+  position: relative;
+}
+
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  z-index: 100;
+  padding: 3px 8px;
+  border-radius: 3px;
+  background: var(--vscode-editorHoverWidget-background, #252526);
+  color: var(--vscode-editorHoverWidget-foreground, #ccc);
+  border: 1px solid var(--vscode-editorHoverWidget-border, #454545);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  font-size: 11px;
+  font-weight: normal;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s ease 0.4s; /* hover 0.4s 후 표시 */
+}
+
+[data-tip]:hover::after {
+  opacity: 1;
 }
 
 .toolbar-btn.danger {
@@ -134,34 +196,117 @@ body {
   position: relative;
 }
 
+/* select 룩의 브랜치 필터 트리거 — 현재 상태(Show All / 선택 요약)를 표시 */
+.branch-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 150px;
+  background: var(--vscode-dropdown-background, #3c3c3c);
+  color: var(--vscode-dropdown-foreground, #ccc);
+  border: 1px solid var(--vscode-dropdown-border, #454545);
+  border-radius: 3px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+}
+
+.branch-select:hover,
+.branch-select.open {
+  border-color: var(--vscode-focusBorder, #007acc);
+}
+
+.branch-select-value {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+.branch-select-caret {
+  font-size: 10px;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* 드롭다운 밖 클릭으로 닫기 위한 투명 오버레이 */
+.dropdown-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 49;
+}
+
 .branch-filter-dropdown {
   position: absolute;
   top: 100%;
   left: 0;
   z-index: 50;
-  margin-top: 4px;
+  margin-top: 2px;
   min-width: 260px;
-  max-height: 340px;
+  max-height: 380px;
   display: flex;
   flex-direction: column;
   background: var(--vscode-dropdown-background, #252526);
   border: 1px solid var(--vscode-dropdown-border, #454545);
-  border-radius: 4px;
+  border-radius: 3px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .branch-filter-list {
   overflow-y: auto;
-  padding: 6px;
+  padding: 4px 0;
 }
 
-.branch-filter-item {
+/* 체크마크(✓) 열 + 이름 — 선택된 항목만 체크가 보인다 */
+.branch-option {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 2px 4px;
+  padding: 3px 10px 3px 8px;
   cursor: pointer;
   white-space: nowrap;
+  user-select: none;
+}
+
+.branch-option:hover {
+  background: var(--vscode-list-hoverBackground, #2a2d2e);
+}
+
+.branch-option-check {
+  width: 14px;
+  flex-shrink: 0;
+  text-align: center;
+  visibility: hidden;
+}
+
+.branch-option.checked .branch-option-check {
+  visibility: visible;
+}
+
+.branch-option.checked .branch-option-label {
+  font-weight: 600;
+}
+
+.branch-option-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 그룹 구분선 + 그룹 라벨 (마지막 그룹들 = 원격) */
+.branch-filter-divider {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--vscode-panel-border, #444);
+}
+
+.branch-filter-group {
+  padding: 2px 10px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+  font-style: italic;
+  user-select: none;
 }
 
 .branch-filter-glob {
@@ -181,17 +326,18 @@ body {
 }
 
 .branch-filter-empty {
-  padding: 8px;
+  padding: 8px 10px;
   color: var(--vscode-descriptionForeground);
   font-size: 12px;
 }
 
-/* 브랜치 필터 헤더: 개수 + list/tree 토글 */
+/* 드롭다운 헤더: Show Remote Branches 토글 + Tree/List 뷰 전환 */
 .branch-filter-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 6px;
+  gap: 10px;
+  padding: 5px 8px;
   border-bottom: 1px solid var(--vscode-panel-border, #444);
 }
 
@@ -199,18 +345,69 @@ body {
   margin-right: 0;
 }
 
-.branch-filter-count {
-  color: var(--vscode-descriptionForeground);
-  font-size: 11px;
+.toolbar-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  font-size: 12px;
 }
 
+/* Show Remote Branches 토글 — 다른 항목과 같은 ✓ 마크 방식 */
+.toolbar-check:hover .branch-option-check {
+  visibility: visible;
+  opacity: 0.35;
+}
+
+.toolbar-check.checked .branch-option-check {
+  visibility: visible;
+  opacity: 1;
+}
+
+.toolbar-check.checked {
+  font-weight: 600;
+}
+
+/* tree 뷰 행 — branch-option의 hover/✓ 체크 스타일 공유 */
 .branch-tree-folder {
   color: var(--vscode-descriptionForeground);
+}
+
+/* 폴더 체크 셀: 전체 선택 ✓ / 일부 선택 – . 평소엔 숨기고 행 hover 시 흐리게 노출 */
+.branch-option-check.partial {
+  visibility: visible;
+}
+
+.branch-tree-folder .branch-option-check {
+  cursor: pointer;
+}
+
+.branch-tree-folder:hover .branch-option-check {
+  visibility: visible;
+  opacity: 0.35;
+}
+
+.branch-tree-folder .branch-option-check.checked,
+.branch-tree-folder .branch-option-check.partial {
+  visibility: visible;
+  opacity: 1;
+}
+
+.branch-tree-row .folder-arrow {
+  cursor: pointer;
+  user-select: none;
+  font-size: 18px;
+  width: 18px;
+  line-height: 1;
 }
 
 .branch-tree-name {
   cursor: pointer;
   user-select: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .search-box {
@@ -230,10 +427,21 @@ body {
   font-size: inherit;
 }
 
+.search-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* visibility로만 숨겨 자리를 유지한다 — 검색창 중앙 고정용 */
+.search-controls.hidden {
+  visibility: hidden;
+}
+
 .search-count {
   color: var(--vscode-descriptionForeground);
   font-size: 12px;
-  min-width: 18px;
+  min-width: 24px;
   text-align: center;
 }
 
@@ -406,6 +614,26 @@ path.graph-line-hit {
 
 .stash-item {
   cursor: pointer;
+}
+
+/* 일괄 작업 선택 체크 — 브랜치 필터와 같은 ✓ 마크. 체크됐거나 행 hover 시에만 보인다 */
+.stash-item-check {
+  width: 16px;
+  flex-shrink: 0;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  visibility: hidden;
+}
+
+.stash-item:hover .stash-item-check {
+  visibility: visible;
+  opacity: 0.35;
+}
+
+.stash-item .stash-item-check.checked {
+  visibility: visible;
+  opacity: 1;
 }
 
 .stash-item-selector {
@@ -633,8 +861,16 @@ path.graph-line-hit {
   background: color-mix(in srgb, var(--ref-color, #888) 35%, transparent);
 }
 
-.ref-head {
-  font-weight: 600;
+.ref-head .ref-name {
+  font-weight: 700;
+}
+
+/* 체크아웃된 브랜치 마커 — 뱃지 왼쪽 바깥의 ○, 브랜치 라인 색을 따른다 */
+.ref-head-marker {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  flex-shrink: 0;
 }
 
 .ref-icon {
@@ -653,10 +889,6 @@ path.graph-line-hit {
   text-overflow: ellipsis;
   max-width: 240px;
   white-space: nowrap;
-}
-
-.ref-head-dot {
-  color: #53c17f;
 }
 
 .ref-worktree-mark {
@@ -813,6 +1045,14 @@ path.graph-line-hit {
   color: var(--vscode-descriptionForeground);
   font-size: 12px;
   line-height: 1.5;
+}
+
+/* 액션 실패 다이얼로그 본문 — git stderr를 이탤릭으로 그대로 노출 */
+.dialog-error-message {
+  font-style: italic;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--vscode-foreground);
 }
 
 .dialog-warning {
@@ -998,6 +1238,32 @@ path.graph-line-hit {
   flex-shrink: 0;
   font-size: 11px;
   color: var(--vscode-descriptionForeground);
+}
+
+/* 파일 행 hover 액션 (경로 복사 / 파일 열기) — Git Graph처럼 hover 시에만 노출 */
+.file-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  visibility: hidden;
+}
+
+.details-file:hover .file-actions {
+  visibility: visible;
+}
+
+.file-action {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 3px;
+  border-radius: 3px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.file-action:hover {
+  background: var(--vscode-toolbar-hoverBackground, rgba(90, 93, 94, 0.31));
+  color: var(--vscode-foreground);
 }
 
 .file-added {

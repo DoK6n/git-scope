@@ -63,15 +63,21 @@
 
 ## 30.2 브랜치 필터 드롭다운
 
-### 30.2.1 위치와 기본 동작 [todo]
+### 30.2.1 위치와 기본 동작 [done]
 
 - 그래프 뷰 상단 컨트롤 바에 "Branches" 드롭다운이 있고, 여기서 그래프에 표시할 브랜치를 고른다. (출처: README)
 - 필터 옵션은 세 가지다. (출처: README)
   1. **Show All** — 모든 브랜치 표시
   2. **개별 브랜치 선택** — 하나 이상의 브랜치를 선택해 그 브랜치들만 표시
   3. **커스텀 glob 패턴 선택** — 설정에 미리 정의해 둔 패턴 목록에서 선택
+- GitScope 구현 노트:
+  - 드롭다운 트리거는 select 룩으로 현재 상태(`Show All` / 선택 1건이면 그 이름 / `N branches`)를 표시한다.
+  - 항목은 체크마크(✓) 행으로 표시하고 클릭 즉시 적용된다(Apply 버튼 없음). 선택이 모두 풀리면 Show All로 복귀.
+  - 목록은 그룹으로 나뉜다: `Show All` ─ divider ─ 로컬 브랜치 ─ divider ─ 원격별 그룹(`origin` 등, 마지막 그룹). 원격 그룹에는 이탤릭 그룹 라벨을 붙이고 브랜치명은 원격 접두를 뗀 이름으로 표시한다.
+  - 커스텀 사전 등록 glob(3) 대신 드롭다운 상단 "Filter Branches…" 입력에서 즉석 glob으로 목록을 좁힌다(→ 30.4.1). `[changed]`
+  - **필터 적용 시 체크아웃된 브랜치(HEAD)는 자동 포함되지 않는다** — 선택한 브랜치들만 정확히 표시된다. (초기 구현은 `git log`에 HEAD를 항상 넘겨 필터가 무력화되는 버그가 있었음 — v0.5.0에서 수정)
 
-### 30.2.2 단일 / 다중 선택 [todo]
+### 30.2.2 단일 / 다중 선택 [done]
 
 - 다중 선택을 지원한다("Select one or more branches to be viewed"). 선택된 브랜치들의 커밋 이력이 합집합으로 표시된다. (출처: README)
 - 선택 상태는 커밋 컨텍스트 메뉴가 아니라 **브랜치 라벨 컨텍스트 메뉴**에서도 조작할 수 있다. 원본은 로컬 브랜치·리모트 브랜치 컨텍스트 메뉴에 다음 두 항목을 둔다. (출처: 원본 package.json `contextMenuActionsVisibility.branch` / `.remoteBranch`)
@@ -79,7 +85,7 @@
   - `Unselect in Branches Dropdown` — 선택에서 제거
 - 즉 드롭다운은 "현재 선택 집합"을 유지하는 상태 저장 컨트롤이며, 그래프의 브랜치 라벨에서도 그 집합을 편집할 수 있다.
 
-### 30.2.3 "Show All" 동작 [todo]
+### 30.2.3 "Show All" 동작 [done]
 
 - Show All을 고르면 개별 브랜치·glob 선택이 모두 해제되고 전체 브랜치가 표시된다. (출처: README)
 - 전체 표시 상태에서만 적용되는 부가 옵션이 있다: reflog에만 언급된 커밋 포함 여부는 "모든 브랜치를 표시할 때만" 적용된다. (출처: 원본 package.json — `repository.includeCommitsMentionedByReflogs` 설명)
@@ -115,8 +121,8 @@
 
 | 대상 | 설정 키(원본) | 기본값 | 리포지토리별 덮어쓰기 | 상태 |
 |---|---|---|---|---|
-| 리모트 브랜치 | `repository.showRemoteBranches` | `true` | 컨트롤 바 | [todo] |
-| 리모트 HEAD 심볼릭 참조 (`origin/HEAD` 등) | `repository.showRemoteHeads` | `true` | — | [todo] |
+| 리모트 브랜치 | `repository.showRemoteBranches` | `true` | 컨트롤 바 | [done] |
+| 리모트 HEAD 심볼릭 참조 (`origin/HEAD` 등) | `repository.showRemoteHeads` | `true` | — | [done] |
 | 태그 | `repository.showTags` | `true` | 리포지토리 설정 위젯 | [todo] |
 | 스태시 | `repository.showStashes` | `true` | 리포지토리 설정 위젯 | [todo] |
 | Uncommitted changes | `repository.showUncommittedChanges` | `true` | — | [todo] |
@@ -126,6 +132,9 @@
 | 첫 번째 부모만 따라가기 (`--first-parent`) | `repository.onlyFollowFirstParent` | `false` | 리포지토리 설정 위젯 | [todo] |
 
 - `showUncommittedChanges` / `showUntrackedFiles`를 끄면 큰 리포지토리에서 로드 시간이 줄어든다고 명시되어 있다. 즉 이 토글들은 순수 표시 옵션이 아니라 조회 비용에 직접 영향을 준다. (출처: 원본 package.json 설명)
+- GitScope 구현 노트 (리모트 브랜치 / 리모트 HEAD):
+  - **Show Remote Branches** 체크박스를 브랜치 드롭다운 내부 상단(헤더)에 둔다. 끄면 `git log`에서 `--remotes`를 빼고 원격 ref를 뱃지·드롭다운에서도 제외하며, 필터에 남아 있던 원격 브랜치 선택도 함께 해제한다. VS Code 설정이 아닌 세션 상태다. `[changed]`
+  - `origin/HEAD` 심볼릭 참조는 항상 뱃지로 표시한다(전용 설정 없음). 필터 드롭다운·브랜치 액션 대상에서는 제외하고, 우클릭 메뉴는 Copy만 제공한다. `[changed]`
 - 커밋 정렬 순서(`date` / `author-date` / `topo`)도 컬럼 헤더 컨텍스트 메뉴에서 리포지토리별로 바꿀 수 있다. 필터는 아니지만 같은 컨트롤 계열이다. 상세는 `10-graph-view.md`. (출처: 원본 package.json `repository.commits.order`)
 
 ---
@@ -147,15 +156,16 @@ GitScope는 다음을 추가한다.
 
 ### 30.4.2 브랜치 필터 드롭다운 list / tree 뷰 [done]
 
-원본의 브랜치 드롭다운은 평면 목록뿐이다. GitScope는 변경 파일 뷰와 동일한 Tree/List 토글을 브랜치 필터에도 제공한다.
+원본의 브랜치 드롭다운은 평면 목록뿐이다. GitScope는 Tree/List 토글을 제공하며, v0.5.0에서 List 뷰를 그룹형으로 리디자인했다.
 
-- 드롭다운 상단에 브랜치 개수 + **Tree | List** 토글 표시 (기본: List — 기존 동작 유지)
+- 드롭다운 헤더: **Show Remote Branches** 토글 + **Tree | List** 전환 (기본: List)
+- **List**: `Show All` ─ divider ─ 로컬 브랜치 ─ divider ─ 원격별 그룹(마지막, 이탤릭 그룹 라벨 + 접두 뗀 이름) 구조. 체크마크(✓) 행
 - **Tree**: 브랜치명을 `/` 세그먼트로 폴더 그룹핑 (예: `origin/feature/a` → `origin` > `feature` > `a`)
   - 브랜치 없이 하위 폴더 하나뿐인 체인은 `a/b`로 압축 (변경 파일 트리와 동일 규칙)
   - 폴더는 ▸/▾로 접기/펼치기 (기본 모두 펼침), leaf는 마지막 세그먼트만 표시(hover 시 전체 이름)
   - 폴더 체크박스 = 하위 브랜치 일괄 선택/해제, 일부만 선택 시 indeterminate 표시
-- glob 필터 입력은 두 뷰 모두에 동일하게 선적용된다
-- 선택 집합은 뷰 전환과 무관하게 유지된다
+- 두 뷰 모두 선택은 클릭 즉시 적용되고, "Filter Branches…" glob 입력이 동일하게 선적용된다
+- 선택 집합(= 현재 필터)은 뷰 전환과 무관하게 유지된다
 
 ---
 

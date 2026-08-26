@@ -2,6 +2,7 @@ import { createSignal } from 'solid-js'
 import type { StashEntry } from '@shared-types/domain'
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
+import { t } from '../../../shared/lib'
 import { confirmDialog } from '../../../shared/ui'
 
 const [panelOpen, setPanelOpen] = createSignal(false)
@@ -50,7 +51,7 @@ async function dropSelected(): Promise<void> {
   if (selectors.length === 0) return
   const ok = await confirmDialog({
     title: `Drop ${selectors.length} Stash${selectors.length > 1 ? 'es' : ''}`,
-    message: `${selectors.sort((a, b) => selectorIndex(a) - selectorIndex(b)).join('\n')}\n\n선택한 스태시를 모두 삭제합니다. 되돌릴 수 없습니다.`,
+    message: t('{0}\n\nDeletes all selected stashes. This cannot be undone.', selectors.sort((a, b) => selectorIndex(a) - selectorIndex(b)).join('\n')),
     confirmLabel: 'Drop',
     danger: true,
   })
@@ -65,7 +66,7 @@ async function dropSelected(): Promise<void> {
     }
     dropped++
   }
-  if (dropped > 0) graphStore.setNotice(`스태시 ${dropped}개 삭제 완료`)
+  if (dropped > 0) graphStore.setNotice(t('Dropped {0} stashes', dropped))
   await graphStore.refresh()
   await reload()
 }

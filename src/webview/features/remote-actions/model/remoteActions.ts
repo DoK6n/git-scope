@@ -1,5 +1,6 @@
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
+import { t } from '../../../shared/lib'
 import { confirmDialog, formDialog } from '../../../shared/ui'
 
 function repo(): string | null {
@@ -28,7 +29,7 @@ export async function pushBranch(name: string): Promise<void> {
     ],
     confirmLabel: 'Push',
     warning: (v) =>
-      v.force ? '원격 브랜치 이력을 덮어쓸 수 있습니다 (--force-with-lease로 최소한의 보호만 적용).' : null,
+      v.force ? t('May overwrite remote branch history (--force-with-lease applies minimal protection).') : null,
   })
   if (!values) return
   await graphStore.runAction(
@@ -39,7 +40,7 @@ export async function pushBranch(name: string): Promise<void> {
       setUpstream: Boolean(values.setUpstream),
       force: Boolean(values.force),
     }),
-    `push ${values.remote}/${name} 완료`,
+    t('Pushed {0}', `${String(values.remote)}/${name}`),
   )
 }
 
@@ -49,13 +50,13 @@ export async function pullBranch(remote: string, branch: string): Promise<void> 
   if (!r) return
   const ok = await confirmDialog({
     title: `Pull ${remote}/${branch}`,
-    message: `${remote}/${branch}를 현재 브랜치로 pull 합니다.`,
+    message: t('Pull {0} into the current branch.', `${remote}/${branch}`),
     confirmLabel: 'Pull',
   })
   if (!ok) return
   await graphStore.runAction(
     request('pullBranch', { repo: r, remote, branch }),
-    `pull ${remote}/${branch} 완료`,
+    t('Pulled {0}', `${remote}/${branch}`),
   )
 }
 
@@ -65,14 +66,14 @@ export async function deleteRemoteBranch(remote: string, name: string): Promise<
   if (!r) return
   const ok = await confirmDialog({
     title: 'Delete Remote Branch',
-    message: `원격 ${remote}에서 브랜치 "${name}"을(를) 삭제합니다. 되돌리기 어렵습니다.`,
+    message: t('Deletes branch "{1}" on remote {0}. This is hard to undo.', remote, name),
     confirmLabel: 'Delete',
     danger: true,
   })
   if (!ok) return
   await graphStore.runAction(
     request('deleteRemoteBranch', { repo: r, remote, name }),
-    `원격 브랜치 ${remote}/${name} 삭제 완료`,
+    t('Deleted remote branch {0}', `${remote}/${name}`),
   )
 }
 
@@ -82,13 +83,13 @@ export async function fetchIntoLocal(remote: string, remoteBranch: string): Prom
   if (!r) return
   const ok = await confirmDialog({
     title: `Fetch into local branch`,
-    message: `${remote}/${remoteBranch} → 로컬 ${remoteBranch} 브랜치로 fetch 합니다 (fast-forward만).`,
+    message: t('Fetches {0} into local branch {1} (fast-forward only).', `${remote}/${remoteBranch}`, remoteBranch),
     confirmLabel: 'Fetch',
   })
   if (!ok) return
   await graphStore.runAction(
     request('fetchIntoLocal', { repo: r, remote, remoteBranch, localBranch: remoteBranch }),
-    `fetch ${remote}/${remoteBranch} → ${remoteBranch} 완료`,
+    t('Fetched {0} → {1}', `${remote}/${remoteBranch}`, remoteBranch),
   )
 }
 
@@ -104,6 +105,6 @@ export async function pushTag(name: string): Promise<void> {
   if (!values) return
   await graphStore.runAction(
     request('pushTag', { repo: r, name, remote: String(values.remote) }),
-    `push tag ${name} 완료`,
+    t('Pushed tag {0}', name),
   )
 }

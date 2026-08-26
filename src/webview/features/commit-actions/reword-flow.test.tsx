@@ -157,7 +157,7 @@ describe('reword 흐름', () => {
     await done
 
     expect(sent.some((m) => m.command === 'rewordCommit')).toBe(false)
-    expect(graphStore.error()).toContain('비어')
+    expect(graphStore.error()).toContain('empty')
     graphStore.setError(null)
   })
 })

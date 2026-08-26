@@ -1,6 +1,7 @@
 import type { Commit } from '@shared-types/domain'
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
+import { t } from '../../../shared/lib'
 import { confirmDialog, formDialog } from '../../../shared/ui'
 import { findFixupTarget, fixupTargetSubject } from '../lib/fixup'
 
@@ -12,7 +13,7 @@ function resolveTarget(commit: Commit): Commit | null {
   const target = findFixupTarget(commits, index)
   if (!target) {
     graphStore.setNotice(
-      `대상 커밋("${fixupTargetSubject(commit.subject)}")을 로드된 범위에서 찾지 못했습니다 — 커밋을 더 로드해보세요.`,
+      t('Target commit ("{0}") not found in the loaded range — try loading more commits.', fixupTargetSubject(commit.subject)),
     )
   }
   return target
@@ -32,12 +33,12 @@ export async function createFixupCommit(commit: Commit): Promise<void> {
   if (!repo) return
   const values = await formDialog({
     title: `Create Fixup Commit for ${commit.hash.slice(0, 8)}`,
-    note: `fixup! ${commit.subject}\n\n이후 "Squash Fixups… (autosquash)"로 이 커밋에 합칠 수 있습니다.`,
+    note: t('fixup! {0}\n\nYou can squash it into the target later with "Squash Fixups… (autosquash)".', commit.subject),
     fields: [
       {
         kind: 'checkbox',
         name: 'includeAll',
-        label: '모든 변경 포함 (-a) — 해제 시 스테이징된 변경만',
+        label: t('Include all changes (-a) — staged changes only when unchecked'),
         initial: true,
       },
     ],
@@ -46,7 +47,7 @@ export async function createFixupCommit(commit: Commit): Promise<void> {
   if (!values) return
   await graphStore.runAction(
     request('commitFixup', { repo, hash: commit.hash, includeAll: Boolean(values.includeAll) }),
-    `fixup 커밋 생성 완료 (→ ${commit.hash.slice(0, 8)})`,
+    t('Fixup commit created (→ {0})', commit.hash.slice(0, 8)),
   )
 }
 
@@ -60,14 +61,15 @@ export async function applyAutosquash(commit: Commit): Promise<void> {
     title: `Squash Fixups into ${target.hash.slice(0, 8)}`,
     message:
       `"${target.subject}"\n\n` +
-      `rebase --autosquash로 fixup!/squash! 커밋들을 대상 커밋에 합칩니다.\n` +
-      `대상 이후 커밋들의 해시가 바뀝니다 — 이미 푸시된 구간이면 주의하세요.`,
+      t(
+        'Squashes fixup!/squash! commits into their targets via rebase --autosquash.\nHashes of commits after the target will change — be careful if the range was already pushed.',
+      ),
     confirmLabel: 'Squash',
     danger: true,
   })
   if (!ok) return
   await graphStore.runAction(
     request('autosquash', { repo, baseHash: target.hash }),
-    `autosquash 완료 (${target.hash.slice(0, 8)}에 병합)`,
+    t('Autosquash done (squashed into {0})', target.hash.slice(0, 8)),
   )
 }

@@ -1,24 +1,26 @@
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
+import { t } from '../../../shared/lib'
 import { formDialog } from '../../../shared/ui'
 import type { FormValues } from '../../../shared/ui'
 
-const MODE_FIELD = {
+// 다이얼로그를 열 때마다 평가한다 — 언어 설정 변경이 힌트에 반영되도록 함수로 둔다
+const modeField = () => ({
   kind: 'radio' as const,
   name: 'mode',
   label: 'Reset mode',
   options: [
-    { value: 'soft', label: '--soft', hint: '인덱스·워킹트리 보존, HEAD만 이동' },
-    { value: 'mixed', label: '--mixed', hint: '인덱스 리셋, 워킹트리 보존 (기본값)' },
-    { value: 'hard', label: '--hard', hint: '인덱스·워킹트리 모두 폐기', danger: true },
+    { value: 'soft', label: '--soft', hint: t('keep index & working tree, move HEAD only') },
+    { value: 'mixed', label: '--mixed', hint: t('reset index, keep working tree (default)') },
+    { value: 'hard', label: '--hard', hint: t('discard index & working tree'), danger: true },
   ],
   initial: 'mixed',
-}
+})
 
 /** hard 모드 선택 시 경고 — 설정으로 끌 수 없다 (스펙 60-new-features §1) */
 const hardWarning = (values: FormValues) =>
   values.mode === 'hard'
-    ? '워킹트리와 인덱스의 모든 변경사항이 영구히 삭제됩니다. 되돌릴 수 없습니다.'
+    ? t('All changes in the working tree and index will be permanently lost. This cannot be undone.')
     : null
 
 async function runReset(to: string, mode: string): Promise<void> {
@@ -28,7 +30,7 @@ async function runReset(to: string, mode: string): Promise<void> {
   await graphStore.runAction(
     request('reset', { repo, to, mode: mode as 'soft' | 'mixed' | 'hard' }),
     // 원격 ref가 남아 있으면 그래프 행이 그대로라 실행 여부가 안 보인다 — 성공을 명시적으로 알린다
-    `git reset --${mode} ${target} 완료 — 브랜치 라벨과 HEAD(●) 위치가 이동했습니다`,
+    t('git reset --{0} {1} done — branch label and HEAD (●) moved', mode, target),
   )
 }
 
@@ -40,12 +42,12 @@ export async function resetToCommit(hash: string): Promise<void> {
   const isAlreadyHead = graph?.headHash === hash
   const values = await formDialog({
     title: `Reset ${headBranch} to ${hash.slice(0, 8)}`,
-    note: `${headBranch} 브랜치가 이 커밋을 가리키도록 이동합니다. 이 커밋보다 위(이후)의 커밋들이 브랜치에서 제외됩니다.`,
-    fields: [MODE_FIELD],
+    note: t('Moves branch {0} to point at this commit. Commits above (after) it are removed from the branch.', headBranch),
+    fields: [modeField()],
     confirmLabel: 'Reset',
     warning: (v) => {
       if (isAlreadyHead)
-        return '이 커밋은 이미 HEAD입니다 — reset해도 아무것도 바뀌지 않습니다. 마지막 커밋을 되돌리려면 바로 아래(부모) 커밋에서 reset 하세요.'
+        return t('This commit is already HEAD — reset changes nothing. To undo the last commit, reset from its parent commit below.')
       return hardWarning(v)
     },
   })
@@ -60,14 +62,14 @@ export async function resetToCommit(hash: string): Promise<void> {
 export async function undoCommitsFrom(hash: string, parents: string[]): Promise<void> {
   const parent = parents[0]
   if (parent === undefined) {
-    graphStore.setError('루트 커밋은 부모가 없어 이 방식으로 되돌릴 수 없습니다.')
+    graphStore.setError(t('The root commit has no parent, so it cannot be undone this way.'))
     return
   }
   const headBranch = graphStore.graph()?.headBranch ?? 'HEAD'
   const values = await formDialog({
     title: `Undo commits from ${hash.slice(0, 8)}`,
-    note: `${hash.slice(0, 8)}부터 HEAD까지의 커밋이 브랜치에서 제외되고, ${headBranch}는 부모 커밋(${parent.slice(0, 8)})을 가리킵니다. HEAD 커밋에서 실행하면 git reset HEAD~1과 같습니다.`,
-    fields: [MODE_FIELD],
+    note: t('Commits from {0} to HEAD are removed from the branch, and {1} will point at the parent commit ({2}). Running this on the HEAD commit equals git reset HEAD~1.', hash.slice(0, 8), headBranch, parent.slice(0, 8)),
+    fields: [modeField()],
     confirmLabel: 'Undo',
     warning: hardWarning,
   })
@@ -80,8 +82,8 @@ export async function resetHeadN(): Promise<void> {
   const values = await formDialog({
     title: 'Reset to HEAD~N',
     fields: [
-      { kind: 'number', name: 'n', label: 'N (HEAD에서 거슬러 올라갈 커밋 수)', initial: 1, min: 0 },
-      MODE_FIELD,
+      { kind: 'number', name: 'n', label: t('N (commits to go back from HEAD)'), initial: 1, min: 0 },
+      modeField(),
     ],
     confirmLabel: 'Reset',
     warning: hardWarning,

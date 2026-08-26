@@ -2,7 +2,7 @@ import { createEffect, createMemo, createResource, createSignal, For, Show } fro
 import type { FileChange, IconSpec } from '@shared-types/domain'
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
-import { formatDate } from '../../../shared/lib'
+import { formatDate, t } from '../../../shared/lib'
 import { basename, buildFileTree } from '../lib/fileTree'
 import type { FileTreeFolder } from '../lib/fileTree'
 import { ensureIcons, getFileIcon, getFolderIcon } from '../model/fileIcons'
@@ -103,8 +103,7 @@ export function InlineDetails(props: { top: number; left: number }) {
                 <div class="details-compare">
                   Comparing{' '}
                   <span class="details-hash">{comparePair()![0].slice(0, 8)}</span> ↔{' '}
-                  <span class="details-hash">{comparePair()![1].slice(0, 8)}</span> — 두 커밋
-                  사이의 모든 변경 파일
+                  <span class="details-hash">{comparePair()![1].slice(0, 8)}</span> — {t('all changed files between the two commits')}
                 </div>
               </Show>
               <div class="details-subject">{d().body.split('\n')[0]}</div>
@@ -205,12 +204,50 @@ function IconView(props: { spec: IconSpec | null | undefined }) {
   )
 }
 
+/** 경로 복사 글리프 — 겹친 문서 두 장 (자체 제작) */
+function CopyPathGlyph() {
+  return (
+    <svg viewBox="0 0 16 16" width="13" height="13">
+      <g fill="none" stroke="currentColor" stroke-width="1.4">
+        <rect x="5.2" y="4.2" width="8" height="9.6" rx="1.2" />
+        <path d="M11 4.2 V3.4 A1.2 1.2 0 0 0 9.8 2.2 H4 A1.2 1.2 0 0 0 2.8 3.4 V10.4 A1.2 1.2 0 0 0 4 11.6 H5.2" />
+      </g>
+    </svg>
+  )
+}
+
+/** 파일 열기 글리프 — 모서리 접힌 문서 (자체 제작) */
+function OpenFileGlyph() {
+  return (
+    <svg viewBox="0 0 16 16" width="13" height="13">
+      <g fill="none" stroke="currentColor" stroke-width="1.4">
+        <path d="M3.4 2.6 H9.2 L12.6 6 V13.4 H3.4 Z" />
+        <path d="M9.2 2.6 V6 H12.6" />
+      </g>
+    </svg>
+  )
+}
+
 function FileRow(props: {
   file: FileChange
   label: string
   depth?: number
   onOpen: (file: FileChange) => void
 }) {
+  const copyPath = (e: MouseEvent) => {
+    e.stopPropagation()
+    const repo = graphStore.currentRepo()
+    if (!repo) return
+    void request('copyToClipboard', { text: `${repo}/${props.file.path}` })
+  }
+  const openFile = (e: MouseEvent) => {
+    e.stopPropagation()
+    const repo = graphStore.currentRepo()
+    if (!repo) return
+    void request('openFile', { repo, path: props.file.path }).then((result) => {
+      if (!result.ok) graphStore.setError(result.error)
+    })
+  }
   return (
     <button
       class="details-file"
@@ -228,6 +265,17 @@ function FileRow(props: {
           <span class="file-removed">-{props.file.deletions}</span>)
         </span>
       </Show>
+      {/* 행 hover 시에만 보이는 파일 액션 — 행 자체는 diff 열기라 클릭 전파를 막는다 */}
+      <span class="file-actions">
+        <span class="file-action" data-tip={t('Copy absolute path')} onClick={copyPath}>
+          <CopyPathGlyph />
+        </span>
+        <Show when={props.file.status !== 'D'}>
+          <span class="file-action" data-tip={t('Open file')} onClick={openFile}>
+            <OpenFileGlyph />
+          </span>
+        </Show>
+      </span>
     </button>
   )
 }

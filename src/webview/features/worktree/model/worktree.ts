@@ -2,6 +2,7 @@ import { createSignal } from 'solid-js'
 import type { Worktree } from '@shared-types/domain'
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
+import { t } from '../../../shared/lib'
 import { confirmDialog, formDialog } from '../../../shared/ui'
 
 const [panelOpen, setPanelOpen] = createSignal(false)
@@ -38,7 +39,7 @@ async function addWorktree(): Promise<void> {
       {
         kind: 'text',
         name: 'branch',
-        label: 'Branch (기존 브랜치명 또는 새 브랜치명)',
+        label: t('Branch (existing or new branch name)'),
         placeholder: 'feature/…',
       },
       { kind: 'checkbox', name: 'create', label: 'Create new branch (-b)', initial: false },
@@ -74,7 +75,7 @@ async function removeWorktree(worktree: Worktree): Promise<void> {
   if (!repo) return
   const ok = await confirmDialog({
     title: 'Remove Worktree',
-    message: `${worktree.path}\n\n이 worktree를 제거할까요? (브랜치는 삭제되지 않습니다)`,
+    message: t('{0}\n\nRemove this worktree? (the branch is not deleted)', worktree.path),
     confirmLabel: 'Remove',
     danger: true,
   })
@@ -88,7 +89,7 @@ async function removeWorktree(worktree: Worktree): Promise<void> {
   // 변경사항이 있어 실패 → stderr를 보여주고 force 재확인
   const forceOk = await confirmDialog({
     title: 'Force Remove Worktree',
-    message: `제거 실패:\n${result.error}\n\n강제로 제거할까요? 워킹트리의 변경사항이 유실됩니다.`,
+    message: t('Remove failed:\n{0}\n\nForce remove? Changes in its working tree will be lost.', result.error),
     confirmLabel: 'Force Remove',
     danger: true,
   })
@@ -132,7 +133,7 @@ async function moveWorktree(worktree: Worktree): Promise<void> {
   if (newPath === '' || newPath === worktree.path) return
   const ok = await graphStore.runAction(
     request('moveWorktree', { repo, path: worktree.path, newPath }),
-    `worktree 이동 완료: ${newPath}`,
+    t('Worktree moved: {0}', newPath),
   )
   if (ok) await reload()
 }
@@ -143,7 +144,7 @@ async function repairWorktree(worktree: Worktree): Promise<void> {
   if (!repo) return
   const ok = await graphStore.runAction(
     request('repairWorktree', { repo, path: worktree.path }),
-    'worktree repair 완료',
+    t('Worktree repaired'),
   )
   if (ok) await reload()
 }
@@ -154,7 +155,7 @@ async function toggleLockWorktree(worktree: Worktree): Promise<void> {
   if (!repo) return
   const ok = await graphStore.runAction(
     request('lockWorktree', { repo, path: worktree.path, lock: !worktree.locked }),
-    `worktree ${worktree.locked ? 'unlock' : 'lock'} 완료`,
+    t('Worktree {0} done', worktree.locked ? 'unlock' : 'lock'),
   )
   if (ok) await reload()
 }

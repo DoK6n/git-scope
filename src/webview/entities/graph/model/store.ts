@@ -2,9 +2,12 @@ import { createMemo, createSignal } from 'solid-js'
 import type { ActionResult, GraphData, RepoInfo } from '@shared-types/domain'
 import type { WebviewSettings } from '@shared-types/messages'
 import { initialSettings, onBridgeEvent, request } from '../../../shared/api'
+import { setLocale, t } from '../../../shared/lib'
+import { errorDialog } from '../../../shared/ui'
 import { layoutGraph } from '../lib/layout'
 
 const [settings, setSettings] = createSignal<WebviewSettings>(initialSettings())
+setLocale(initialSettings().language ?? 'en')
 const [repos, setRepos] = createSignal<RepoInfo[]>([])
 const [currentRepo, setCurrentRepo] = createSignal<string | null>(null)
 const [graph, setGraph] = createSignal<GraphData | null>(null)
@@ -30,6 +33,8 @@ function setNotice(message: string | null): void {
 const [maxCommits, setMaxCommits] = createSignal(initialSettings().initialLoadCommits)
 /** null = 모든 브랜치, 아니면 선택된 ref 이름 목록 */
 const [branchFilter, setBranchFilter] = createSignal<string[] | null>(null)
+/** 원격 브랜치 표시 여부 — 끄면 로그·뱃지·드롭다운에서 원격 참조 제외 */
+const [showRemotes, setShowRemotesRaw] = createSignal(true)
 const [selectedCommit, setSelectedCommitRaw] = createSignal<string | null>(null)
 /** Ctrl/Cmd+클릭으로 고른 비교 대상 커밋 (selectedCommit과 비교) */
 const [compareWith, setCompareWith] = createSignal<string | null>(null)
@@ -59,14 +64,17 @@ async function scrollToHash(hash: string): Promise<void> {
     rounds++
   }
   if (index < 0) {
-    setNotice('해당 커밋을 그래프에서 찾을 수 없습니다.')
+    setNotice(t('Commit not found in the graph.'))
     return
   }
   setScrollTargetRow(index)
 }
 
 onBridgeEvent((event) => {
-  if (event.event === 'settings') setSettings(event.settings)
+  if (event.event === 'settings') {
+    setSettings(event.settings)
+    setLocale(event.settings.language ?? 'en')
+  }
   if (event.event === 'repoChanged') void refresh()
 })
 
@@ -99,6 +107,7 @@ async function refresh(): Promise<void> {
       repo,
       maxCommits: maxCommits(),
       branches: branchFilter(),
+      includeRemotes: showRemotes(),
     })
     setGraph(data)
     setError(null)
@@ -131,14 +140,42 @@ async function applyBranchFilter(refs: string[] | null): Promise<void> {
   await refresh()
 }
 
+/** 원격 브랜치 표시 토글 — 끌 때 필터에 남아 있는 원격 선택도 함께 제거 */
+async function setShowRemotes(show: boolean): Promise<void> {
+  if (show === showRemotes()) return
+  if (!show) {
+    const current = branchFilter()
+    if (current) {
+      const remoteNames = new Set(
+        (graph()?.refs ?? []).filter((r) => r.type === 'remote').map((r) => r.name),
+      )
+      const next = current.filter((name) => !remoteNames.has(name))
+      setBranchFilter(next.length === 0 ? null : next)
+    }
+  }
+  setShowRemotesRaw(show)
+  await refresh()
+}
+
 /**
  * git 액션 실행 공통 흐름: 성공하면 그래프를 갱신하고 true,
  * 실패하면 git stderr를 에러로 노출하고 false.
+ * errorTitle을 주면 IDE 알림 대신 webview 에러 다이얼로그로 보여준다.
  */
 async function runAction(
   action: Promise<ActionResult>,
   successMessage?: string,
+  errorTitle?: string,
 ): Promise<boolean> {
+  const fail = (message: string): false => {
+    if (errorTitle) {
+      setErrorRaw(message)
+      void errorDialog({ title: errorTitle, message })
+    } else {
+      setError(message)
+    }
+    return false
+  }
   try {
     const result = await action
     if (result.ok) {
@@ -146,11 +183,9 @@ async function runAction(
       if (successMessage) setNotice(successMessage)
       return true
     }
-    setError(result.error)
-    return false
+    return fail(result.error)
   } catch (e) {
-    setError(e instanceof Error ? e.message : String(e))
-    return false
+    return fail(e instanceof Error ? e.message : String(e))
   }
 }
 
@@ -167,6 +202,8 @@ export const graphStore = {
   error,
   setError,
   branchFilter,
+  showRemotes,
+  setShowRemotes,
   selectedCommit,
   setSelectedCommit,
   compareWith,

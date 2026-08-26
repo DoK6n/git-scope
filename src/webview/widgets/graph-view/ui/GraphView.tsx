@@ -3,6 +3,7 @@ import type { Commit, GitRef } from '@shared-types/domain'
 import { graphStore } from '../../../entities/graph'
 import type { Segment } from '../../../entities/graph'
 import { searchStore } from '../../../features/search'
+import { t } from '../../../shared/lib'
 import { CommitRow } from './CommitRow'
 import { DETAILS_H, InlineDetails } from './InlineDetails'
 import { columnStore } from '../model/columns'
@@ -184,7 +185,7 @@ export function GraphView() {
               )
             }
             onDblClick={() => columnStore.setGraphManual(null)}
-            title="더블클릭: 레인 수에 맞춤"
+            title={t('Double-click: fit to lane count')}
           />
         </div>
         <div class="hcell hcell-flex">

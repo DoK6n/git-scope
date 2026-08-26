@@ -63,9 +63,8 @@ export function parseRefs(output: string): GitRef[] {
     if (refname.startsWith('refs/heads/')) {
       refs.push({ name: refname.slice('refs/heads/'.length), hash: objectname, type: 'head' })
     } else if (refname.startsWith('refs/remotes/')) {
+      // origin/HEAD 같은 심볼릭 참조도 포함한다 — 그래프에 뱃지로 표시 (원본 showRemoteHeads 기본 동작)
       const name = refname.slice('refs/remotes/'.length)
-      // origin/HEAD 같은 심볼릭 참조는 제외
-      if (name.endsWith('/HEAD')) continue
       const remote = name.split('/')[0]!
       refs.push({ name, hash: objectname, type: 'remote', remote })
     } else if (refname.startsWith('refs/tags/')) {

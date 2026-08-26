@@ -8,5 +8,6 @@ export function readSettings(): WebviewSettings {
     loadMoreCommits: config.get<number>('loadMoreCommits', 100),
     dateType: config.get<'author' | 'commit'>('dateType', 'author'),
     fetchPruneByDefault: config.get<boolean>('fetchPruneByDefault', false),
+    language: config.get<'en' | 'ko'>('language', 'en'),
   }
 }

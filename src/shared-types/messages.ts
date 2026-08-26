@@ -22,8 +22,10 @@ export interface RequestMap {
     params: {
       repo: string
       maxCommits: number
-      /** null이면 모든 브랜치(+HEAD), 아니면 선택된 ref 이름 목록 */
+      /** null이면 모든 브랜치(+HEAD), 아니면 선택된 ref 이름 목록 — 목록이 있으면 그 브랜치들만 표시 */
       branches: string[] | null
+      /** false면 원격 브랜치를 로그·ref 목록에서 제외 (Show Remote Branches 토글) */
+      includeRemotes: boolean
     }
     result: GraphData
   }
@@ -151,6 +153,8 @@ export interface RequestMap {
   /** 워킹트리·인덱스 변경 전부 폐기 (reset --hard HEAD) ⚠️ */
   discardAllChanges: { params: { repo: string }; result: ActionResult }
   openScmView: { params: Record<string, never>; result: ActionResult }
+  /** 워킹트리의 파일을 에디터로 연다 (커밋 상세 파일 행 액션) */
+  openFile: { params: { repo: string; path: string }; result: ActionResult }
 
   // ── 신규 기능 (M4) ─────────────────────────────
   reset: {
@@ -236,6 +240,8 @@ export interface WebviewSettings {
   loadMoreCommits: number
   dateType: 'author' | 'commit'
   fetchPruneByDefault: boolean
+  /** UI 문구 언어 (gitScope.language) — 기본 en */
+  language: 'en' | 'ko'
 }
 
 export type HostMessage = BridgeResponse | BridgeEvent

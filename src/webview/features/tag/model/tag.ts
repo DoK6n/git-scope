@@ -1,5 +1,6 @@
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
+import { t } from '../../../shared/lib'
 import { confirmDialog, formDialog } from '../../../shared/ui'
 
 /** 특정 커밋에 태그 생성 (lightweight 또는 annotated) */
@@ -11,7 +12,7 @@ export async function createTagAt(hash: string): Promise<void> {
     fields: [
       { kind: 'text', name: 'name', label: 'Tag name', placeholder: 'v1.0.0' },
       { kind: 'checkbox', name: 'annotated', label: 'Annotated tag', initial: false },
-      { kind: 'text', name: 'message', label: 'Message (annotated일 때)', initial: '' },
+      { kind: 'text', name: 'message', label: t('Message (when annotated)'), initial: '' },
     ],
     confirmLabel: 'Create',
   })
@@ -53,7 +54,7 @@ export async function deleteTag(name: string): Promise<void> {
   if (!repo) return
   const ok = await confirmDialog({
     title: 'Delete Tag',
-    message: `태그 "${name}"을(를) 삭제할까요?`,
+    message: t('Delete tag "{0}"?', name),
     confirmLabel: 'Delete',
     danger: true,
   })

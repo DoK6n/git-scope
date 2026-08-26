@@ -45,7 +45,17 @@ export class GitRepo {
 
   // ── 조회 ─────────────────────────────────────────
 
-  async getGraph(maxCommits: number, branches: string[] | null): Promise<GraphData> {
+  async getGraph(
+    maxCommits: number,
+    branches: string[] | null,
+    includeRemotes = true,
+  ): Promise<GraphData> {
+    // 필터가 있으면 선택된 브랜치만 — HEAD를 넣으면 체크아웃 브랜치 이력이 항상 섞여
+    // 필터가 무력화되므로, HEAD는 전체 표시일 때만 포함한다
+    const revisions =
+      branches === null
+        ? ['--branches', ...(includeRemotes ? ['--remotes'] : []), '--tags', 'HEAD']
+        : branches
     const [logOut, refsOut, headHash, headBranch, statusOut, worktrees] = await Promise.all([
       this.git([
         'log',
@@ -53,8 +63,7 @@ export class GitRepo {
         `-n`,
         String(maxCommits + 1),
         `--format=${LOG_FORMAT}`,
-        ...(branches === null ? ['--branches', '--remotes', '--tags'] : branches),
-        'HEAD',
+        ...revisions,
         '--',
       ]).catch((e) => {
         // 커밋이 하나도 없는 리포는 log가 실패한다
@@ -90,7 +99,9 @@ export class GitRepo {
     }
 
     const uncommittedCount = countPorcelainEntries(statusOut)
-    if (uncommittedCount > 0 && headHash !== null) {
+    // 브랜치 필터로 HEAD 커밋이 로드되지 않았으면 부모 없는 고아 노드가 되므로 얹지 않는다
+    const headLoaded = headHash !== null && commits.some((c) => c.hash === headHash)
+    if (uncommittedCount > 0 && headHash !== null && headLoaded) {
       // 워킹트리 변경사항을 HEAD를 부모로 갖는 합성 커밋으로 그래프 맨 위에 얹는다
       const now = Math.floor(Date.now() / 1000)
       const uncommitted: Commit = {
@@ -108,7 +119,7 @@ export class GitRepo {
 
     return {
       commits,
-      refs: parseRefs(refsOut),
+      refs: parseRefs(refsOut).filter((r) => includeRemotes || r.type !== 'remote'),
       headHash,
       headBranch,
       uncommittedCount,

@@ -4,6 +4,30 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Show Remote Branches** toggle in the branch dropdown header — turning it off removes remote refs from the graph, badges, and the dropdown, and clears any remote branches from the active filter.
+- Dedicated **Fetch (prune)** toolbar button (scissors icon) next to Fetch, with a tooltip describing `git fetch --all --prune`.
+- Commit detail file rows now show hover actions like Git Graph: copy the file's absolute path, and open the file in the editor (hidden for deleted files).
+- New `gitScope.language` setting (`en`/`ko`, default `en`): UI text — tooltips, dialogs, notifications — is English by default and switches to Korean when set, applying live without reopening the view.
+- `origin/HEAD` is now shown as a badge on the commit it points to (right-click offers Copy only; it is excluded from the branch filter and branch actions).
+- Checkout failures (e.g. a branch already checked out in another worktree) now show an **Error: Unable to Checkout Branch** dialog with the git error message, instead of only a toast notification.
+
+### Fixed
+
+- Branch filter now shows **only** the selected branches: `HEAD` was always passed to `git log`, so the checked-out branch's history leaked into every filtered view and made the filter appear broken.
+- External git changes (IDE Source Control, terminal, other tools) are now detected in linked worktrees and submodule-style checkouts — the `.git` watcher previously pointed at the `.git` *file* and never fired; it now resolves and watches the real `gitdir` and `commondir`.
+- One action no longer reloads the graph multiple times: the `.git` watcher ignored its own footprints poorly — events caused by the extension's own requests (e.g. fetch writing `FETCH_HEAD`, `git status` rewriting the index) triggered extra refreshes on top of the action's own refresh.
+
+### Changed
+
+- Redesigned the branch dropdown: a select-style trigger showing the current state, a "Filter Branches…" glob input, a header with the Show Remote Branches toggle and the Tree/List switch, and checkmark rows applied instantly — both views are grouped as Show All ─ local branches ─ one group per remote (last), separated by dividers. The Tree view keeps folder grouping (larger fold arrows, remote prefix stripped inside its group) and uses the same ✓ checkmarks everywhere, with `–` marking partially selected folders; the Show Remote Branches toggle uses the ✓ style too.
+- The toolbar is now laid out in three sections: branch filter on the left, the search box centered, and action buttons on the right. The search match count and ↑/↓ controls always reserve their space, so the centered search box no longer shifts as a query is typed or cleared.
+- Toolbar buttons and file-row actions use custom CSS tooltips (shown after a short hover delay), since native `title` tooltips do not appear in some webview environments.
+- The checked-out branch badge now shows a colored ○ marker outside the badge on the left, with the branch name in bold.
+- The Fetch and Refresh toolbar buttons are now icon buttons (cloud-download / circular arrow); the refresh icon spins while the graph is loading.
+- Stash panel bulk-select checkboxes now use the same checkmark style as the branch dropdown.
+
 ## [0.4.3] - 2026-08-24
 
 ### Changed

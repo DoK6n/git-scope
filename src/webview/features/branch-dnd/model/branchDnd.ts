@@ -1,6 +1,7 @@
 import type { GitRef } from '@shared-types/domain'
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
+import { t } from '../../../shared/lib'
 import { formDialog } from '../../../shared/ui'
 
 /** 브랜치 뱃지 드래그 페이로드 MIME — dragover 단계에서는 types로만 판별한다 */
@@ -57,7 +58,7 @@ export async function confirmBranchDrop(
       hint:
         headBranch === target
           ? `git merge ${source.name}`
-          : `${target} 체크아웃 후 merge (HEAD 이동)`,
+          : t('checkout {0}, then merge (HEAD moves)', target),
     },
     ...(source.isRemote
       ? []
@@ -72,24 +73,24 @@ export async function confirmBranchDrop(
   ]
   const values = await formDialog({
     title: `${source.name} → ${target}`,
-    note: '드롭한 브랜치로 수행할 작업을 선택하세요.',
+    note: t('Choose what to do with the dropped branch.'),
     fields: [{ kind: 'radio', name: 'action', label: 'Action', options, initial: 'merge' }],
     confirmLabel: 'Run',
     warning: (v) =>
       v.action === 'rebase'
-        ? `${source.name}의 커밋 해시가 바뀌고 HEAD가 ${source.name}으로 이동합니다.`
+        ? t('Commit hashes of {0} will change and HEAD moves to {0}.', source.name)
         : null,
   })
   if (!values) return
   if (values.action === 'rebase') {
     await graphStore.runAction(
       request('rebaseBranchOnto', { repo, branch: source.name, onto: target }),
-      `rebase ${source.name} onto ${target} 완료`,
+      t('Rebased {0} onto {1}', source.name, target),
     )
   } else {
     await graphStore.runAction(
       request('mergeBranchInto', { repo, source: source.name, target }),
-      `merge ${source.name} into ${target} 완료`,
+      t('Merged {0} into {1}', source.name, target),
     )
   }
 }

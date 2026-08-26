@@ -1,5 +1,6 @@
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
+import { t } from '../../../shared/lib'
 import { formDialog } from '../../../shared/ui'
 
 /** 특정 커밋/브랜치에서 새 브랜치 생성 (+선택적으로 checkout). label은 다이얼로그 표기용 */
@@ -23,7 +24,7 @@ export async function createBranchAt(at: string, label?: string): Promise<void> 
       at,
       checkout: Boolean(values.checkout),
     }),
-    `브랜치 ${values.name} 생성 완료 (from ${from})`,
+    t('Branch {0} created (from {1})', String(values.name).trim(), from),
   )
 }
 
@@ -37,14 +38,14 @@ export async function deleteBranch(name: string): Promise<void> {
       {
         kind: 'checkbox',
         name: 'force',
-        label: 'Force delete (-D) — 병합되지 않은 커밋도 삭제',
+        label: t('Force delete (-D) — also deletes unmerged commits'),
         initial: false,
       },
     ],
     confirmLabel: 'Delete',
     danger: true,
     warning: (v) =>
-      v.force ? '병합되지 않은 커밋이 유실될 수 있습니다.' : null,
+      v.force ? t('Unmerged commits may be lost.') : null,
   })
   if (!values) return
   await graphStore.runAction(

@@ -1,6 +1,7 @@
 import type { Commit } from '@shared-types/domain'
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
+import { t } from '../../../shared/lib'
 import { confirmDialog, formDialog } from '../../../shared/ui'
 
 function repo(): string | null {
@@ -15,8 +16,8 @@ export async function cherryPick(commit: Commit): Promise<void> {
     title: `Cherry Pick ${commit.hash.slice(0, 8)}`,
     note: commit.subject,
     fields: [
-      { kind: 'checkbox', name: 'recordOrigin', label: '원본 커밋 표기 (-x)', initial: false },
-      { kind: 'checkbox', name: 'noCommit', label: '커밋하지 않고 변경만 적용 (--no-commit)', initial: false },
+      { kind: 'checkbox', name: 'recordOrigin', label: t('Record origin commit (-x)'), initial: false },
+      { kind: 'checkbox', name: 'noCommit', label: t('Apply changes without committing (--no-commit)'), initial: false },
     ],
     confirmLabel: 'Cherry Pick',
   })
@@ -29,7 +30,7 @@ export async function cherryPick(commit: Commit): Promise<void> {
       recordOrigin: Boolean(values.recordOrigin),
       isMerge: commit.parents.length > 1,
     }),
-    `cherry-pick ${commit.hash.slice(0, 8)} 완료`,
+    t('Cherry-picked {0}', commit.hash.slice(0, 8)),
   )
 }
 
@@ -39,13 +40,13 @@ export async function revertCommit(commit: Commit): Promise<void> {
   if (!r) return
   const ok = await confirmDialog({
     title: `Revert ${commit.hash.slice(0, 8)}`,
-    message: `"${commit.subject}"\n\n이 커밋의 변경을 되돌리는 새 커밋을 만듭니다.`,
+    message: t('"{0}"\n\nCreates a new commit that reverts the changes of this commit.', commit.subject),
     confirmLabel: 'Revert',
   })
   if (!ok) return
   await graphStore.runAction(
     request('revert', { repo: r, hash: commit.hash, isMerge: commit.parents.length > 1 }),
-    `revert ${commit.hash.slice(0, 8)} 완료`,
+    t('Reverted {0}', commit.hash.slice(0, 8)),
   )
 }
 
@@ -55,14 +56,14 @@ export async function dropCommit(commit: Commit): Promise<void> {
   if (!r) return
   const ok = await confirmDialog({
     title: `Drop Commit ${commit.hash.slice(0, 8)}`,
-    message: `"${commit.subject}"\n\n이 커밋을 현재 브랜치 히스토리에서 제거합니다(rebase). 이후 커밋들의 해시가 바뀝니다.`,
+    message: t('"{0}"\n\nRemoves this commit from the current branch history (rebase). Hashes of later commits will change.', commit.subject),
     confirmLabel: 'Drop',
     danger: true,
   })
   if (!ok) return
   await graphStore.runAction(
     request('dropCommit', { repo: r, hash: commit.hash }),
-    `drop ${commit.hash.slice(0, 8)} 완료`,
+    t('Dropped {0}', commit.hash.slice(0, 8)),
   )
 }
 
@@ -87,18 +88,18 @@ export async function rewordCommit(commit: Commit): Promise<void> {
     confirmLabel: 'Save',
     warning: isHead
       ? undefined
-      : () => 'HEAD가 아닌 커밋이므로 rebase로 다시 씁니다 — 이후 커밋들의 해시가 바뀝니다.',
+      : () => t('Not the HEAD commit — history is rewritten via rebase, so hashes of later commits will change.'),
   })
   if (!values) return
   const message = String(values.message).trim()
   if (message === '') {
-    graphStore.setError('커밋 메시지가 비어 있습니다.')
+    graphStore.setError(t('Commit message is empty.'))
     return
   }
   if (message === original) return
   await graphStore.runAction(
     request('rewordCommit', { repo: r, hash: commit.hash, message }),
-    `커밋 메시지 수정 완료 (${commit.hash.slice(0, 8)})`,
+    t('Commit message updated ({0})', commit.hash.slice(0, 8)),
   )
 }
 
@@ -109,13 +110,13 @@ export async function rebaseOnto(target: string, label: string): Promise<void> {
   const headBranch = graphStore.graph()?.headBranch ?? 'HEAD'
   const ok = await confirmDialog({
     title: `Rebase ${headBranch} on ${label}`,
-    message: `${headBranch} 브랜치를 ${label} 위로 rebase 합니다. 커밋 해시가 바뀝니다.`,
+    message: t('Rebases branch {0} onto {1}. Commit hashes will change.', headBranch, label),
     confirmLabel: 'Rebase',
     danger: true,
   })
   if (!ok) return
   await graphStore.runAction(
     request('rebase', { repo: r, target }),
-    `rebase onto ${label} 완료`,
+    t('Rebased onto {0}', label),
   )
 }

@@ -10,7 +10,7 @@ import {
 } from '../../../features/stash'
 import { worktreeStore } from '../../../features/worktree'
 import { request } from '../../../shared/api'
-import { formatDate } from '../../../shared/lib'
+import { formatDate, t } from '../../../shared/lib'
 import { openContextMenu } from '../../../shared/ui'
 import type { MenuItem } from '../../../shared/ui'
 
@@ -66,7 +66,7 @@ export function StashPanel() {
                     // 고아 스태시는 베이스가 로그에 없어 그래프로 이동할 수 없다
                     if (stash.isOrphan) {
                       graphStore.setNotice(
-                        '고아 스태시 — 베이스 커밋이 삭제되어 그래프에 표시할 수 없습니다. Apply/Drop은 가능합니다.',
+                        t('Orphan stash — its base commit was deleted, so it cannot be shown in the graph. Apply/Drop still work.'),
                       )
                       return
                     }
@@ -76,18 +76,22 @@ export function StashPanel() {
                   }}
                   onContextMenu={(e) => openContextMenu(e, buildStashMenu(stash))}
                 >
-                  <input
-                    type="checkbox"
+                  <span
                     class="stash-item-check"
-                    checked={stashPanelStore.selected().has(stash.selector)}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={() => stashPanelStore.toggleSelected(stash.selector)}
-                  />
+                    classList={{ checked: stashPanelStore.selected().has(stash.selector) }}
+                    title={t('Select for bulk actions')}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      stashPanelStore.toggleSelected(stash.selector)
+                    }}
+                  >
+                    ✓
+                  </span>
                   <span class="stash-item-selector">{stash.selector}</span>
                   <Show when={stash.isOrphan}>
                     <span
                       class="stash-orphan-mark"
-                      title="베이스 커밋이 어떤 브랜치/태그에서도 도달할 수 없습니다 (브랜치 삭제 또는 rebase). 그래프에는 표시되지 않지만 Apply/Drop은 가능합니다."
+                      title={t('The base commit is unreachable from any branch/tag (branch deleted or rebased). Not shown in the graph, but Apply/Drop still work.')}
                     >
                       orphan
                     </span>
@@ -100,7 +104,7 @@ export function StashPanel() {
               )}
             </For>
             <Show when={stashPanelStore.stashes().length === 0}>
-              <div class="branch-filter-empty">스태시 없음</div>
+              <div class="branch-filter-empty">{t('No stashes')}</div>
             </Show>
           </Show>
         </div>
@@ -109,7 +113,7 @@ export function StashPanel() {
             <button
               class="toolbar-btn danger"
               onClick={() => void stashPanelStore.dropSelected()}
-              title="체크한 스태시 일괄 삭제"
+              title={t('Drop all checked stashes')}
             >
               Drop Selected ({stashPanelStore.selected().size})
             </button>
@@ -118,7 +122,7 @@ export function StashPanel() {
             class="toolbar-btn primary"
             onClick={() => withReload(stashPush())}
             disabled={(graphStore.graph()?.uncommittedCount ?? 0) === 0}
-            title="워킹트리 변경사항을 스태시로 저장"
+            title={t('Stash working tree changes')}
           >
             + Stash Uncommitted Changes
           </button>

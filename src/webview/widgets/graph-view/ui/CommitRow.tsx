@@ -1,12 +1,12 @@
 import { createMemo, For, Show } from 'solid-js'
 import type { Commit, GitRef } from '@shared-types/domain'
 import { AuthorAvatar } from '../../../entities/author'
-import { groupRefs, RefBadge } from '../../../entities/ref'
+import { groupRefs, isRemoteHeadRef, RefBadge } from '../../../entities/ref'
 import { graphStore } from '../../../entities/graph'
 import { dropBranchOn, isBranchDrag, startBranchDrag } from '../../../features/branch-dnd'
 import { checkoutBranch, checkoutRemoteBranch } from '../../../features/checkout'
 import { fixupKind, scrollToFixupTarget } from '../../../features/fixup'
-import { BRANCH_PALETTE, formatDate, shortHash } from '../../../shared/lib'
+import { BRANCH_PALETTE, formatDate, shortHash, t } from '../../../shared/lib'
 import { openContextMenu } from '../../../shared/ui'
 import { buildRefMenu } from '../model/refMenu'
 
@@ -102,7 +102,9 @@ export function CommitRow(props: CommitRowProps) {
                 if (items.length > 0) openContextMenu(e, items)
               }}
               onDragStart={
-                group.ref.type === 'tag' ? undefined : (e) => startBranchDrag(e, group.ref)
+                group.ref.type === 'tag' || isRemoteHeadRef(group.ref)
+                  ? undefined
+                  : (e) => startBranchDrag(e, group.ref)
               }
               canDrop={group.ref.type === 'head' ? isBranchDrag : undefined}
               onDrop={
@@ -111,7 +113,7 @@ export function CommitRow(props: CommitRowProps) {
                   : undefined
               }
               onDblClick={
-                group.ref.type === 'tag'
+                group.ref.type === 'tag' || isRemoteHeadRef(group.ref)
                   ? undefined
                   : () => {
                       // 더블클릭 = git switch. 이미 체크아웃됐거나 worktree에 있으면 무시
@@ -150,7 +152,7 @@ export function CommitRow(props: CommitRowProps) {
             <span
               class="ref-badge fixup-badge"
               style={{ 'border-color': lineColor(), '--ref-color': lineColor() }}
-              title="클릭: 대상 커밋으로 이동 · 우클릭 메뉴에서 autosquash 실행"
+              title={t('Click: go to target commit · autosquash via right-click menu')}
               onClick={(e) => {
                 e.stopPropagation()
                 scrollToFixupTarget(props.commit)

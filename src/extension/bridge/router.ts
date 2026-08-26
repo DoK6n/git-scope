@@ -23,7 +23,11 @@ export class Router {
   /** 리포의 .git 변경 감지 콜백 — GraphPanel이 주입 (webview에 repoChanged 전달) */
   onRepoActivity: (() => void) | null = null
 
-  private watchers = new Map<string, fs.FSWatcher>()
+  private watchers = new Map<string, fs.FSWatcher[]>()
+
+  /** 처리 중인 webview 요청 수 / 마지막 요청 완료 시각 — 자기 유발 감시 이벤트 억제용 */
+  private running = 0
+  private lastRequestDone = 0
 
   constructor(
     readonly avatars: AvatarService,
@@ -31,39 +35,66 @@ export class Router {
   ) {}
 
   dispose(): void {
-    for (const watcher of this.watchers.values()) watcher.close()
+    for (const list of this.watchers.values()) for (const watcher of list) watcher.close()
     this.watchers.clear()
   }
 
   /**
-   * .git 디렉토리 감시 — 앱 내 액션이든 터미널 작업이든 HEAD/refs/index가 바뀌면
+   * .git 감시 — 앱 내 액션이든 터미널·IDE 작업이든 HEAD/refs/index가 바뀌면
    * 디바운스 후 그래프를 자동 갱신하게 한다. (objects/logs 쓰기는 무시)
    */
   private watchRepo(root: string): void {
     if (this.watchers.has(root)) return
+    this.watchers.set(root, [])
+    void this.startWatchers(root)
+  }
+
+  private async startWatchers(root: string): Promise<void> {
+    // worktree·서브모듈은 root/.git이 디렉토리가 아니라 gitdir 경로가 적힌 파일이라
+    // 그대로 감시하면 아무 이벤트도 오지 않는다. 실제 gitdir(HEAD/index)과
+    // commondir(refs/packed-refs)을 해석해 둘 다 감시한다.
+    const dirs = new Set<string>()
     try {
-      let timer: ReturnType<typeof setTimeout> | undefined
-      const watcher = fs.watch(
-        path.join(root, '.git'),
-        { recursive: true },
-        (_event, filename) => {
+      const out = await execGit(['rev-parse', '--absolute-git-dir', '--git-common-dir'], {
+        cwd: root,
+      })
+      const [gitDir, commonDir] = out.trim().split('\n')
+      if (gitDir) dirs.add(gitDir)
+      if (commonDir) dirs.add(path.resolve(root, commonDir))
+    } catch {
+      dirs.add(path.join(root, '.git'))
+    }
+    const list = this.watchers.get(root)
+    if (!list) return
+    let timer: ReturnType<typeof setTimeout> | undefined
+    for (const dir of dirs) {
+      try {
+        const watcher = fs.watch(dir, { recursive: true }, (_event, filename) => {
           const name = filename?.toString() ?? ''
-          if (name.startsWith('objects') || name.startsWith('logs')) return
+          if (name.startsWith('objects') || name.startsWith('logs') || name.includes('/logs/'))
+            return
           const relevant =
             name === '' ||
             name === 'HEAD' ||
             name === 'index' ||
             name === 'packed-refs' ||
             name.startsWith('refs') ||
-            name.endsWith('_HEAD')
+            name.endsWith('_HEAD') ||
+            name.endsWith('/HEAD') // 다른 worktree의 HEAD 이동 (commondir/worktrees/*/HEAD)
           if (!relevant) return
           clearTimeout(timer)
-          timer = setTimeout(() => this.onRepoActivity?.(), 400)
-        },
-      )
-      this.watchers.set(root, watcher)
-    } catch {
-      // 감시 실패는 치명적이지 않다 — 수동 새로고침으로 대체
+          timer = setTimeout(() => {
+            // 앱 자신이 실행한 액션(fetch 등)과 조회(status의 index 재작성)가 낸 이벤트로
+            // 다시 갱신하면 클릭 한 번에 그래프가 여러 번 리로드된다. 액션 후 갱신은
+            // runAction이 이미 하므로, 요청 처리 중이거나 직후의 이벤트는 무시한다.
+            if (this.running > 0 || Date.now() - this.lastRequestDone < 800) return
+            this.onRepoActivity?.()
+          }, 400)
+        })
+        list.push(watcher)
+      } catch {
+        // 감시 실패는 치명적이지 않다 — 수동 새로고침으로 대체
+      }
     }
   }
 
@@ -121,9 +152,21 @@ export class Router {
   async handle<C extends RequestCommand>(
     request: BridgeRequest<C>,
   ): Promise<RequestMap[C]['result']> {
+    this.running++
+    try {
+      return await this.dispatch(request)
+    } finally {
+      this.running--
+      this.lastRequestDone = Date.now()
+    }
+  }
+
+  private async dispatch<C extends RequestCommand>(
+    request: BridgeRequest<C>,
+  ): Promise<RequestMap[C]['result']> {
     const handlers: { [K in RequestCommand]: Handler<K> } = {
       listRepos: () => this.listRepos(),
-      getGraph: (p) => this.getRepo(p.repo).getGraph(p.maxCommits, p.branches),
+      getGraph: (p) => this.getRepo(p.repo).getGraph(p.maxCommits, p.branches, p.includeRemotes),
       getCommitDetails: (p) => this.getRepo(p.repo).getCommitDetails(p.hash),
       getCommitComparison: (p) => this.getRepo(p.repo).getComparison(p.fromHash, p.toHash),
       openDiff: (p) => this.openDiff(p),
@@ -165,6 +208,18 @@ export class Router {
       openScmView: async () => {
         await vscode.commands.executeCommand('workbench.view.scm')
         return { ok: true }
+      },
+      openFile: async (p) => {
+        try {
+          await vscode.commands.executeCommand(
+            'vscode.open',
+            vscode.Uri.file(path.join(p.repo, p.path)),
+            { preview: true },
+          )
+          return { ok: true }
+        } catch (e) {
+          return { ok: false, error: e instanceof Error ? e.message : String(e) }
+        }
       },
       reset: (p) => this.getRepo(p.repo).reset(p.to, p.mode),
       fetch: (p) => this.getRepo(p.repo).fetch(p.prune),

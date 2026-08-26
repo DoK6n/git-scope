@@ -64,7 +64,7 @@ describe('parseLog', () => {
 })
 
 describe('parseRefs', () => {
-  it('로컬/원격/태그를 구분하고 origin/HEAD는 제외한다', () => {
+  it('로컬/원격/태그를 구분하고 origin/HEAD도 원격 참조로 포함한다', () => {
     const out = [
       ['refs/heads/main', 'aaa', ''].join(NUL),
       ['refs/heads/feature/graph', 'bbb', ''].join(NUL),
@@ -78,6 +78,7 @@ describe('parseRefs', () => {
     expect(refs).toEqual([
       { name: 'main', hash: 'aaa', type: 'head' },
       { name: 'feature/graph', hash: 'bbb', type: 'head' },
+      { name: 'origin/HEAD', hash: 'aaa', type: 'remote', remote: 'origin' },
       { name: 'origin/main', hash: 'aaa', type: 'remote', remote: 'origin' },
       // annotated tag는 peeled 해시를 쓴다
       { name: 'v1.0.0', hash: 'ccc', type: 'tag' },

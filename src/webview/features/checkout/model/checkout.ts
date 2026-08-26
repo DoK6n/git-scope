@@ -1,12 +1,18 @@
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
+import { t } from '../../../shared/lib'
 import { confirmDialog, formDialog } from '../../../shared/ui'
 
 /** 로컬 브랜치 checkout */
 export async function checkoutBranch(name: string): Promise<void> {
   const repo = graphStore.currentRepo()
   if (!repo) return
-  await graphStore.runAction(request('checkoutBranch', { repo, name }))
+  // 다른 worktree에 체크아웃된 브랜치 등 git이 거부하면 에러 다이얼로그로 표시
+  await graphStore.runAction(
+    request('checkoutBranch', { repo, name }),
+    undefined,
+    'Unable to Checkout Branch',
+  )
 }
 
 /** 원격 브랜치 checkout — 추적 로컬 브랜치명을 입력받아 생성 */
@@ -28,6 +34,8 @@ export async function checkoutRemoteBranch(remoteName: string): Promise<void> {
       remoteName,
       localName: String(values.localName).trim(),
     }),
+    undefined,
+    'Unable to Checkout Branch',
   )
 }
 
@@ -37,9 +45,13 @@ export async function checkoutCommit(hash: string): Promise<void> {
   if (!repo) return
   const ok = await confirmDialog({
     title: 'Checkout Commit',
-    message: `${hash.slice(0, 8)} 커밋을 체크아웃하면 detached HEAD 상태가 됩니다.\n계속할까요?`,
+    message: t('Checking out commit {0} puts the repository in a detached HEAD state.\nContinue?', hash.slice(0, 8)),
     confirmLabel: 'Checkout',
   })
   if (!ok) return
-  await graphStore.runAction(request('checkoutCommit', { repo, hash }))
+  await graphStore.runAction(
+    request('checkoutCommit', { repo, hash }),
+    undefined,
+    'Unable to Checkout Commit',
+  )
 }
