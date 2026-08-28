@@ -4,7 +4,8 @@ import { TelemetryReporter } from '@vscode/extension-telemetry'
 // Azure Application Insights connection string.
 // 비밀값이 아니라 수집 엔드포인트 식별자라서 소스에 포함해도 된다(MS 공식 익스텐션들과 동일).
 // 빈 값이면 reporter를 만들지 않아 아무것도 전송되지 않는다.
-const CONNECTION_STRING = ''
+const CONNECTION_STRING: string =
+  'InstrumentationKey=833a7fb2-3a74-4b7c-9f52-51226541bc00;IngestionEndpoint=https://koreasouth-0.in.applicationinsights.azure.com/;LiveEndpoint=https://koreasouth.livediagnostics.monitor.azure.com/;ApplicationId=ec8a9e8d-44cc-41c6-b31e-092c3e1edd41'
 
 let reporter: TelemetryReporter | null = null
 
