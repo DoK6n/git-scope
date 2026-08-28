@@ -87,13 +87,25 @@ export class Router {
     }
     const list = this.watchers.get(root)
     if (!list) return
+    // 갱신은 최소 2초 간격 — 코드젠·캐시처럼 파일을 연달아 쓰는 도구가 있어도
+    // 초 단위로 전체 재조회가 도는 사태를 막는다 (마지막 이벤트는 trailing으로 반영)
+    let lastFired = 0
+    let trailing: ReturnType<typeof setTimeout> | undefined
+    const fireActivity = (): void => {
+      if (this.runningMutations > 0 || Date.now() - this.lastMutationDone < 800) return
+      const wait = 2000 - (Date.now() - lastFired)
+      if (wait > 0) {
+        clearTimeout(trailing)
+        trailing = setTimeout(fireActivity, wait)
+        return
+      }
+      lastFired = Date.now()
+      this.onRepoActivity?.()
+    }
     let timer: ReturnType<typeof setTimeout> | undefined
     const scheduleActivity = (): void => {
       clearTimeout(timer)
-      timer = setTimeout(() => {
-        if (this.runningMutations > 0 || Date.now() - this.lastMutationDone < 800) return
-        this.onRepoActivity?.()
-      }, 400)
+      timer = setTimeout(fireActivity, 400)
     }
     for (const dir of dirs) {
       try {
@@ -122,9 +134,13 @@ export class Router {
 
     // Source Control의 Discard Changes처럼 index를 건드리지 않고 working tree 파일만
     // 바꾸는 작업도 감지한다. .git은 위의 전용 watcher가 처리하므로 여기서는 제외한다.
+    // gitignore 대상(dist/ 빌드 산출물 등)의 쓰기는 그래프와 무관한데도 매번 갱신을
+    // 일으켜 사실상 무한 리로드가 된다 — 배치로 모아 check-ignore로 걸러낸다.
     const worktreeWatcher = vscode.workspace.createFileSystemWatcher(
       new vscode.RelativePattern(root, '**/*'),
     )
+    const pendingPaths = new Set<string>()
+    let ignoreTimer: ReturnType<typeof setTimeout> | undefined
     const onWorktreeActivity = (uri: vscode.Uri): void => {
       const relative = path.relative(root, uri.fsPath)
       if (
@@ -135,12 +151,39 @@ export class Router {
         path.isAbsolute(relative)
       )
         return
-      scheduleActivity()
+      pendingPaths.add(relative)
+      clearTimeout(ignoreTimer)
+      ignoreTimer = setTimeout(() => {
+        const paths = [...pendingPaths]
+        pendingPaths.clear()
+        void this.allIgnored(root, paths).then((ignored) => {
+          if (!ignored) fireActivity()
+        })
+      }, 400)
     }
     worktreeWatcher.onDidChange(onWorktreeActivity)
     worktreeWatcher.onDidCreate(onWorktreeActivity)
     worktreeWatcher.onDidDelete(onWorktreeActivity)
     this.worktreeWatchers.set(root, worktreeWatcher)
+  }
+
+  /**
+   * 경로들이 전부 gitignore 대상인지 — 하나라도 무시 대상이 아니면 false.
+   * 판정에 실패하면 갱신하는 쪽(false)이 안전하다.
+   */
+  private async allIgnored(root: string, paths: string[]): Promise<boolean> {
+    if (paths.length === 0) return true
+    try {
+      const out = await execGit(['check-ignore', '--stdin', '-z'], {
+        cwd: root,
+        stdin: paths.map((p) => `${p}\0`).join(''),
+        allowExitCodes: [1], // 1 = 무시 대상 없음
+      })
+      const ignoredCount = out.split('\0').filter((p) => p !== '').length
+      return ignoredCount === paths.length
+    } catch {
+      return false
+    }
   }
 
   private mapIconUri(spec: IconSpec | null): IconSpec | null {

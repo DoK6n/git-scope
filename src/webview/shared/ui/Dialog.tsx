@@ -1,5 +1,5 @@
 import type { JSX, ParentComponent } from 'solid-js'
-import { Show } from 'solid-js'
+import { onCleanup, Show } from 'solid-js'
 
 interface DialogProps {
   open: boolean
@@ -9,8 +9,16 @@ interface DialogProps {
   footer?: JSX.Element
 }
 
-/** 모든 다이얼로그의 공통 골격 — 오버레이 + 타이틀 + 본문 + 푸터 */
+/** 모든 다이얼로그의 공통 골격 — 오버레이 + 타이틀 + 본문 + 푸터. Esc로 닫힌다 */
 export const Dialog: ParentComponent<DialogProps> = (props) => {
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape' && props.open) {
+      e.stopPropagation() // 뒤의 find 위젯 등 다른 Esc 처리로 번지지 않게
+      props.onClose()
+    }
+  }
+  window.addEventListener('keydown', onKey)
+  onCleanup(() => window.removeEventListener('keydown', onKey))
   return (
     <Show when={props.open}>
       <div class="dialog-overlay" onClick={() => props.onClose()}>

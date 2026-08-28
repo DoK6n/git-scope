@@ -704,7 +704,8 @@ path.graph-line-hit {
 }
 
 .graph-node {
-  transition: opacity 0.12s;
+  /* r 전환: hover(히트 서클) 시 확대가 부드럽게 보이도록 */
+  transition: opacity 0.12s, r 0.12s;
 }
 
 .graph-node.uncommitted {
@@ -759,6 +760,73 @@ path.graph-line-hit {
 .graph-node.stash {
   fill: var(--vscode-editor-background);
   stroke-width: 2;
+}
+
+/* ── 노드 히트 서클 — hover 확대·클릭·drag-to-reset의 포인터 타겟 ───── */
+/* (.graph-svg 자체는 pointer-events: none — 히트 서클만 이벤트를 받는다) */
+.graph-node-hit {
+  fill: transparent;
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.graph-node-hit.head-node {
+  cursor: grab;
+}
+
+/* ── drag-to-reset 미리보기 (스펙 60-new-features §10) ───── */
+.graph-view.dragging-reset,
+.graph-view.dragging-reset .commit-row,
+.graph-view.dragging-reset .graph-node-hit {
+  cursor: ns-resize;
+  user-select: none;
+}
+
+/* 드래그 중에는 라인/노드 hover 인터랙션이 미리보기를 방해하지 않게 차단 —
+   드래그 자체는 window 리스너로 진행되므로 영향 없다 */
+.graph-view.dragging-reset .graph-line-hit,
+.graph-view.dragging-reset .graph-node-hit {
+  pointer-events: none;
+}
+
+/* 지워질 커밋의 노드와 그 노드에 드나드는 엣지 — 통과하는 다른 라인은 남는다 */
+path.graph-line.doomed,
+.graph-node.doomed {
+  opacity: 0.15;
+}
+
+.commit-row.doomed {
+  opacity: 0.45;
+}
+
+.commit-row.doomed .col-hash {
+  text-decoration: line-through;
+}
+
+.commit-row.new-head {
+  background: var(--vscode-list-inactiveSelectionBackground, rgba(255, 255, 255, 0.08));
+  outline: 1px solid var(--vscode-focusBorder, #007acc);
+  outline-offset: -1px;
+}
+
+.reset-chip,
+.new-head-chip {
+  flex-shrink: 0;
+  font-size: 10px;
+  line-height: 14px;
+  padding: 0 6px;
+  border-radius: 8px;
+}
+
+.reset-chip {
+  border: 1px solid var(--vscode-inputValidation-errorBorder, #be1100);
+  color: var(--vscode-errorForeground, #f48771);
+}
+
+.new-head-chip {
+  border: 1px solid var(--vscode-focusBorder, #007acc);
+  color: var(--vscode-focusBorder, #3794ff);
+  font-weight: 600;
 }
 
 /* 스태시 라벨 뱃지 — 색상은 브랜치 뱃지와 동일하게 그래프 라인 색을 따른다 (인라인 style) */
@@ -1202,6 +1270,60 @@ path.graph-line-hit {
   color: var(--vscode-descriptionForeground);
   font-size: 12px;
   line-height: 1.5;
+}
+
+/* 다이얼로그 읽기 전용 항목 리스트 — 위험 액션의 대상(지워질 커밋 등) 확인용 */
+.dialog-list {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--vscode-panel-border, #444);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.dialog-list-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+
+.dialog-list-item code {
+  font-family: var(--vscode-editor-font-family, monospace);
+  color: var(--vscode-descriptionForeground);
+  flex-shrink: 0;
+}
+
+.dialog-list-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dialog-list-mark {
+  flex-shrink: 0;
+  font-size: 10px;
+  padding: 0 5px;
+  border-radius: 8px;
+  border: 1px solid var(--vscode-descriptionForeground);
+  color: var(--vscode-descriptionForeground);
+}
+
+.dialog-list-more {
+  color: var(--vscode-descriptionForeground);
+  line-height: 1.7;
+}
+
+.dialog-list-footer {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--vscode-panel-border, #444);
+  line-height: 1.7;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 액션 실패 다이얼로그 본문 — git stderr를 이탤릭으로 그대로 노출 */

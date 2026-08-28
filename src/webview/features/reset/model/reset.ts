@@ -5,7 +5,8 @@ import { formDialog } from '../../../shared/ui'
 import type { FormValues } from '../../../shared/ui'
 
 // 다이얼로그를 열 때마다 평가한다 — 언어 설정 변경이 힌트에 반영되도록 함수로 둔다
-const modeField = () => ({
+// (export는 슬라이스 내부 공용 — dragReset도 동일한 모드 선택 UI를 쓴다)
+export const modeField = () => ({
   kind: 'radio' as const,
   name: 'mode',
   label: 'Reset mode',
@@ -18,12 +19,12 @@ const modeField = () => ({
 })
 
 /** hard 모드 선택 시 경고 — 설정으로 끌 수 없다 (스펙 60-new-features §1) */
-const hardWarning = (values: FormValues) =>
+export const hardWarning = (values: FormValues) =>
   values.mode === 'hard'
     ? t('All changes in the working tree and index will be permanently lost. This cannot be undone.')
     : null
 
-async function runReset(to: string, mode: string): Promise<void> {
+export async function runReset(to: string, mode: string): Promise<void> {
   const repo = graphStore.currentRepo()
   if (!repo) return
   const target = to.startsWith('HEAD') ? to : to.slice(0, 8)
