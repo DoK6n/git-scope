@@ -17,6 +17,8 @@ export interface ExecOptions {
   allowExitCodes?: number[]
   /** 추가 환경변수 (예: commit-tree의 GIT_AUTHOR_*) */
   env?: Record<string, string>
+  /** stdin으로 넘길 입력 (예: check-ignore --stdin의 경로 목록) */
+  stdin?: string
 }
 
 /** 실행된 git 명령을 기록할 로거 — main에서 Output 채널로 연결한다 */
@@ -54,6 +56,9 @@ export function execGit(args: string[], opts: ExecOptions): Promise<string> {
       cwd: opts.cwd,
       env: { ...process.env, GIT_OPTIONAL_LOCKS: '0', ...opts.env },
     })
+
+    if (opts.stdin !== undefined) child.stdin.write(opts.stdin)
+    child.stdin.end()
 
     const stdout: Buffer[] = []
     const stderr: Buffer[] = []
