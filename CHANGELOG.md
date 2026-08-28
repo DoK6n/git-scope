@@ -4,13 +4,16 @@
 
 ## [Unreleased]
 
-### Fixed
-
-- Working-tree watcher no longer reacts to gitignored paths (build output, generated code, caches): change events are batch-checked with `git check-ignore`, so tools that continuously write ignored files (e.g. codegen, bundler watch) no longer cause an endless graph-refresh loop. Auto-refresh is also throttled to at most once per 2 seconds as a safety net.
+## [0.6.0] - 2026-08-28
 
 ### Added
 
 - **Drag-to-reset**: drag the HEAD commit's graph dot downward to "erase" commits — erased rows are dimmed with a `reset` chip and the commit that will become the new HEAD is highlighted, including side-branch commits that would become unreachable when a merge is erased (commits still protected by another ref stay lit). Releasing the mouse opens a confirmation dialog listing the commits to be removed, the new HEAD, and the usual soft/mixed/hard mode choice; `Esc` cancels the drag. Dragging near the viewport edge auto-scrolls (and loads more commits at the bottom).
+- Anonymous usage telemetry powered by `@vscode/extension-telemetry`: records extension activation, graph opens, and repository-mutating action names, outcomes, and durations while respecting VS Code's telemetry setting. Repository content, commit messages, branch names, paths, remote URLs, and error text are never collected.
+
+### Fixed
+
+- Working-tree watcher no longer reacts to gitignored paths (build output, generated code, caches): change events are batch-checked with `git check-ignore`, so tools that continuously write ignored files (e.g. codegen, bundler watch) no longer cause an endless graph-refresh loop. Auto-refresh is also throttled to at most once per 2 seconds as a safety net.
 
 ## [0.5.2] - 2026-08-26
 

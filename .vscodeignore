@@ -3,6 +3,7 @@
 !resources/**
 !images/preview.gif
 !package.json
+!telemetry.json
 !README.md
 !CHANGELOG.md
 !CHANGELOG.ko.md
