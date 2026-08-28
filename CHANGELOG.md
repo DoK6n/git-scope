@@ -9,7 +9,7 @@
 ### Added
 
 - **Drag-to-reset**: drag the HEAD commit's graph dot downward to "erase" commits — erased rows are dimmed with a `reset` chip and the commit that will become the new HEAD is highlighted, including side-branch commits that would become unreachable when a merge is erased (commits still protected by another ref stay lit). Releasing the mouse opens a confirmation dialog listing the commits to be removed, the new HEAD, and the usual soft/mixed/hard mode choice; `Esc` cancels the drag. Dragging near the viewport edge auto-scrolls (and loads more commits at the bottom).
-- Anonymous usage telemetry powered by `@vscode/extension-telemetry`: records extension activation, graph opens, and repository-mutating action names, outcomes, and durations while respecting VS Code's telemetry setting. Repository content, commit messages, branch names, paths, remote URLs, and error text are never collected.
+- Anonymous usage telemetry powered by `@vscode/extension-telemetry`: records extension activation, graph opens, and the type, outcome, and duration of repository-mutating actions while respecting VS Code's telemetry setting. An action type is a fixed internal Git Scope feature identifier such as `checkoutBranch`, `merge`, or `reset`—not a user-provided branch or operation name. Action parameters and repository data, including actual branch and tag names, commit hashes and messages, file and repository paths, remote names and URLs, stash messages, and error text, are never collected.
 
 ### Fixed
 
