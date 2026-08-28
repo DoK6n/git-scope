@@ -164,6 +164,21 @@ describe('GraphView drag-to-reset 배선', () => {
     cancelBtn?.click()
   })
 
+  it('확인 다이얼로그는 Esc로 닫힌다 — 취소와 동일하게 reset 없이 미리보기만 지운다', async () => {
+    const headHit = document.querySelector('.graph-node-hit.head-node')!
+    headHit.dispatchEvent(mouse('mousedown', { clientY: 13 }))
+    window.dispatchEvent(mouse('mousemove', { clientY: 65 }))
+    window.dispatchEvent(mouse('mouseup', { clientY: 65 }))
+    await flush()
+    expect(document.querySelector('.dialog')).toBeTruthy()
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await flush()
+    expect(document.querySelector('.dialog')).toBeNull()
+    expect(dragResetStore.plan()).toBeNull()
+    expect(sent.some((m) => m.command === 'reset')).toBe(false)
+  })
+
   it('Escape로 드래그를 취소하면 미리보기가 사라진다', () => {
     const headHit = document.querySelector('.graph-node-hit.head-node')!
     headHit.dispatchEvent(mouse('mousedown', { clientY: 13 }))

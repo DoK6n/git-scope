@@ -24,8 +24,8 @@ describe('layoutGraph', () => {
     expect(layout.laneCount).toBe(1)
     // c→b, b→a 두 개의 수직 선분
     expect(layout.segments).toEqual([
-      { row: 0, fromLane: 0, toLane: 0, color: 0 },
-      { row: 1, fromLane: 0, toLane: 0, color: 0 },
+      { row: 0, fromLane: 0, toLane: 0, color: 0, childRow: 0 },
+      { row: 1, fromLane: 0, toLane: 0, color: 0, childRow: 1 },
     ])
   })
 
@@ -51,10 +51,10 @@ describe('layoutGraph', () => {
     expect(base!.lane).toBe(0)
     expect(layout.laneCount).toBe(2)
 
-    // m에서 f로 가는 분기 선분 (레인 0 → 레인 1)
-    expect(layout.segments).toContainEqual({ row: 0, fromLane: 0, toLane: 1, color: 1 })
-    // f의 레인이 base로 수렴 (레인 1 → 레인 0)
-    expect(layout.segments).toContainEqual({ row: 2, fromLane: 1, toLane: 0, color: 1 })
+    // m에서 f로 가는 분기 선분 (레인 0 → 레인 1) — 엣지의 자식은 m(행 0)
+    expect(layout.segments).toContainEqual({ row: 0, fromLane: 0, toLane: 1, color: 1, childRow: 0 })
+    // f의 레인이 base로 수렴 (레인 1 → 레인 0) — 엣지의 자식은 f(행 1)
+    expect(layout.segments).toContainEqual({ row: 2, fromLane: 1, toLane: 0, color: 1, childRow: 1 })
   })
 
   it('독립 브랜치 tip은 새 레인을 얻는다', () => {
@@ -73,7 +73,7 @@ describe('layoutGraph', () => {
 
   it('hasMore면 마지막 행 아래로 이어지는 선분을 만든다', () => {
     const layout = layoutGraph([commit('c', ['b']), commit('b', ['a'])], true)
-    expect(layout.segments).toContainEqual({ row: 1, fromLane: 0, toLane: 0, color: 0 })
+    expect(layout.segments).toContainEqual({ row: 1, fromLane: 0, toLane: 0, color: 0, childRow: 1 })
   })
 
   it('레인이 해제되면 재사용된다', () => {
@@ -92,6 +92,17 @@ describe('layoutGraph', () => {
     expect(layout.rows[3]!.lane).toBe(1) // z가 해제된 레인 1 재사용
   })
 
+  it('자식→부모 엣지가 다른 브랜치 행을 통과해도 모든 선분이 같은 childRow를 갖는다', () => {
+    // h → p 엣지 사이(행 1)에 무관한 브랜치 tip u가 끼어 있다
+    const layout = layoutGraph(
+      [commit('h', ['p']), commit('u', ['x']), commit('p', ['x']), commit('x', [])],
+      false,
+    )
+    const hEdge = layout.segments.filter((s) => s.childRow === 0)
+    // 행 0→1, 1→2 두 선분으로 쪼개지지만 둘 다 h(행 0)의 엣지다
+    expect(hEdge.map((s) => s.row)).toEqual([0, 1])
+  })
+
   it('uncommitted 합성 노드(부모=HEAD)가 HEAD 레인으로 수렴한다', () => {
     const layout = layoutGraph(
       [
@@ -107,6 +118,7 @@ describe('layoutGraph', () => {
       fromLane: layout.rows[0]!.lane,
       toLane: layout.rows[2]!.lane,
       color: layout.rows[0]!.color,
+      childRow: 0,
     })
   })
 })

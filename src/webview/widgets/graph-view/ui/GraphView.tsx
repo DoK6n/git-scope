@@ -392,18 +392,11 @@ export function GraphView() {
           <For each={visibleSegments()}>
             {(seg) => {
               const d = () => segmentPath(seg, nodeY(seg.row), nodeY(seg.row + 1))
-              // reset 미리보기: dim된 노드에서 나가거나(dim행의 노드 레인 → 아래)
-              // dim된 노드로 들어오는(위 → dim행의 노드 레인) 엣지만 지운다 —
-              // dim 구간을 그냥 지나가는 다른 라인의 선은 남는다
-              const doomed = () => {
-                const rows = doomedRows()
-                if (!rows) return false
-                const layout = graphStore.layout()
-                return (
-                  (rows.has(seg.row) && layout?.rows[seg.row]?.lane === seg.fromLane) ||
-                  (rows.has(seg.row + 1) && layout?.rows[seg.row + 1]?.lane === seg.toLane)
-                )
-              }
+              // reset 미리보기: dim된 커밋에서 출발한 엣지의 선분은 전부 지운다 —
+              // 자식→부모 엣지가 다른 브랜치 행을 통과하며 여러 선분으로 쪼개져도
+              // childRow가 같으므로 함께 사라진다. 살아남는 커밋의 엣지는 남는다
+              // (자식이 살아남으면 그 부모도 도달 가능해 dim되지 않는다)
+              const doomed = () => doomedRows()?.has(seg.childRow) ?? false
               return (
                 <>
                   <path
