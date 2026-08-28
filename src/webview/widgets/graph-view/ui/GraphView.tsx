@@ -48,10 +48,10 @@ export function GraphView() {
   const [scrollTop, setScrollTop] = createSignal(0)
   const [viewHeight, setViewHeight] = createSignal(600)
   // 그래프 선 강조: hover는 일시적, 클릭은 고정(토글), 상세뷰가 열리면 그 커밋의 라인.
-  // seg.color가 라인 고유 id다
+  // seg.color가 라인 고유 id다. reset 드래그 중에는 미리보기 dim과 섞이지 않게 전부 끈다
   const [hoverLine, setHoverLine] = createSignal<number | null>(null)
   const [pinnedLine, setPinnedLine] = createSignal<number | null>(null)
-  const activeLine = () => hoverLine() ?? pinnedLine() ?? selectedLine()
+  const activeLine = () => (dragging() ? null : (hoverLine() ?? pinnedLine() ?? selectedLine()))
 
   onMount(() => {
     if (!containerRef) return
@@ -176,6 +176,9 @@ export function GraphView() {
       if (active) return
       active = true
       setDragging(true)
+      // 드래그 중 pointer-events가 꺼져 mouseleave가 못 오므로 hover 잔상을 직접 지운다
+      setHoverLine(null)
+      setHoverNode(null)
       // 상세 패널이 열려 있으면 행 y가 밀린다 — 닫아서 행 = i*ROW_H 로 단순화
       graphStore.setSelectedCommit(null)
       updatePlan()

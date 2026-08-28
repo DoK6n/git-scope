@@ -782,6 +782,13 @@ path.graph-line-hit {
   user-select: none;
 }
 
+/* 드래그 중에는 라인/노드 hover 인터랙션이 미리보기를 방해하지 않게 차단 —
+   드래그 자체는 window 리스너로 진행되므로 영향 없다 */
+.graph-view.dragging-reset .graph-line-hit,
+.graph-view.dragging-reset .graph-node-hit {
+  pointer-events: none;
+}
+
 /* 지워질 커밋의 노드와 그 노드에 드나드는 엣지 — 통과하는 다른 라인은 남는다 */
 path.graph-line.doomed,
 .graph-node.doomed {

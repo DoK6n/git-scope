@@ -190,6 +190,21 @@ describe('GraphView drag-to-reset 배선', () => {
     expect(document.querySelector('.dialog')).toBeNull()
   })
 
+  it('리셋 드래그 중에는 라인 hover 강조가 꺼진다 — 미리보기 dim과 섞이지 않게', () => {
+    // 라인 hover로 강조를 켠 상태에서 드래그를 시작하면 강조가 사라져야 한다
+    const lineHit = document.querySelector('.graph-line-hit')!
+    lineHit.dispatchEvent(new MouseEvent('mouseenter'))
+    expect(document.querySelector('.graph-line.active')).toBeTruthy()
+
+    const headHit = document.querySelector('.graph-node-hit.head-node')!
+    headHit.dispatchEvent(mouse('mousedown', { clientY: 13 }))
+    window.dispatchEvent(mouse('mousemove', { clientY: 65 }))
+    expect(document.querySelector('.graph-line.active')).toBeNull()
+    expect(dragResetStore.plan()).toBeTruthy()
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+  })
+
   it('HEAD가 아닌 노드 클릭은 커밋 선택으로 동작한다', () => {
     const hits = [...document.querySelectorAll('.graph-node-hit')]
     hits[2]!.dispatchEvent(mouse('click'))
