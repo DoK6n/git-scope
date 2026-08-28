@@ -704,7 +704,8 @@ path.graph-line-hit {
 }
 
 .graph-node {
-  transition: opacity 0.12s;
+  /* r 전환: hover(히트 서클) 시 확대가 부드럽게 보이도록 */
+  transition: opacity 0.12s, r 0.12s;
 }
 
 .graph-node.uncommitted {
@@ -761,16 +762,22 @@ path.graph-line-hit {
   stroke-width: 2;
 }
 
-/* ── drag-to-reset 미리보기 (스펙 60-new-features §10) ───── */
-/* HEAD 노드만 포인터 이벤트를 받는다 (.graph-svg 자체는 pointer-events: none) */
-.graph-node.head-node {
+/* ── 노드 히트 서클 — hover 확대·클릭·drag-to-reset의 포인터 타겟 ───── */
+/* (.graph-svg 자체는 pointer-events: none — 히트 서클만 이벤트를 받는다) */
+.graph-node-hit {
+  fill: transparent;
   pointer-events: all;
+  cursor: pointer;
+}
+
+.graph-node-hit.head-node {
   cursor: grab;
 }
 
+/* ── drag-to-reset 미리보기 (스펙 60-new-features §10) ───── */
 .graph-view.dragging-reset,
 .graph-view.dragging-reset .commit-row,
-.graph-view.dragging-reset .graph-node.head-node {
+.graph-view.dragging-reset .graph-node-hit {
   cursor: ns-resize;
   user-select: none;
 }

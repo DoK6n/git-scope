@@ -14,6 +14,8 @@ import { openContextMenu } from '../../../shared/ui'
 export const ROW_H = 26
 const LANE_W = 14
 const NODE_R = 4
+/** 노드 포인터 히트 반경 — 보이는 점(4px)보다 넉넉해야 hover/드래그를 잡기 쉽다 */
+const NODE_HIT_R = 9
 const OVERSCAN = 10
 /** 인라인 상세 패널로 밀려난 행까지 커버하는 추가 오버스캔 */
 const DETAILS_ROWS = Math.ceil(DETAILS_H / ROW_H)
@@ -110,6 +112,8 @@ export function GraphView() {
   })
 
   const [dragging, setDragging] = createSignal(false)
+  /** 마우스가 올라간 노드의 행 — 해당 점을 살짝 확대해 어느 커밋인지 보여준다 */
+  const [hoverNode, setHoverNode] = createSignal<number | null>(null)
 
   /** 미리보기 dim 대상 행 인덱스 집합 (erased + 도달 불가가 되는 사이드 커밋) */
   const doomedRows = createMemo<Set<number> | null>(() => {
@@ -126,10 +130,14 @@ export function GraphView() {
   )
   const resetTargetHash = () => dragResetStore.plan()?.target.hash ?? null
 
+  /** 드래그로 끝난 mouseup 직후 같은 노드에서 click이 발생하면 선택 토글을 막는다 */
+  let suppressNodeClick = false
+
   const startDragReset = (e: MouseEvent) => {
     if (e.button !== 0 || !containerRef || !canvasRef) return
     e.preventDefault()
     e.stopPropagation()
+    suppressNodeClick = false
     const startY = e.clientY
     let lastY = e.clientY
     let active = false
@@ -182,13 +190,11 @@ export function GraphView() {
     const onUp = () => {
       cleanup()
       if (!active) {
-        // 드래그가 아닌 단순 클릭 — 행 클릭과 동일하게 상세뷰 토글 (점이 이벤트를
-        // 가로채므로 아래 행으로 전달되지 않는다)
-        const head = graphStore.graph()?.headHash ?? null
+        // 드래그가 아닌 단순 클릭 — 이어서 발생하는 히트 서클의 click이 선택을 처리한다
         dragResetStore.clear()
-        graphStore.setSelectedCommit(graphStore.selectedCommit() === head ? null : head)
         return
       }
+      suppressNodeClick = true
       if ((dragResetStore.plan()?.erased.length ?? 0) > 0) {
         void confirmDragReset() // 다이얼로그가 닫힐 때 미리보기도 함께 지워진다
       } else {
@@ -203,6 +209,18 @@ export function GraphView() {
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
     window.addEventListener('keydown', onKey)
+  }
+
+  /** 행/노드 공통 클릭 처리 — 선택 토글, Ctrl/Cmd+클릭은 비교 대상 지정 */
+  const handleRowClick = (c: Commit, e: MouseEvent) => {
+    if (c.isUncommitted) return
+    const selected = graphStore.selectedCommit()
+    if ((e.ctrlKey || e.metaKey) && selected && selected !== c.hash) {
+      // Ctrl/Cmd+클릭: 선택된 커밋과 비교
+      graphStore.setCompareWith(graphStore.compareWith() === c.hash ? null : c.hash)
+    } else {
+      graphStore.setSelectedCommit(selected === c.hash ? null : c.hash)
+    }
   }
 
   const refsByHash = createMemo(() => {
@@ -344,19 +362,7 @@ export function GraphView() {
                   resetDoomed={doomedRows()?.has(i) ?? false}
                   resetErased={erasedSet().has(commit()!.hash)}
                   resetNewHead={resetTargetHash() === commit()!.hash}
-                  onClick={(e) => {
-                    const c = commit()!
-                    if (c.isUncommitted) return
-                    const selected = graphStore.selectedCommit()
-                    if ((e.ctrlKey || e.metaKey) && selected && selected !== c.hash) {
-                      // Ctrl/Cmd+클릭: 선택된 커밋과 비교
-                      graphStore.setCompareWith(
-                        graphStore.compareWith() === c.hash ? null : c.hash,
-                      )
-                    } else {
-                      graphStore.setSelectedCommit(selected === c.hash ? null : c.hash)
-                    }
-                  }}
+                  onClick={(e) => handleRowClick(commit()!, e)}
                   onContextMenu={(e) => {
                     const items = buildRowMenu(commit()!)
                     if (items.length > 0) openContextMenu(e, items)
@@ -424,19 +430,40 @@ export function GraphView() {
                   <circle
                     cx={laneX(row()!.lane)}
                     cy={nodeY(i)}
-                    r={activeLine() === row()!.color ? NODE_R + 1 : NODE_R}
+                    r={
+                      hoverNode() === i
+                        ? NODE_R + 2
+                        : activeLine() === row()!.color
+                          ? NODE_R + 1
+                          : NODE_R
+                    }
                     class={`graph-node color-${row()!.color % 8}`}
                     classList={{
                       uncommitted: commit()!.isUncommitted,
                       stash: commit()!.stashSelector !== undefined,
                       dimmed: activeLine() !== null && activeLine() !== row()!.color,
                       doomed: doomedRows()?.has(i) ?? false,
-                      'head-node': headRow() === i,
                     }}
-                    // 핸들러는 반응형이 아니므로 항상 붙이고 안에서 판정한다 —
-                    // 어차피 head-node 클래스가 없는 노드는 pointer-events를 받지 않는다
+                  />
+                  {/* 보이는 점(4px)은 잡기 너무 작다 — 투명한 히트 서클이 hover 확대,
+                      클릭(행 선택), HEAD 노드의 drag-to-reset을 대신 받는다 */}
+                  <circle
+                    cx={laneX(row()!.lane)}
+                    cy={nodeY(i)}
+                    r={NODE_HIT_R}
+                    class="graph-node-hit"
+                    classList={{ 'head-node': headRow() === i }}
+                    onMouseEnter={() => setHoverNode(i)}
+                    onMouseLeave={() => setHoverNode(null)}
                     onMouseDown={(e) => {
                       if (headRow() === i) startDragReset(e)
+                    }}
+                    onClick={(e) => {
+                      if (suppressNodeClick) {
+                        suppressNodeClick = false
+                        return
+                      }
+                      handleRowClick(commit()!, e)
                     }}
                   >
                     <Show when={headRow() === i}>
