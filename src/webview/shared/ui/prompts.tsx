@@ -1,4 +1,5 @@
 import { createSignal, For, Show } from 'solid-js'
+import { t } from '../lib'
 import { Dialog } from './Dialog'
 
 /** 폼 다이얼로그 필드 정의 */
@@ -18,10 +19,24 @@ export type FieldSpec =
 
 export type FormValues = Record<string, string | number | boolean>
 
+/**
+ * 다이얼로그 본문에 표시하는 읽기 전용 항목 리스트 —
+ * 위험 액션의 대상(지워질 커밋, 삭제될 스태시 등)을 확인용으로 나열할 때 쓴다.
+ */
+export interface DialogList {
+  items: { code: string; text: string; mark?: string }[]
+  /** items에 담지 못한 나머지 개수 — "… and N more"로 표시 */
+  more?: number
+  /** 리스트 아래 강조 줄 (예: 새 HEAD 안내) */
+  footer?: string
+}
+
 interface FormState {
   title: string
   /** 다이얼로그 상단 설명 문구 */
   note?: string
+  /** note 아래 읽기 전용 항목 리스트 */
+  list?: DialogList
   fields: FieldSpec[]
   confirmLabel: string
   danger: boolean
@@ -52,6 +67,7 @@ const [errorState, setErrorState] = createSignal<ErrorState | null>(null)
 export function formDialog(opts: {
   title: string
   note?: string
+  list?: DialogList
   fields: FieldSpec[]
   confirmLabel?: string
   danger?: boolean
@@ -61,6 +77,7 @@ export function formDialog(opts: {
     setFormState({
       title: opts.title,
       note: opts.note,
+      list: opts.list,
       fields: opts.fields,
       confirmLabel: opts.confirmLabel ?? 'OK',
       danger: opts.danger ?? false,
@@ -209,6 +226,29 @@ function FormDialogView(props: { state: FormState }) {
     >
       <Show when={props.state.note}>
         <div class="dialog-note">{props.state.note}</div>
+      </Show>
+      <Show when={props.state.list}>
+        {(list) => (
+          <div class="dialog-list">
+            <For each={list().items}>
+              {(item) => (
+                <div class="dialog-list-item">
+                  <code>{item.code}</code>
+                  <span class="dialog-list-text">{item.text}</span>
+                  <Show when={item.mark}>
+                    <span class="dialog-list-mark">{item.mark}</span>
+                  </Show>
+                </div>
+              )}
+            </For>
+            <Show when={(list().more ?? 0) > 0}>
+              <div class="dialog-list-more">{t('… and {0} more', list().more!)}</div>
+            </Show>
+            <Show when={list().footer}>
+              <div class="dialog-list-footer">{list().footer}</div>
+            </Show>
+          </div>
+        )}
       </Show>
       <For each={props.state.fields}>
         {(field) => (

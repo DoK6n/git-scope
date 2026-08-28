@@ -2,6 +2,12 @@
 
 한국어 버전: [CHANGELOG.ko.md](CHANGELOG.ko.md)
 
+## [Unreleased]
+
+### Added
+
+- **Drag-to-reset**: drag the HEAD commit's graph dot downward to "erase" commits — erased rows are dimmed with a `reset` chip and the commit that will become the new HEAD is highlighted, including side-branch commits that would become unreachable when a merge is erased (commits still protected by another ref stay lit). Releasing the mouse opens a confirmation dialog listing the commits to be removed, the new HEAD, and the usual soft/mixed/hard mode choice; `Esc` cancels the drag. Dragging near the viewport edge auto-scrolls (and loads more commits at the bottom).
+
 ## [0.5.2] - 2026-08-26
 
 ### Changed

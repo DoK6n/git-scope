@@ -21,6 +21,12 @@ interface CommitRowProps {
   compared?: boolean
   searchMatch?: boolean
   searchCurrent?: boolean
+  /** drag-to-reset 미리보기: 그래프에서 사라질 커밋 (erased + 도달 불가 사이드 커밋) */
+  resetDoomed?: boolean
+  /** drag-to-reset 미리보기: 브랜치에서 제거될 first-parent 체인 커밋 — "reset" 칩 표시 */
+  resetErased?: boolean
+  /** drag-to-reset 미리보기: 새 HEAD가 될 커밋 */
+  resetNewHead?: boolean
   onClick: (e: MouseEvent) => void
   onContextMenu: (e: MouseEvent) => void
 }
@@ -74,6 +80,8 @@ export function CommitRow(props: CommitRowProps) {
         stash: props.commit.stashSelector !== undefined,
         'search-match': props.searchMatch,
         'search-current': props.searchCurrent,
+        doomed: props.resetDoomed,
+        'new-head': props.resetNewHead,
       }}
       style={{ top: `${props.top}px` }}
       onClick={(e) => props.onClick(e)}
@@ -168,6 +176,12 @@ export function CommitRow(props: CommitRowProps) {
           )}
         </Show>
         <span class="commit-subject">{props.commit.subject}</span>
+        <Show when={props.resetErased}>
+          <span class="reset-chip">reset</span>
+        </Show>
+        <Show when={props.resetNewHead}>
+          <span class="new-head-chip">{t('→ new HEAD')}</span>
+        </Show>
       </div>
       <Show when={!props.commit.isUncommitted}>
         <div class="col-author" title={props.commit.authorEmail}>

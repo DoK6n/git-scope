@@ -2,6 +2,7 @@ import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show }
 import type { Commit, GitRef } from '@shared-types/domain'
 import { graphStore } from '../../../entities/graph'
 import type { Segment } from '../../../entities/graph'
+import { computeDragResetPlan, confirmDragReset, dragResetStore } from '../../../features/reset'
 import { searchStore } from '../../../features/search'
 import { t } from '../../../shared/lib'
 import { CommitRow } from './CommitRow'
@@ -31,8 +32,15 @@ function segmentPath(seg: Segment, y1: number, y2: number): string {
   return `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`
 }
 
+/** 드래그 중 뷰포트 가장자리 자동 스크롤이 시작되는 여백(px)과 프레임당 스크롤량 */
+const EDGE_SCROLL_ZONE = 28
+const EDGE_SCROLL_STEP = 10
+/** 이 거리(px) 이상 움직여야 드래그로 판정 — 그 전 mouseup은 일반 클릭 */
+const DRAG_THRESHOLD = 4
+
 export function GraphView() {
   let containerRef: HTMLDivElement | undefined
+  let canvasRef: HTMLDivElement | undefined
   const [scrollTop, setScrollTop] = createSignal(0)
   const [viewHeight, setViewHeight] = createSignal(600)
   // 그래프 선 강조: hover는 일시적, 클릭은 고정(토글), 상세뷰가 열리면 그 커밋의 라인.
@@ -88,6 +96,114 @@ export function GraphView() {
     containerRef.scrollTop = Math.max(0, rowTop(target) - containerRef.clientHeight / 2)
     graphStore.consumeScrollTarget()
   })
+
+  // ── drag-to-reset (스펙 60-new-features §10) ─────────────────────────
+  // HEAD 커밋의 노드에서 mousedown → 아래로 끌면 지나간 first-parent 커밋들이
+  // "지워지는" 미리보기 → mouseup에서 확인 다이얼로그 → git reset
+
+  /** HEAD 커밋(합성 uncommitted 노드 제외)의 행 인덱스 */
+  const headRow = createMemo<number | null>(() => {
+    const head = graphStore.graph()?.headHash
+    if (!head) return null
+    const idx = commits().findIndex((c) => c.hash === head && !c.isUncommitted)
+    return idx >= 0 ? idx : null
+  })
+
+  const [dragging, setDragging] = createSignal(false)
+
+  /** 미리보기 dim 대상 행 인덱스 집합 (erased + 도달 불가가 되는 사이드 커밋) */
+  const doomedRows = createMemo<Set<number> | null>(() => {
+    const plan = dragResetStore.plan()
+    if (!plan) return null
+    const set = new Set<number>()
+    commits().forEach((c, i) => {
+      if (plan.dimmed.has(c.hash)) set.add(i)
+    })
+    return set
+  })
+  const erasedSet = createMemo<Set<string>>(
+    () => new Set((dragResetStore.plan()?.erased ?? []).map((c) => c.hash)),
+  )
+  const resetTargetHash = () => dragResetStore.plan()?.target.hash ?? null
+
+  const startDragReset = (e: MouseEvent) => {
+    if (e.button !== 0 || !containerRef || !canvasRef) return
+    e.preventDefault()
+    e.stopPropagation()
+    const startY = e.clientY
+    let lastY = e.clientY
+    let active = false
+    let raf: number | null = null
+
+    const updatePlan = () => {
+      const g = graphStore.graph()
+      if (!g || !canvasRef) return
+      const y = lastY - canvasRef.getBoundingClientRect().top
+      const row = Math.max(0, Math.min(commits().length - 1, Math.floor(y / ROW_H)))
+      dragResetStore.setPlan(
+        computeDragResetPlan(commits(), g.refs, g.headHash, g.headBranch, row),
+      )
+    }
+
+    // 커서가 가장자리에 머물러도 계속 흐르도록 rAF 루프로 스크롤한다.
+    // 바닥에 닿으면 onScroll의 loadMore가 그대로 동작해 추가 커밋도 끌어올 수 있다
+    const tick = () => {
+      if (containerRef) {
+        const rect = containerRef.getBoundingClientRect()
+        if (lastY > rect.bottom - EDGE_SCROLL_ZONE) {
+          containerRef.scrollTop += EDGE_SCROLL_STEP
+          updatePlan()
+        } else if (lastY < rect.top + EDGE_SCROLL_ZONE) {
+          containerRef.scrollTop -= EDGE_SCROLL_STEP
+          updatePlan()
+        }
+      }
+      raf = requestAnimationFrame(tick)
+    }
+
+    const cleanup = () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      window.removeEventListener('keydown', onKey)
+      if (raf !== null) cancelAnimationFrame(raf)
+      setDragging(false)
+    }
+    const onMove = (ev: MouseEvent) => {
+      lastY = ev.clientY
+      if (!active && Math.abs(ev.clientY - startY) > DRAG_THRESHOLD) {
+        active = true
+        setDragging(true)
+        // 상세 패널이 열려 있으면 행 y가 밀린다 — 닫아서 행 = i*ROW_H 로 단순화
+        graphStore.setSelectedCommit(null)
+        raf = requestAnimationFrame(tick)
+      }
+      if (active) updatePlan()
+    }
+    const onUp = () => {
+      cleanup()
+      if (!active) {
+        // 드래그가 아닌 단순 클릭 — 행 클릭과 동일하게 상세뷰 토글 (점이 이벤트를
+        // 가로채므로 아래 행으로 전달되지 않는다)
+        const head = graphStore.graph()?.headHash ?? null
+        dragResetStore.clear()
+        graphStore.setSelectedCommit(graphStore.selectedCommit() === head ? null : head)
+        return
+      }
+      if ((dragResetStore.plan()?.erased.length ?? 0) > 0) {
+        void confirmDragReset() // 다이얼로그가 닫힐 때 미리보기도 함께 지워진다
+      } else {
+        dragResetStore.clear()
+      }
+    }
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key !== 'Escape') return
+      cleanup()
+      dragResetStore.clear()
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    window.addEventListener('keydown', onKey)
+  }
 
   const refsByHash = createMemo(() => {
     const map = new Map<string, GitRef[]>()
@@ -163,6 +279,7 @@ export function GraphView() {
   return (
     <div
       class="graph-view"
+      classList={{ 'dragging-reset': dragging() }}
       ref={(el) => (containerRef = el)}
       onScroll={onScroll}
       style={{
@@ -204,7 +321,11 @@ export function GraphView() {
           Hash
         </div>
       </div>
-      <div class="graph-canvas" style={{ height: `${totalHeight()}px` }}>
+      <div
+        class="graph-canvas"
+        ref={(el) => (canvasRef = el)}
+        style={{ height: `${totalHeight()}px` }}
+      >
         <For each={visibleIndices()}>
           {(i) => {
             const commit = () => commits()[i]
@@ -220,6 +341,9 @@ export function GraphView() {
                   compared={graphStore.compareWith() === commit()!.hash}
                   searchMatch={searchStore.matchSet().has(i)}
                   searchCurrent={searchStore.currentRow() === i}
+                  resetDoomed={doomedRows()?.has(i) ?? false}
+                  resetErased={erasedSet().has(commit()!.hash)}
+                  resetNewHead={resetTargetHash() === commit()!.hash}
                   onClick={(e) => {
                     const c = commit()!
                     if (c.isUncommitted) return
@@ -253,6 +377,18 @@ export function GraphView() {
           <For each={visibleSegments()}>
             {(seg) => {
               const d = () => segmentPath(seg, nodeY(seg.row), nodeY(seg.row + 1))
+              // reset 미리보기: dim된 노드에서 나가거나(dim행의 노드 레인 → 아래)
+              // dim된 노드로 들어오는(위 → dim행의 노드 레인) 엣지만 지운다 —
+              // dim 구간을 그냥 지나가는 다른 라인의 선은 남는다
+              const doomed = () => {
+                const rows = doomedRows()
+                if (!rows) return false
+                const layout = graphStore.layout()
+                return (
+                  (rows.has(seg.row) && layout?.rows[seg.row]?.lane === seg.fromLane) ||
+                  (rows.has(seg.row + 1) && layout?.rows[seg.row + 1]?.lane === seg.toLane)
+                )
+              }
               return (
                 <>
                   <path
@@ -261,6 +397,7 @@ export function GraphView() {
                     classList={{
                       active: activeLine() === seg.color,
                       dimmed: activeLine() !== null && activeLine() !== seg.color,
+                      doomed: doomed(),
                     }}
                     fill="none"
                   />
@@ -293,8 +430,19 @@ export function GraphView() {
                       uncommitted: commit()!.isUncommitted,
                       stash: commit()!.stashSelector !== undefined,
                       dimmed: activeLine() !== null && activeLine() !== row()!.color,
+                      doomed: doomedRows()?.has(i) ?? false,
+                      'head-node': headRow() === i,
                     }}
-                  />
+                    // 핸들러는 반응형이 아니므로 항상 붙이고 안에서 판정한다 —
+                    // 어차피 head-node 클래스가 없는 노드는 pointer-events를 받지 않는다
+                    onMouseDown={(e) => {
+                      if (headRow() === i) startDragReset(e)
+                    }}
+                  >
+                    <Show when={headRow() === i}>
+                      <title>{t('Drag down: reset (erase commits)')}</title>
+                    </Show>
+                  </circle>
                 </Show>
               )
             }}

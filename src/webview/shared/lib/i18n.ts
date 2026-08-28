@@ -126,6 +126,14 @@ const KO: Record<string, string> = {
     '{0}부터 HEAD까지의 커밋이 브랜치에서 제외되고, {1}는 부모 커밋({2})을 가리킵니다. HEAD 커밋에서 실행하면 git reset HEAD~1과 같습니다.',
   'N (commits to go back from HEAD)': 'N (HEAD에서 거슬러 올라갈 커밋 수)',
 
+  // ── drag-to-reset ──
+  'Drag down: reset (erase commits)': '아래로 드래그: reset (커밋 지우기)',
+  'Reset — undo {0} commits': 'Reset — 커밋 {0}개 되돌리기',
+  'These commits are removed from {0}:': '다음 커밋들이 {0} 브랜치에서 제거됩니다:',
+  '… and {0} more': '… 외 {0}개',
+  '→ new HEAD: {0} {1}': '→ 새 HEAD: {0} {1}',
+  '→ new HEAD': '→ 새 HEAD',
+
   // ── worktree ──
   'Branch (existing or new branch name)': 'Branch (기존 브랜치명 또는 새 브랜치명)',
   '{0}\n\nRemove this worktree? (the branch is not deleted)':
