@@ -39,6 +39,8 @@ const EDGE_SCROLL_ZONE = 28
 const EDGE_SCROLL_STEP = 10
 /** 이 거리(px) 이상 움직여야 드래그로 판정 — 그 전 mouseup은 일반 클릭 */
 const DRAG_THRESHOLD = 4
+/** 움직이지 않아도 이 시간(ms) 이상 꾹 누르고 있으면 드래그 모드로 진입 */
+const HOLD_DELAY = 300
 
 export function GraphView() {
   let containerRef: HTMLDivElement | undefined
@@ -169,22 +171,29 @@ export function GraphView() {
       raf = requestAnimationFrame(tick)
     }
 
+    // 드래그 모드 진입 — 임계 거리 이동 또는 꾹 누르기(HOLD_DELAY) 중 먼저 오는 쪽
+    const activate = () => {
+      if (active) return
+      active = true
+      setDragging(true)
+      // 상세 패널이 열려 있으면 행 y가 밀린다 — 닫아서 행 = i*ROW_H 로 단순화
+      graphStore.setSelectedCommit(null)
+      updatePlan()
+      raf = requestAnimationFrame(tick)
+    }
+    const holdTimer = window.setTimeout(activate, HOLD_DELAY)
+
     const cleanup = () => {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
       window.removeEventListener('keydown', onKey)
+      window.clearTimeout(holdTimer)
       if (raf !== null) cancelAnimationFrame(raf)
       setDragging(false)
     }
     const onMove = (ev: MouseEvent) => {
       lastY = ev.clientY
-      if (!active && Math.abs(ev.clientY - startY) > DRAG_THRESHOLD) {
-        active = true
-        setDragging(true)
-        // 상세 패널이 열려 있으면 행 y가 밀린다 — 닫아서 행 = i*ROW_H 로 단순화
-        graphStore.setSelectedCommit(null)
-        raf = requestAnimationFrame(tick)
-      }
+      if (!active && Math.abs(ev.clientY - startY) > DRAG_THRESHOLD) activate()
       if (active) updatePlan()
     }
     const onUp = () => {
@@ -430,13 +439,8 @@ export function GraphView() {
                   <circle
                     cx={laneX(row()!.lane)}
                     cy={nodeY(i)}
-                    r={
-                      hoverNode() === i
-                        ? NODE_R + 2
-                        : activeLine() === row()!.color
-                          ? NODE_R + 1
-                          : NODE_R
-                    }
+                    // 확대는 hover된 그 점 하나만 — 라인 강조는 선 굵기로만 표현한다
+                    r={hoverNode() === i ? NODE_R + 2.5 : NODE_R}
                     class={`graph-node color-${row()!.color % 8}`}
                     classList={{
                       uncommitted: commit()!.isUncommitted,
