@@ -5,11 +5,15 @@ import { AvatarService } from './git/avatars'
 import { GitContentProvider, GITSCOPE_SCHEME } from './git/contentProvider'
 import { setGitCommandLogger } from './git/exec'
 import { FileIconService } from './icons/fileIcons'
+import { activateTelemetry, sendEvent } from './telemetry'
 
 const GITHUB_SCOPES = ['repo']
 const TOKEN_SECRET_KEY = 'gitScope.githubToken'
 
 export function activate(context: vscode.ExtensionContext): void {
+  activateTelemetry(context)
+  sendEvent('activate')
+
   // 실행되는 모든 git 명령을 Output 패널 "Git Scope" 채널에 기록
   const gitOutput = vscode.window.createOutputChannel('Git Scope')
   setGitCommandLogger((line) => gitOutput.appendLine(line))
@@ -61,6 +65,7 @@ export function activate(context: vscode.ExtensionContext): void {
       }
     }),
     vscode.commands.registerCommand('gitScope.view', () => {
+      sendEvent('graphOpen')
       GraphPanel.show(context, router)
     }),
     vscode.commands.registerCommand('gitScope.clearAvatarCache', async () => {

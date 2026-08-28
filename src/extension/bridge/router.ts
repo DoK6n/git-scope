@@ -9,6 +9,7 @@ import { execGit } from '../git/exec'
 import { makeGitUri } from '../git/contentProvider'
 import type { FileIconService } from '../icons/fileIcons'
 import type { IconSpec } from '@shared-types/domain'
+import { sendActionEvent } from '../telemetry'
 
 type Handler<C extends RequestCommand> = (
   params: RequestMap[C]['params'],
@@ -242,8 +243,22 @@ export class Router {
   ): Promise<RequestMap[C]['result']> {
     const mutatesRepo = !READ_ONLY_REQUESTS.has(request.command)
     if (mutatesRepo) this.runningMutations++
+    const started = Date.now()
     try {
-      return await this.dispatch(request)
+      const result = await this.dispatch(request)
+      if (mutatesRepo) {
+        // 이벤트에는 명령 이름과 성공 여부만 담는다 — 파라미터·에러 문자열은
+        // 브랜치명·경로 등 리포 내용을 포함할 수 있어 전송하지 않는다
+        const ok =
+          typeof result === 'object' && result !== null && 'ok' in result
+            ? (result as { ok: boolean }).ok
+            : true
+        sendActionEvent(request.command, ok, Date.now() - started)
+      }
+      return result
+    } catch (e) {
+      if (mutatesRepo) sendActionEvent(request.command, false, Date.now() - started)
+      throw e
     } finally {
       if (mutatesRepo) {
         this.runningMutations--

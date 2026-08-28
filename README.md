@@ -26,6 +26,12 @@ Click **Git Scope** in the left side of the status bar, or use Command Palette (
 - **Avatars**: GitHub profile pictures (with disk cache and GitHub sign-in support), Gravatar fallback, and AI co-author icons for `Co-authored-by` trailers
 - Auto-refresh: the graph follows any `.git` change — actions in the app or commands in your terminal
 
+## Telemetry
+
+Git Scope collects anonymous usage telemetry to understand which features are used and to catch failures: extension activation, graph opens, and git action events (action name, success/failure, duration only). **It never collects repository content** — no commit messages, branch names, file paths, remote URLs, or error text. See [`telemetry.json`](telemetry.json) for the full list of events.
+
+Telemetry respects VS Code's `telemetry.telemetryLevel` setting — set it to `off` to disable.
+
 ## Development
 
 ```bash
