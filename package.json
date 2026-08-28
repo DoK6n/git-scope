@@ -141,5 +141,8 @@
     "vite": "^5.2.0",
     "vite-plugin-solid": "^2.10.0",
     "vitest": "^1.6.0"
+  },
+  "dependencies": {
+    "@vscode/extension-telemetry": "^1.5.2"
   }
 }

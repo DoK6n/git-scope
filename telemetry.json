@@ -1,0 +1,24 @@
+{
+  "events": {
+    "activate": {
+      "description": "Extension activated.",
+      "properties": {}
+    },
+    "graphOpen": {
+      "description": "The Git Scope graph view was opened.",
+      "properties": {}
+    },
+    "action": {
+      "description": "A repository-mutating git action ran (e.g. reset, merge, addWorktree). Never includes repository content — no commit messages, branch names, paths, or error text.",
+      "properties": {
+        "command": "Internal action name (e.g. 'reset', 'merge', 'addWorktree').",
+        "outcome": "'ok' or 'error'."
+      },
+      "measurements": {
+        "durationMs": "Action duration in milliseconds."
+      }
+    }
+  },
+  "commonProperties": "Standard properties added by @vscode/extension-telemetry (VS Code version, extension version, machine id, OS, etc.). See https://github.com/microsoft/vscode-extension-telemetry",
+  "optOut": "Respects the VS Code 'telemetry.telemetryLevel' setting. Set it to 'off' to disable all telemetry."
+}
