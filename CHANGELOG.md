@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-08-28
+
+### Changed
+
+- Clarified the Marketplace telemetry disclosure: an action type is a fixed internal Git Scope feature identifier such as `checkoutBranch`, `merge`, or `reset`—not a user-provided branch or operation name. Action parameters and repository data, including actual branch and tag names, commit hashes and messages, file and repository paths, remote names and URLs, stash messages, and error text, are never collected.
+
 ## [0.6.0] - 2026-08-28
 
 ### Added

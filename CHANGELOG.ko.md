@@ -4,6 +4,12 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-08-28
+
+### Changed
+
+- Marketplace의 텔레메트리 안내를 명확히 했습니다: 작업 종류는 사용자가 입력한 브랜치명이나 작업명이 아니라 `checkoutBranch`, `merge`, `reset` 같은 Git Scope의 고정된 내부 기능 식별자입니다. 실제 브랜치명·태그명, 커밋 해시·메시지, 파일·저장소 경로, 원격명·URL, 스태시 메시지, 오류 텍스트를 비롯한 작업 파라미터와 저장소 데이터는 수집하지 않습니다.
+
 ## [0.6.0] - 2026-08-28
 
 ### Added
