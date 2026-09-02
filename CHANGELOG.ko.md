@@ -4,6 +4,8 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-09-02
+
 ### Fixed
 
 - 빌드 산출물·캐시 디렉토리(`.next`, `dist`, turbopack 캐시 등)에 파일을 계속 쓰는 도구가 돌아도 감시 비용이 붙지 않습니다: gitignore 판정을 **디렉토리 단위로 캐시**하므로, 한 번 무시 대상으로 판정된 디렉토리 아래에서 쏟아지는 이벤트는 git 프로세스 없이 버려집니다. 개발 서버를 켜둔 채 작업할 때 백그라운드 git 호출이 사라집니다.

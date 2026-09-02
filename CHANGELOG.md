@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-09-02
+
 ### Fixed
 
 - Tools that continuously write into build output or cache directories (`.next`, `dist`, turbopack caches and the like) no longer cost anything to watch: gitignore decisions are cached **per directory**, so once a directory is known to be ignored, the flood of events beneath it is dropped without spawning git. Background git invocations disappear while a dev server is running.
