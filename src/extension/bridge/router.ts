@@ -55,6 +55,8 @@ export class Router {
   private lastSignature = new Map<string, string>()
   /** 액션 직후 상태 기록이 진행 중인 리포 — 감시 이벤트가 이걸 기다린다 */
   private stateRecording = new Map<string, Promise<void>>()
+  /** 리포별 `디렉토리 → gitignore 대상인가` 캐시 — 채워지면 무시 대상 이벤트를 git 없이 버린다 */
+  private ignoredDirs = new Map<string, Map<string, boolean>>()
   /** 리포별 마지막 `git status` 출력 — 실제로 달라졌을 때만 갱신하기 위한 서명 */
   private lastStatus = new Map<string, string>()
 
@@ -74,6 +76,7 @@ export class Router {
     this.worktreeWatchers.clear()
     this.lastStatus.clear()
     this.lastSignature.clear()
+    this.ignoredDirs.clear()
     this.gitDirs.clear()
   }
 
@@ -259,6 +262,51 @@ export class Router {
     return { signature: parts.join('|'), status }
   }
 
+  /**
+   * 배치에서 gitignore 대상 경로를 걸러낸다 — 빌드 산출물·캐시(`.next`, `dist`, turbopack 등)를
+   * 계속 쓰는 도구가 돌아도 감시 비용이 붙지 않게 한다.
+   *
+   * 판정은 **디렉토리 단위로 캐시**한다: git에서 디렉토리가 제외 대상이면 그 안의 모든 경로도
+   * 제외 대상이므로, `.next/dev/cache/turbopack`을 한 번 판정해두면 그 아래에서 쏟아지는
+   * 이벤트는 git 프로세스 없이 버려진다. 캐시가 채워진 뒤에는 호출당 git 0개.
+   */
+  private async withoutIgnored(
+    root: string,
+    batch: [string, 'touched' | 'deleted'][],
+  ): Promise<[string, 'touched' | 'deleted'][]> {
+    let cache = this.ignoredDirs.get(root)
+    if (!cache) {
+      cache = new Map()
+      this.ignoredDirs.set(root, cache)
+    }
+    // .gitignore가 바뀌면 판정이 뒤집힐 수 있다 — 캐시를 버리고 다시 묻는다
+    if (batch.some(([relative]) => path.basename(relative) === '.gitignore')) cache.clear()
+    // 거대한 트리에서 무한히 자라지 않게 상한을 둔다
+    if (cache.size > 4000) cache.clear()
+
+    const dirOf = (relative: string): string => {
+      const dir = path.dirname(relative)
+      return dir === '.' ? '' : dir
+    }
+    const unknown = [
+      ...new Set(batch.map(([relative]) => dirOf(relative)).filter((d) => d !== '' && !cache.has(d))),
+    ]
+    if (unknown.length > 0) {
+      try {
+        const out = await execGit(['check-ignore', '--stdin', '-z'], {
+          cwd: root,
+          stdin: unknown.map((d) => `${d}\0`).join(''),
+          allowExitCodes: [1], // 1 = 무시 대상 없음
+        })
+        const ignored = new Set(out.split('\0').filter((p) => p !== ''))
+        for (const dir of unknown) cache.set(dir, ignored.has(dir))
+      } catch {
+        // 판정 실패는 캐시하지 않는다 — 이번 배치는 통과시키고 다음에 다시 묻는다
+      }
+    }
+    return batch.filter(([relative]) => cache.get(dirOf(relative)) !== true)
+  }
+
   /** 워처가 준 경로 중 하나라도 최근에 실제로 바뀌었는지 — git 프로세스 없이 mtime만 본다 */
   private async batchHasRealChange(
     root: string,
@@ -290,7 +338,9 @@ export class Router {
   ): Promise<void> {
     if (this.isActive?.() === false) return
     if (this.runningMutations > 0 || Date.now() - this.lastMutationDone < 800) return
-    if (!(await this.batchHasRealChange(root, batch))) return
+    const relevant = await this.withoutIgnored(root, batch)
+    if (relevant.length === 0) return
+    if (!(await this.batchHasRealChange(root, relevant))) return
     fireActivity()
   }
 
