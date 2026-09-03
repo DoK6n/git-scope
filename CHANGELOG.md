@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Commit details now show an asynchronously calculated effective `+N / −M` line count that excludes blank and comment-only changes for common text and code formats. Hovering the count reveals the raw `git diff --numstat` totals; unsupported formats safely retain their raw counts, binary files are reported separately, and a failed calculation never blocks the rest of the details view.
+
 ## [0.6.3] - 2026-09-03
 
 ### Fixed
