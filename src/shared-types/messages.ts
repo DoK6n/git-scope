@@ -8,6 +8,7 @@ import type {
   GraphData,
   IconSpec,
   RepoInfo,
+  RemoteCheckoutPlan,
   StashEntry,
   TagDetails,
   Worktree,
@@ -72,8 +73,18 @@ export interface RequestMap {
 
   // ── 기본 액션 (M3) ─────────────────────────────
   checkoutBranch: { params: { repo: string; name: string }; result: ActionResult }
+  getRemoteCheckoutPlan: {
+    params: { repo: string; remote: string; branch: string; localName: string }
+    result: RemoteCheckoutPlan
+  }
   checkoutRemoteBranch: {
-    params: { repo: string; remoteName: string; localName: string }
+    params: {
+      repo: string
+      remote: string
+      branch: string
+      localName: string
+      mode: 'create' | 'checkout-only' | 'checkout-and-pull'
+    }
     result: ActionResult
   }
   checkoutCommit: { params: { repo: string; hash: string }; result: ActionResult }

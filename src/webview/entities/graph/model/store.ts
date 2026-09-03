@@ -166,6 +166,7 @@ async function runAction(
   action: Promise<ActionResult>,
   successMessage?: string,
   errorTitle?: string,
+  refreshOnFailure = false,
 ): Promise<boolean> {
   const fail = (message: string): false => {
     if (errorTitle) {
@@ -183,8 +184,10 @@ async function runAction(
       if (successMessage) setNotice(successMessage)
       return true
     }
+    if (refreshOnFailure) await refresh()
     return fail(result.error)
   } catch (e) {
+    if (refreshOnFailure) await refresh()
     return fail(e instanceof Error ? e.message : String(e))
   }
 }

@@ -120,6 +120,15 @@ export interface AuthorStatsEntry {
   commits: number
 }
 
+/** 원격 체크아웃 전, 입력한 로컬 브랜치와 선택한 원격 ref의 관계 */
+export interface RemoteCheckoutPlan {
+  localExists: boolean
+  /** 로컬에만 있는 커밋 수 */
+  ahead: number
+  /** 선택한 원격 ref에만 있는 커밋 수 */
+  behind: number
+}
+
 /**
  * 파일/폴더 아이콘 — 활성 아이콘 테마에서 해석.
  * svg는 webview URI 문자열, 폰트 기반이면 fontChar+fontId(+색/크기)

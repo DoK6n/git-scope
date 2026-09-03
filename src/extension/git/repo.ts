@@ -9,6 +9,7 @@ import type {
   CommitDetails,
   CommitLineStats,
   GraphData,
+  RemoteCheckoutPlan,
   StashEntry,
   TagDetails,
   Worktree,
@@ -30,6 +31,14 @@ import {
   stripCommitMessageComments,
 } from './parse'
 import { calculateCommitLineStats } from './lineStats'
+import {
+  aheadBehindArgs,
+  createTrackingBranchArgs,
+  localBranchExistsArgs,
+  parseAheadBehind,
+  pullFastForwardArgs,
+  switchLocalBranchArgs,
+} from './remoteCheckout'
 
 /** git의 잘 알려진 빈 트리 해시 — 루트 커밋 디프의 베이스로 쓴다 */
 export const EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'
@@ -66,9 +75,13 @@ export class GitRepo {
       await this.git(args)
       return { ok: true }
     } catch (e) {
-      if (e instanceof GitError) return { ok: false, error: e.stderr.trim() || e.message }
-      return { ok: false, error: String(e) }
+      return this.actionError(e)
     }
+  }
+
+  private actionError(error: unknown): ActionResult {
+    if (error instanceof GitError) return { ok: false, error: error.stderr.trim() || error.message }
+    return { ok: false, error: String(error) }
   }
 
   // ── 조회 ─────────────────────────────────────────
@@ -257,8 +270,55 @@ export class GitRepo {
     return this.action(['switch', name])
   }
 
-  checkoutRemoteBranch(remoteName: string, localName: string): Promise<ActionResult> {
-    return this.action(['switch', '-c', localName, '--track', remoteName])
+  async getRemoteCheckoutPlan(
+    remote: string,
+    branch: string,
+    localName: string,
+  ): Promise<RemoteCheckoutPlan> {
+    const localHash = await this.git(localBranchExistsArgs(localName), [1])
+    if (localHash.trim() === '') return { localExists: false, ahead: 0, behind: 0 }
+    const counts = await this.git(aheadBehindArgs(remote, branch, localName))
+    return { localExists: true, ...parseAheadBehind(counts) }
+  }
+
+  async checkoutRemoteBranch(
+    remote: string,
+    branch: string,
+    localName: string,
+    mode: 'create' | 'checkout-only' | 'checkout-and-pull',
+  ): Promise<ActionResult> {
+    try {
+      // 확인 다이얼로그 뒤 ref가 바뀌었을 수 있으므로, 첫 mutation 전에 다시 판정한다.
+      const plan = await this.getRemoteCheckoutPlan(remote, branch, localName)
+      if (mode === 'create') {
+        if (plan.localExists) {
+          return {
+            ok: false,
+            error: `Local branch "${localName}" now exists. Retry remote checkout to review its ahead/behind state.`,
+          }
+        }
+        return this.action(createTrackingBranchArgs(remote, branch, localName))
+      }
+
+      if (!plan.localExists) {
+        return {
+          ok: false,
+          error: `Local branch "${localName}" no longer exists. Retry remote checkout.`,
+        }
+      }
+      if (mode === 'checkout-and-pull' && plan.ahead > 0) {
+        return {
+          ok: false,
+          error: `Automatic pull stopped: local branch "${localName}" is ${plan.ahead} ahead and ${plan.behind} behind ${remote}/${branch}. No branch was checked out or rewritten.`,
+        }
+      }
+
+      const switched = await this.action(switchLocalBranchArgs(localName))
+      if (!switched.ok || mode === 'checkout-only') return switched
+      return this.action(pullFastForwardArgs(remote, branch))
+    } catch (error) {
+      return this.actionError(error)
+    }
   }
 
   checkoutCommit(hash: string): Promise<ActionResult> {
