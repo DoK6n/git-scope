@@ -9,6 +9,8 @@ import type {
   CommitDetails,
   CommitLineStats,
   GraphData,
+  InProgressOperation,
+  InProgressOperationType,
   RemoteCheckoutPlan,
   StashFileChange,
   StashEntry,
@@ -19,6 +21,7 @@ import { execGit, GitError } from './exec'
 import {
   countPorcelainEntries,
   AUTHOR_STATS_FORMAT,
+  countUnmergedEntries,
   LOG_FORMAT,
   parseLog,
   parseAuthorStats,
@@ -118,7 +121,10 @@ export class GitRepo {
       this.git(['status', '--porcelain', '-z']),
       this.listWorktrees().catch(() => [] as Worktree[]),
     ])
-    const stashOut = await this.git(['stash', 'list', `--format=${STASH_FORMAT}`]).catch(() => '')
+    const [stashOut, operation] = await Promise.all([
+      this.git(['stash', 'list', `--format=${STASH_FORMAT}`]).catch(() => ''),
+      this.getInProgressOperation(statusOut),
+    ])
 
     let commits = parseLog(logOut)
     const moreAvailable = commits.length > maxCommits
@@ -141,9 +147,14 @@ export class GitRepo {
     }
 
     const uncommittedCount = countPorcelainEntries(statusOut)
-    // 브랜치 필터로 HEAD 커밋이 로드되지 않았으면 부모 없는 고아 노드가 되므로 얹지 않는다
+    // 일반 변경은 브랜치 필터로 HEAD가 빠지면 고아 노드가 되므로 얹지 않는다.
+    // 진행 중 작업은 필터와 무관하게 알려야 하므로 행을 유지한다.
     const headLoaded = headHash !== null && commits.some((c) => c.hash === headHash)
-    if (uncommittedCount > 0 && headHash !== null && headLoaded) {
+    if (
+      (uncommittedCount > 0 || operation !== null) &&
+      headHash !== null &&
+      (headLoaded || operation !== null)
+    ) {
       // 워킹트리 변경사항을 HEAD를 부모로 갖는 합성 커밋으로 그래프 맨 위에 얹는다
       const now = Math.floor(Date.now() / 1000)
       const uncommitted: Commit = {
@@ -165,11 +176,49 @@ export class GitRepo {
       headHash,
       headBranch,
       uncommittedCount,
+      operation,
       moreAvailable,
       worktreeBranches: worktrees
         .filter((w) => !w.isMain && w.branch !== null)
         .map((w) => w.branch as string),
     }
+  }
+
+  /**
+   * 진행 중인 Git 작업 판정. 경로는 Git이 해석하게 해 linked worktree·서브모듈의
+   * 실제 gitdir에 있는 상태 파일/디렉토리를 확인한다.
+   */
+  private async getInProgressOperation(statusOut: string): Promise<InProgressOperation | null> {
+    const [mergeHead, rebaseMerge, rebaseApply, cherryPickHead, revertHead] = await this.gitPaths(
+      'MERGE_HEAD',
+      'rebase-merge',
+      'rebase-apply',
+      'CHERRY_PICK_HEAD',
+      'REVERT_HEAD',
+    )
+    const exists = (filePath: string | undefined): Promise<boolean> =>
+      filePath === undefined
+        ? Promise.resolve(false)
+        : fs.promises.stat(filePath).then(
+            () => true,
+            () => false,
+          )
+    const [merging, rebaseMergeExists, rebaseApplyExists, cherryPicking, reverting] =
+      await Promise.all([
+        exists(mergeHead),
+        exists(rebaseMerge),
+        exists(rebaseApply),
+        exists(cherryPickHead),
+        exists(revertHead),
+      ])
+
+    // rebase는 내부적으로 cherry-pick 상태 파일을 함께 남길 수 있으므로 우선 판정한다.
+    let type: InProgressOperationType | null = null
+    if (rebaseMergeExists || rebaseApplyExists) type = 'rebase'
+    else if (merging) type = 'merge'
+    else if (cherryPicking) type = 'cherry-pick'
+    else if (reverting) type = 'revert'
+    return type === null ? null : { type, conflictCount: countUnmergedEntries(statusOut) }
   }
 
   async getCommitDetails(hash: string): Promise<CommitDetails> {
@@ -653,6 +702,16 @@ export class GitRepo {
 
   reset(to: string, mode: 'soft' | 'mixed' | 'hard'): Promise<ActionResult> {
     return this.action(['reset', `--${mode}`, to])
+  }
+
+  abortOperation(operation: InProgressOperationType): Promise<ActionResult> {
+    const commands: Record<InProgressOperationType, string> = {
+      merge: 'merge',
+      rebase: 'rebase',
+      'cherry-pick': 'cherry-pick',
+      revert: 'revert',
+    }
+    return this.action([commands[operation], '--abort'])
   }
 
   fetch(prune: boolean): Promise<ActionResult> {

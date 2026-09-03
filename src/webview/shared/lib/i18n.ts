@@ -74,6 +74,17 @@ const KO: Record<string, string> = {
   'Raw numstat: +{0} / −{1}': '원시 numstat: +{0} / −{1}',
   '{0} unsupported file(s) use raw counts': '미지원 파일 {0}개는 원시 수치 사용',
   '{0} binary file(s) excluded': '바이너리 파일 {0}개는 합계에서 제외',
+  merging: '머지 중',
+  rebasing: '리베이스 중',
+  'cherry-picking': '체리픽 중',
+  reverting: '리버트 중',
+  '{0} conflicts': '충돌 {0}개',
+  Abort: '중단',
+  'Abort {0}?': '{0} 작업을 중단할까요?',
+  'This stops the {0} operation and returns the repository to the state before it started. Working tree and index changes made by the operation will be discarded.':
+    '{0} 작업을 멈추고 저장소를 작업 시작 전 상태로 되돌립니다. 작업이 만든 워킹 트리와 인덱스 변경사항은 폐기됩니다.',
+  '{0} operation aborted': '{0} 작업 중단 완료',
+  'Unable to abort {0}': '{0} 작업을 중단할 수 없음',
 
   // ── 브랜치 액션 ──
   'Branch {0} created (from {1})': '브랜치 {0} 생성 완료 (from {1})',

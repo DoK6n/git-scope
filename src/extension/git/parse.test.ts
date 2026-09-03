@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   countPorcelainEntries,
   parseAuthorStats,
+  countUnmergedEntries,
   parseLog,
   parseNameStatus,
   parseRefs,
@@ -154,6 +155,23 @@ describe('countPorcelainEntries', () => {
 
   it('깨끗한 워킹트리면 0', () => {
     expect(countPorcelainEntries('')).toBe(0)
+  })
+})
+
+describe('countUnmergedEntries', () => {
+  it('실제 porcelain v1 상태 코드 중 unmerged 파일만 센다', () => {
+    const out = [
+      'UU src/both-modified.ts',
+      'AA src/both-added.ts',
+      'DU src/deleted-by-us.ts',
+      ' M src/ordinary.ts',
+      '?? untracked.txt',
+    ].join(NUL) + NUL
+    expect(countUnmergedEntries(out)).toBe(3)
+  })
+
+  it('충돌이 없으면 0', () => {
+    expect(countUnmergedEntries(' M src/a.ts\0A  src/b.ts\0')).toBe(0)
   })
 })
 

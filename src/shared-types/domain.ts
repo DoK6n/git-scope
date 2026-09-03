@@ -40,6 +40,14 @@ export interface GitRef {
   remote?: string
 }
 
+export type InProgressOperationType = 'merge' | 'rebase' | 'cherry-pick' | 'revert'
+
+export interface InProgressOperation {
+  type: InProgressOperationType
+  /** `git status --porcelain -z`에서 unmerged 상태인 파일 수 */
+  conflictCount: number
+}
+
 export interface GraphData {
   commits: Commit[]
   refs: GitRef[]
@@ -49,6 +57,8 @@ export interface GraphData {
   headBranch: string | null
   /** 워킹트리 변경 파일 수 */
   uncommittedCount: number
+  /** 충돌 등으로 완료되지 않은 merge/rebase/cherry-pick/revert */
+  operation: InProgressOperation | null
   /** 요청한 개수보다 커밋이 더 남아 있는지 */
   moreAvailable: boolean
   /** worktree에 체크아웃되어 있는 브랜치명 목록 (main worktree 제외) */

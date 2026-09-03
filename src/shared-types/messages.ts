@@ -7,6 +7,7 @@ import type {
   CommitLineStats,
   GraphData,
   IconSpec,
+  InProgressOperationType,
   RepoInfo,
   RemoteCheckoutPlan,
   StashFileChange,
@@ -187,6 +188,11 @@ export interface RequestMap {
   // ── 신규 기능 (M4) ─────────────────────────────
   reset: {
     params: { repo: string; to: string; mode: 'soft' | 'mixed' | 'hard' }
+    result: ActionResult
+  }
+  /** 진행 중인 merge/rebase/cherry-pick/revert를 시작 전 상태로 되돌린다 ⚠️ */
+  abortOperation: {
+    params: { repo: string; operation: InProgressOperationType }
     result: ActionResult
   }
   fetch: { params: { repo: string; prune: boolean }; result: ActionResult }
