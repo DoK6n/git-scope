@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   countPorcelainEntries,
+  parseAuthorStats,
   parseLog,
   parseNameStatus,
   parseRefs,
@@ -61,6 +62,27 @@ describe('parseLog', () => {
 
   it('빈 출력이면 빈 배열', () => {
     expect(parseLog('')).toEqual([])
+  })
+})
+
+describe('parseAuthorStats', () => {
+  it('mailmap 정규 이메일 기준으로 합치고 커밋 수 순으로 정렬한다', () => {
+    const output = [
+      ['Kim Dokyun', 'dokyun@example.com'].join(NUL),
+      ['Kim D.', 'DOKYUN@example.com'].join(NUL),
+      ['Alice', 'alice@example.com'].join(NUL),
+      ['Bob', 'bob@example.com'].join(NUL),
+    ].join('\n')
+
+    expect(parseAuthorStats(output)).toEqual([
+      { name: 'Kim Dokyun', email: 'dokyun@example.com', commits: 2 },
+      { name: 'Alice', email: 'alice@example.com', commits: 1 },
+      { name: 'Bob', email: 'bob@example.com', commits: 1 },
+    ])
+  })
+
+  it('빈 출력이면 빈 통계다', () => {
+    expect(parseAuthorStats('')).toEqual([])
   })
 })
 

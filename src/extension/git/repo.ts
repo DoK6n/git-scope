@@ -2,6 +2,9 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import type {
   ActionResult,
+  AuthorStatsEntry,
+  AuthorStatsPeriod,
+  AuthorStatsScope,
   Commit,
   CommitDetails,
   CommitLineStats,
@@ -13,8 +16,10 @@ import type {
 import { execGit, GitError } from './exec'
 import {
   countPorcelainEntries,
+  AUTHOR_STATS_FORMAT,
   LOG_FORMAT,
   parseLog,
+  parseAuthorStats,
   parseNameStatus,
   parseNumstat,
   parseRefs,
@@ -28,6 +33,24 @@ import { calculateCommitLineStats } from './lineStats'
 
 /** git의 잘 알려진 빈 트리 해시 — 루트 커밋 디프의 베이스로 쓴다 */
 export const EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'
+
+/** 작성자 통계 조회 범위를 Git log 인자로 변환한다. Current branch는 detached HEAD도 포함한다. */
+export function authorStatsLogArgs(
+  scope: AuthorStatsScope,
+  period: AuthorStatsPeriod,
+): string[] {
+  const since = period === 'all' ? [] : [`--since=${period.slice(0, -1)} days ago`]
+  const revisions =
+    scope === 'allRefs' ? ['--branches', '--remotes', '--tags', 'HEAD'] : ['HEAD']
+  return [
+    'log',
+    '--use-mailmap',
+    `--format=${AUTHOR_STATS_FORMAT}`,
+    ...since,
+    ...revisions,
+    '--',
+  ]
+}
 
 /** 리포 하나에 대한 git 명령 실행기 */
 export class GitRepo {
@@ -156,6 +179,25 @@ export class GitRepo {
       commitDate: Number(fields[6]),
       body: (fields[7] ?? '').trim(),
       files: await this.diffFiles(base, hash),
+    }
+  }
+
+  /**
+   * 로드된 그래프와 무관한 작성자별 전체 히스토리 집계.
+   * %aN/%aE와 --use-mailmap을 함께 써서 설정값과 무관하게 mailmap을 적용한다.
+   */
+  async getAuthorStats(
+    scope: AuthorStatsScope,
+    period: AuthorStatsPeriod,
+  ): Promise<AuthorStatsEntry[]> {
+    try {
+      const output = await this.git(authorStatsLogArgs(scope, period))
+      return parseAuthorStats(output)
+    } catch (e) {
+      // unborn HEAD / 커밋이 하나도 없는 저장소는 빈 통계로 표시한다.
+      if (e instanceof GitError && /does not have any commits|bad revision|unknown revision/i.test(e.stderr))
+        return []
+      throw e
     }
   }
 
