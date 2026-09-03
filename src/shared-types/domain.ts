@@ -48,6 +48,11 @@ export interface InProgressOperation {
   conflictCount: number
 }
 
+export interface BranchUpstream {
+  remote: string
+  branch: string
+}
+
 export interface GraphData {
   commits: Commit[]
   refs: GitRef[]
@@ -55,6 +60,8 @@ export interface GraphData {
   headHash: string | null
   /** 체크아웃된 브랜치명 (detached면 null) */
   headBranch: string | null
+  /** 현재 브랜치가 추적하는 upstream (미설정 또는 detached면 null) */
+  headUpstream: BranchUpstream | null
   /** 워킹트리 변경 파일 수 */
   uncommittedCount: number
   /** 충돌 등으로 완료되지 않은 merge/rebase/cherry-pick/revert */

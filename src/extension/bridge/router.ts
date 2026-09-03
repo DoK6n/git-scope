@@ -50,6 +50,7 @@ const MERGE_LIKE_REQUESTS = new Set<RequestCommand>([
   'cherryPick',
   'revert',
   'pullBranch',
+  'pullCurrent',
 ])
 
 /** webview 요청을 GitRepo/VS Code API 호출로 라우팅한다 */
@@ -536,6 +537,7 @@ export class Router {
       pushBranch: (p) =>
         this.getRepo(p.repo).pushBranch(p.name, p.remote, p.setUpstream, p.force),
       pullBranch: (p) => this.getRepo(p.repo).pullBranch(p.remote, p.branch),
+      pullCurrent: (p) => this.getRepo(p.repo).pullCurrent(),
       deleteRemoteBranch: (p) => this.getRepo(p.repo).deleteRemoteBranch(p.remote, p.name),
       fetchIntoLocal: (p) =>
         this.getRepo(p.repo).fetchIntoLocal(p.remote, p.remoteBranch, p.localBranch),

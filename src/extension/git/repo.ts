@@ -23,9 +23,11 @@ import {
   countPorcelainEntries,
   AUTHOR_STATS_FORMAT,
   countUnmergedEntries,
+  HEAD_UPSTREAM_FORMAT,
   LOG_FORMAT,
   parseLog,
   parseAuthorStats,
+  parseHeadUpstream,
   parseNameStatus,
   parseNumstat,
   parseRefs,
@@ -157,6 +159,13 @@ export class GitRepo {
     const headBranchPromise = this.git(['symbolic-ref', '--short', '-q', 'HEAD'], [1]).then(
       (value) => value.trim() || null,
     )
+    const headUpstreamPromise = this.git([
+      'for-each-ref',
+      `--format=${HEAD_UPSTREAM_FORMAT}`,
+      '--points-at',
+      'HEAD',
+      'refs/heads',
+    ]).catch(() => '')
     const statusPromise = this.git(['status', '--porcelain', '-z'])
     const worktreesPromise = this.listWorktrees().catch(() => [] as Worktree[])
     // 원격 ref를 선별해야 할 때만 refs를 먼저 기다린다. 기본 경로는 log와 refs를 병렬 조회한다.
@@ -174,28 +183,34 @@ export class GitRepo {
             includeRemotes,
             hideRemoteOnlyBranches,
           )
-    const [logOut, refsOut, headHash, headBranch, statusOut, worktrees] = await Promise.all([
-      revisions.length === 0
-        ? Promise.resolve('')
-        : this.git([
-            'log',
-            '--date-order',
-            `-n`,
-            String(maxCommits + 1),
-            `--format=${LOG_FORMAT}`,
-            ...revisions,
-            '--',
-          ]).catch((e) => {
-            // 커밋이 하나도 없는 리포는 log가 실패한다
-            if (e instanceof GitError && /does not have any commits|bad revision/i.test(e.stderr)) return ''
-            throw e
-          }),
-      refsPromise,
-      headHashPromise,
-      headBranchPromise,
-      statusPromise,
-      worktreesPromise,
-    ])
+    const [logOut, refsOut, headHash, headBranch, headUpstreamOut, statusOut, worktrees] =
+      await Promise.all([
+        revisions.length === 0
+          ? Promise.resolve('')
+          : this.git([
+              'log',
+              '--date-order',
+              `-n`,
+              String(maxCommits + 1),
+              `--format=${LOG_FORMAT}`,
+              ...revisions,
+              '--',
+            ]).catch((e) => {
+              // 커밋이 하나도 없는 리포는 log가 실패한다
+              if (
+                e instanceof GitError &&
+                /does not have any commits|bad revision/i.test(e.stderr)
+              )
+                return ''
+              throw e
+            }),
+        refsPromise,
+        headHashPromise,
+        headBranchPromise,
+        headUpstreamPromise,
+        statusPromise,
+        worktreesPromise,
+      ])
     const [stashOut, operation] = await Promise.all([
       this.git(['stash', 'list', `--format=${STASH_FORMAT}`]).catch(() => ''),
       this.getInProgressOperation(statusOut),
@@ -250,6 +265,7 @@ export class GitRepo {
       refs: visibleGraphRefs(parseRefs(refsOut), includeRemotes, hideRemoteOnlyBranches),
       headHash,
       headBranch,
+      headUpstream: parseHeadUpstream(headUpstreamOut),
       uncommittedCount,
       operation,
       moreAvailable,
@@ -703,6 +719,10 @@ export class GitRepo {
 
   pullBranch(remote: string, branch: string): Promise<ActionResult> {
     return this.action(['pull', remote, branch])
+  }
+
+  pullCurrent(): Promise<ActionResult> {
+    return this.action(['pull'])
   }
 
   deleteRemoteBranch(remote: string, name: string): Promise<ActionResult> {

@@ -11,6 +11,7 @@ export type GitIconName =
   | 'statistics'
   | 'reset'
   | 'worktree'
+  | 'pull'
   | 'fetch'
   | 'prune'
   | 'refresh'
@@ -32,6 +33,7 @@ const PATHS: Record<GitIconName, string[]> = {
   statistics: ['M2.5 13.5V8h3v5.5h-3ZM6.5 13.5V3h3v10.5h-3ZM10.5 13.5V6h3v7.5h-3Z'],
   reset: ['M3 5V2.5L1 4.5 3 6.5V5a5.5 5.5 0 1 1-.3 6.2', 'M8 5v3l2 1.5'],
   worktree: ['M2 2.5h4v4H2v-4ZM10 9.5h4v4h-4v-4Z', 'M6 4.5h2a2 2 0 0 1 2 2v3'],
+  pull: ['M8 2.5v9M4.8 8.8 8 12l3.2-3.2', 'M3 14h10'],
   fetch: [
     'M5 12H4a2.5 2.5 0 0 1-.3-5A4 4 0 0 1 11.5 6a2.5 2.5 0 0 1 .5 5.95H11',
     'M8 7.5v6M5.8 11.3 8 13.5l2.2-2.2',

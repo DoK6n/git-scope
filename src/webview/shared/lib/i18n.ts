@@ -45,6 +45,10 @@ const KO: Record<string, string> = {
     'Fetch (prune) — 원격에서 삭제된 브랜치 참조 정리',
   'Fetched all remotes': 'git fetch --all 완료',
   'Fetched all remotes (prune)': 'git fetch --all --prune 완료',
+  'Pull current branch from {0}': '현재 브랜치를 {0}에서 pull',
+  'Cannot pull in detached HEAD state.': 'detached HEAD 상태에서는 pull할 수 없습니다.',
+  'Current branch has no upstream.': '현재 브랜치에 upstream이 없습니다.',
+  'Pulled current branch from {0}': '현재 브랜치를 {0}에서 pull 완료',
 
   // ── 타임라인 ──
   'View mode': '보기 모드',
