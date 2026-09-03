@@ -4,6 +4,10 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
+### Fixed
+
+- **linked worktree·서브모듈** 안에서 머지 계열 액션을 하면 소스 제어의 커밋 메시지 칸이 계속 비어 있던 문제를 고쳤습니다. VS Code 내장 git은 경로를 `<root>/.git/MERGE_MSG`로 조립하는데, 이 저장소들의 `.git`은 디렉토리가 아니라 실제 git 디렉토리 경로가 적힌 **파일**이라 읽기가 `ENOTDIR`로 실패하고, 그것이 조용히 "메시지 없음"으로 처리됩니다. 이제 Git Scope가 경로를 `rev-parse --git-path`로 해석하고 해당 저장소에서는 기본 메시지를 소스 제어 입력칸에 직접 넣습니다 — `merge`, `cherry-pick`, `revert`, `pull` 모두 터미널에서 `git commit` 했을 때와 같은 기본 메시지가 뜹니다. 일반 저장소는 내장 git이 정상적으로 읽으므로 건드리지 않습니다. 이미 작성 중인 메시지는 덮어쓰지 않고, 기본 메시지를 못 채워도 액션 결과 자체에는 영향이 없습니다.
+
 ## [0.6.3] - 2026-09-03
 
 ### Fixed

@@ -184,6 +184,20 @@ export function countPorcelainEntries(output: string): number {
   return count
 }
 
+/**
+ * 커밋 메시지 파일(`MERGE_MSG`, `SQUASH_MSG`, `COMMIT_EDITMSG`)에서 주석 줄을 걷어낸다.
+ *
+ * `git commit`이 에디터 내용을 정리하는 것과 같은 처리다. 충돌이 나면 git이 `MERGE_MSG`에
+ * `# Conflicts:` 목록을 붙이는데, 그것만 남은 파일은 걷어내면 빈 문자열이 되므로 "기본
+ * 메시지 없음"으로 판정할 수 있다.
+ *
+ * `core.commentChar`는 지원하지 않는다 — 기본값 `#`만 주석으로 본다. 내장 git도 같은
+ * 제약을 갖고 있어 동작을 일치시킨다.
+ */
+export function stripCommitMessageComments(message: string): string {
+  return message.replace(/^\s*#.*$\n?/gm, '').trim()
+}
+
 /** `git worktree list --porcelain -z` 출력 파싱 */
 export function parseWorktrees(output: string, mainRoot: string): Worktree[] {
   const worktrees: Worktree[] = []

@@ -21,6 +21,7 @@ import {
   parseWorktrees,
   REF_FORMAT,
   STASH_FORMAT,
+  stripCommitMessageComments,
 } from './parse'
 
 /** git의 잘 알려진 빈 트리 해시 — 루트 커밋 디프의 베이스로 쓴다 */
@@ -231,26 +232,68 @@ export class GitRepo {
    */
   private async seedSquashMergeMessage(): Promise<void> {
     try {
-      // --git-path는 worktree·서브모듈처럼 .git이 디렉토리가 아닌 경우도 올바른 경로를 준다
-      const out = await this.git(['rev-parse', '--git-path', 'SQUASH_MSG', '--git-path', 'MERGE_MSG'])
-      const [squashPath, mergePath] = out.trim().split('\n')
+      const [squashPath, mergePath] = await this.gitPaths('SQUASH_MSG', 'MERGE_MSG')
       if (squashPath === undefined || mergePath === undefined) return
-      const squashMessage = await fs.promises.readFile(path.resolve(this.root, squashPath), 'utf8')
+      const squashMessage = await fs.promises.readFile(squashPath, 'utf8')
       if (squashMessage.trim() === '') return
-      const existing = await fs.promises
-        .readFile(path.resolve(this.root, mergePath), 'utf8')
-        .catch(() => '')
+      const existing = await fs.promises.readFile(mergePath, 'utf8').catch(() => '')
       // 주석이 아닌 줄이 이미 있으면 사용자나 git이 쓴 메시지다 — 덮어쓰지 않는다
-      const hasMessage = existing
-        .split('\n')
-        .some((line) => line.trim() !== '' && !line.startsWith('#'))
-      if (hasMessage) return
+      if (stripCommitMessageComments(existing) !== '') return
       const merged =
         existing.trim() === '' ? squashMessage : `${squashMessage.trimEnd()}\n\n${existing}`
-      await fs.promises.writeFile(path.resolve(this.root, mergePath), merged)
+      await fs.promises.writeFile(mergePath, merged)
     } catch {
       // 기본 메시지를 못 채워도 머지 자체에는 영향이 없다
     }
+  }
+
+  /**
+   * `.git` 하위 파일의 실제 경로를 git에게 물어 절대경로로 돌려준다.
+   *
+   * 경로를 `<root>/.git/<name>`으로 조립하면 안 된다 — worktree·서브모듈·
+   * `--separate-git-dir` 저장소에서 `.git`은 디렉토리가 아니라 gitdir 경로가 적힌
+   * 파일이므로 그 아래로 내려갈 수 없다(`ENOTDIR`).
+   */
+  private async gitPaths(...names: string[]): Promise<(string | undefined)[]> {
+    const args = ['rev-parse']
+    for (const name of names) args.push('--git-path', name)
+    const out = await this.git(args)
+    return out
+      .trim()
+      .split('\n')
+      .map((line) => (line === '' ? undefined : path.resolve(this.root, line)))
+  }
+
+  /**
+   * `<root>/.git`이 디렉토리가 아닌지 — 즉 worktree·서브모듈·`--separate-git-dir` 저장소인지.
+   *
+   * VS Code 내장 git은 머지 상태 파일 경로를 `<root>/.git/<name>`으로 조립하므로
+   * 이 값이 true인 저장소에서는 `MERGE_MSG`를 읽지 못한다. 그 경우에만 GitScope가
+   * 커밋 메시지 기본값을 소스 제어 입력칸에 직접 넣어 보완한다.
+   */
+  async usesGitDirFile(): Promise<boolean> {
+    return fs.promises.stat(path.join(this.root, '.git')).then(
+      (stat) => !stat.isDirectory(),
+      () => false,
+    )
+  }
+
+  /**
+   * 지금 커밋하면 기본값으로 쓰일 커밋 메시지. 없으면 null.
+   *
+   * 내장 git의 `getInputTemplate()`과 같은 우선순위(`MERGE_MSG` → `SQUASH_MSG`)로 읽고,
+   * 같은 방식으로 주석 줄을 걷어낸다. `commit.template`은 내장 git이 이 경로와 무관하게
+   * 항상 읽으므로 여기서는 다루지 않는다.
+   */
+  async readPendingCommitMessage(): Promise<string | null> {
+    const paths = await this.gitPaths('MERGE_MSG', 'SQUASH_MSG')
+    for (const filePath of paths) {
+      if (filePath === undefined) continue
+      const raw = await fs.promises.readFile(filePath, 'utf8').catch(() => '')
+      const message = stripCommitMessageComments(raw)
+      if (message !== '') return message
+    }
+    return null
   }
 
   createTag(name: string, at: string, message: string | null): Promise<ActionResult> {
