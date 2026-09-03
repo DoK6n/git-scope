@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { graphStore } from '../../../entities/graph'
 import { authorStatsStore } from '../../../features/author-stats'
 import { fetchAll, fetchDefault } from '../../../features/fetch'
@@ -59,11 +59,21 @@ function RefreshGlyph() {
 
 /** 상단 툴바 — [필터] · [상호작용 버튼] */
 export function Toolbar() {
+  let branchQueryInput: HTMLInputElement | undefined
   const [filterOpen, setFilterOpen] = createSignal(false)
   const [branchQuery, setBranchQuery] = createSignal('')
   const [branchView, setBranchView] = createSignal<'list' | 'tree'>('list')
   /** 접힌 폴더 path 집합 — 기본은 모두 펼침 (tree 뷰) */
   const [collapsed, setCollapsed] = createSignal<Set<string>>(new Set())
+
+  createEffect(() => {
+    if (!filterOpen()) return
+    queueMicrotask(() => {
+      if (!branchQueryInput?.isConnected) return
+      branchQueryInput.focus()
+      if (branchQueryInput.value !== '') branchQueryInput.select()
+    })
+  })
 
   /** 선택 집합 = branchFilter 그대로 — 드롭다운은 상태를 따로 들고 있지 않는다 */
   const selected = createMemo(() => new Set(graphStore.branchFilter() ?? []))
@@ -283,6 +293,7 @@ export function Toolbar() {
             <div class="branch-filter-dropdown">
               <div class="branch-filter-glob">
                 <input
+                  ref={(element) => (branchQueryInput = element)}
                   type="text"
                   placeholder={t('Filter Branches… (glob: feature/*)')}
                   value={branchQuery()}
