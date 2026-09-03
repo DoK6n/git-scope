@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-09-03
+
 ### Fixed
 
 - Fixed the Source Control commit message box being empty after a **squash merge** from the graph. Git writes the default message for an ordinary merge to `MERGE_MSG` but puts a squash merge's summary in `SQUASH_MSG`, and the Source Control input reads only `MERGE_MSG` (on a conflict it holds nothing but the conflicted-file comments). The box now shows the same default message `git commit` would offer in a terminal. Conflict comments are preserved, and a message already being written is never overwritten.
