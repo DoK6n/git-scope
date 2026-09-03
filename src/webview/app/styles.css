@@ -996,8 +996,71 @@ path.graph-line.doomed,
   right: 400px;
 }
 
+.stash-header-actions,
+.stash-inline-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.stash-header-actions .worktree-action-btn:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.stash-list {
+  padding: 4px;
+}
+
+.stash-entry {
+  border-radius: 4px;
+}
+
+.stash-entry:hover,
+.stash-entry:focus-within {
+  background: var(--vscode-list-hoverBackground);
+}
+
 .stash-item {
   cursor: pointer;
+  height: auto;
+  min-height: 40px;
+  padding: 4px 6px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.stash-item:hover {
+  background: transparent;
+}
+
+.stash-item-main,
+.stash-item-meta {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 5px;
+}
+
+.stash-item-meta {
+  padding-left: 42px;
+}
+
+.stash-expand {
+  width: 16px;
+  height: 18px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.stash-expand.expanded {
+  transform: rotate(90deg);
 }
 
 /* 일괄 작업 선택 체크 — 브랜치 필터와 같은 ✓ 마크. 체크됐거나 행 hover 시에만 보인다 */
@@ -1010,7 +1073,8 @@ path.graph-line.doomed,
   visibility: hidden;
 }
 
-.stash-item:hover .stash-item-check {
+.stash-entry:hover .stash-item-check,
+.stash-entry:focus-within .stash-item-check {
   visibility: visible;
   opacity: 0.35;
 }
@@ -1029,6 +1093,7 @@ path.graph-line.doomed,
 
 .stash-item-subject {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1038,6 +1103,93 @@ path.graph-line.doomed,
   flex-shrink: 0;
   font-size: 11px;
   color: var(--vscode-descriptionForeground);
+}
+
+.stash-branch-badge {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 1px 5px;
+  border-radius: 8px;
+  border: 1px solid var(--vscode-badge-background, #4d4d4d);
+  color: var(--vscode-badge-foreground, var(--vscode-foreground));
+  font-size: 10px;
+  line-height: 13px;
+}
+
+.stash-inline-actions {
+  visibility: hidden;
+  flex-shrink: 0;
+}
+
+.stash-entry:hover .stash-inline-actions,
+.stash-entry:focus-within .stash-inline-actions {
+  visibility: visible;
+}
+
+.stash-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.stash-action-btn:hover {
+  color: var(--vscode-foreground);
+  background: var(--vscode-toolbar-hoverBackground, rgba(255, 255, 255, 0.12));
+}
+
+.stash-action-btn.danger:hover {
+  color: var(--vscode-errorForeground, #f48771);
+}
+
+.stash-files {
+  padding: 0 6px 5px 42px;
+}
+
+.stash-file {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 23px;
+  min-width: 0;
+  gap: 6px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: var(--vscode-foreground);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.stash-file:hover {
+  background: var(--vscode-list-activeSelectionBackground, rgba(4, 57, 94, 0.75));
+}
+
+.stash-file-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stash-files-empty {
+  padding: 4px 5px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
 }
 
 /* 베이스 커밋이 도달 불가한 고아 스태시 표시 칩 */

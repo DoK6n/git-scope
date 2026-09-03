@@ -1,6 +1,6 @@
 export { isGlobPattern, globToRegExp, makeMatcher } from './glob'
 export { t, locale, setLocale } from './i18n'
 export type { Locale } from './i18n'
-export { formatDate, shortHash } from './format'
+export { formatDate, formatRelativeTime, shortHash } from './format'
 export { gravatarUrl } from './gravatar'
 export { BRANCH_PALETTE, hashColor } from './palette'

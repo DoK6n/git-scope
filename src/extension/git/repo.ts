@@ -10,6 +10,7 @@ import type {
   CommitLineStats,
   GraphData,
   RemoteCheckoutPlan,
+  StashFileChange,
   StashEntry,
   TagDetails,
   Worktree,
@@ -683,6 +684,38 @@ export class GitRepo {
       for (const stash of stashes) stash.isOrphan = orphans.has(stash.baseHash)
     }
     return stashes
+  }
+
+  /** 스태시의 tracked/untracked 변경 파일 — 펼친 행에서만 지연 조회한다. */
+  async getStashFiles(selector: string): Promise<StashFileChange[]> {
+    const args = ['stash', 'show', '--include-untracked', '--find-renames']
+    const [nameStatus, numstat, stashHash, baseHash, untrackedHash] = await Promise.all([
+      this.git([...args, '--name-status', '-z', selector]),
+      this.git([...args, '--numstat', '-z', selector]),
+      this.git(['rev-parse', '--verify', selector]),
+      this.git(['rev-parse', '--verify', `${selector}^1`]),
+      this.git(['rev-parse', '--verify', '--quiet', `${selector}^3`], [1]),
+    ])
+    const resolvedStashHash = stashHash.trim()
+    const resolvedBaseHash = baseHash.trim()
+    const resolvedUntrackedHash = untrackedHash.trim()
+    const untrackedPaths = new Set(
+      resolvedUntrackedHash
+        ? (await this.git(['ls-tree', '-r', '--name-only', '-z', resolvedUntrackedHash]))
+            .split('\0')
+            .filter(Boolean)
+        : [],
+    )
+    const stats = parseNumstat(numstat)
+    return parseNameStatus(nameStatus).map((file) => {
+      const isUntracked = untrackedPaths.has(file.path)
+      return {
+        ...file,
+        ...(stats.get(file.path) ?? {}),
+        hash: isUntracked ? resolvedUntrackedHash : resolvedStashHash,
+        baseHash: isUntracked ? EMPTY_TREE_HASH : resolvedBaseHash,
+      }
+    })
   }
 
   async listWorktrees(): Promise<Worktree[]> {

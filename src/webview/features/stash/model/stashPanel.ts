@@ -1,5 +1,5 @@
 import { createSignal } from 'solid-js'
-import type { StashEntry } from '@shared-types/domain'
+import type { StashEntry, StashFileChange } from '@shared-types/domain'
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
 import { t } from '../../../shared/lib'
@@ -10,6 +10,9 @@ const [stashes, setStashes] = createSignal<StashEntry[]>([])
 const [loading, setLoading] = createSignal(false)
 /** 일괄 삭제용으로 체크된 셀렉터 집합 */
 const [selected, setSelected] = createSignal<Set<string>>(new Set())
+const [expanded, setExpanded] = createSignal<Set<string>>(new Set())
+const [filesBySelector, setFilesBySelector] = createSignal(new Map<string, StashFileChange[]>())
+const [filesLoading, setFilesLoading] = createSignal<Set<string>>(new Set())
 
 async function reload(): Promise<void> {
   const repo = graphStore.currentRepo()
@@ -17,6 +20,9 @@ async function reload(): Promise<void> {
   setLoading(true)
   // 목록이 바뀌면 stash@{N} 인덱스가 밀리므로 선택은 항상 초기화한다
   setSelected(new Set<string>())
+  setExpanded(new Set<string>())
+  setFilesBySelector(new Map())
+  setFilesLoading(new Set<string>())
   try {
     setStashes(await request('listStashes', { repo }))
   } catch (e) {
@@ -37,6 +43,33 @@ function toggleSelected(selector: string): void {
   if (next.has(selector)) next.delete(selector)
   else next.add(selector)
   setSelected(next)
+}
+
+async function toggleExpanded(selector: string): Promise<void> {
+  const next = new Set(expanded())
+  if (next.has(selector)) {
+    next.delete(selector)
+    setExpanded(next)
+    return
+  }
+  next.add(selector)
+  setExpanded(next)
+  if (filesBySelector().has(selector)) return
+  const repo = graphStore.currentRepo()
+  if (!repo) return
+  setFilesLoading((current) => new Set(current).add(selector))
+  try {
+    const files = await request('getStashFiles', { repo, selector })
+    setFilesBySelector((current) => new Map(current).set(selector, files))
+  } catch (e) {
+    graphStore.setError(e instanceof Error ? e.message : String(e))
+  } finally {
+    setFilesLoading((current) => {
+      const remaining = new Set(current)
+      remaining.delete(selector)
+      return remaining
+    })
+  }
 }
 
 function selectorIndex(selector: string): number {
@@ -76,7 +109,11 @@ export const stashPanelStore = {
   stashes,
   loading,
   selected,
+  expanded,
+  filesLoading,
+  filesFor: (selector: string) => filesBySelector().get(selector),
   toggleSelected,
+  toggleExpanded,
   dropSelected,
   togglePanel,
   closePanel: () => setPanelOpen(false),

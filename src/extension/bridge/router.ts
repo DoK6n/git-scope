@@ -28,6 +28,7 @@ const READ_ONLY_REQUESTS = new Set<RequestCommand>([
   'getTagDetails',
   'openScmView',
   'listStashes',
+  'getStashFiles',
   'listWorktrees',
   'openWorktree',
   'getFileIcons',
@@ -543,6 +544,7 @@ export class Router {
       reset: (p) => this.getRepo(p.repo).reset(p.to, p.mode),
       fetch: (p) => this.getRepo(p.repo).fetch(p.prune),
       listStashes: (p) => this.getRepo(p.repo).listStashes(),
+      getStashFiles: (p) => this.getRepo(p.repo).getStashFiles(p.selector),
       listWorktrees: (p) => this.getRepo(p.repo).listWorktrees(),
       addWorktree: (p) =>
         this.getRepo(p.repo).addWorktree(p.path, p.branch, p.createBranch, p.startPoint),

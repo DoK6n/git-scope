@@ -177,6 +177,20 @@ describe('parseStashList', () => {
       selector: 'stash@{0}',
       baseHash: 'base1111',
       subject: 'WIP on main: 1234 feat',
+      branch: 'main',
+      message: '1234 feat',
+    })
+  })
+
+  it('사용자 메시지와 비표준 stash 제목을 표시 정보로 분리한다', async () => {
+    const { parseStashSubject } = await import('./parse')
+    expect(parseStashSubject('On feature/panel: keep local work')).toEqual({
+      branch: 'feature/panel',
+      message: 'keep local work',
+    })
+    expect(parseStashSubject('Created via git stash store')).toEqual({
+      branch: null,
+      message: 'Created via git stash store',
     })
   })
 

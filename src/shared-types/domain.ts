@@ -68,6 +68,12 @@ export interface FileChange {
   deletions?: number
 }
 
+/** 스태시 파일 diff를 열 때 사용할 실제 Git 객체 쌍. */
+export interface StashFileChange extends FileChange {
+  hash: string
+  baseHash: string
+}
+
 export interface CommitDetails {
   hash: string
   parents: string[]
@@ -153,6 +159,10 @@ export interface StashEntry {
   authorDate: number
   commitDate: number
   subject: string
+  /** 생성 당시 브랜치명. 오래되거나 비표준인 스태시 제목에서는 null */
+  branch: string | null
+  /** "On <branch>:" / "WIP on <branch>:" 접두사를 제외한 표시용 메시지 */
+  message: string
   /**
    * 베이스 커밋이 어떤 브랜치/태그에서도 도달 불가(고아) — 브랜치 삭제·rebase 후 남은 스태시.
    * listStashes에서만 계산한다 (그래프 합성 경로는 미설정)
