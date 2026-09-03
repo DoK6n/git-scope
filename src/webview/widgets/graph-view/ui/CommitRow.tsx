@@ -8,7 +8,7 @@ import { checkoutBranch, checkoutRemoteBranch } from '../../../features/checkout
 import { fixupKind, scrollToFixupTarget } from '../../../features/fixup'
 import { ConflictOperationControls } from '../../../features/conflict-operation'
 import { BRANCH_PALETTE, formatDate, shortHash, t } from '../../../shared/lib'
-import { openContextMenu } from '../../../shared/ui'
+import { GitIcon, openContextMenu } from '../../../shared/ui'
 import { buildRefMenu } from '../model/refMenu'
 
 interface CommitRowProps {
@@ -43,18 +43,6 @@ function FixupGlyph() {
         d="M12 2.5 v4.5 a3.5 3.5 0 0 1 -3.5 3.5 H5.5"
       />
       <path fill="currentColor" d="M7.5 6.5 v8 L2 10.5 z" />
-    </svg>
-  )
-}
-
-/** 스태시 뱃지용 상자 글리프 — 자체 제작 (클린룸: 원본 아이콘 자산 미사용) */
-function StashGlyph() {
-  return (
-    <svg viewBox="0 0 16 16" width="10" height="10">
-      <path
-        fill="currentColor"
-        d="M1.5 3h13a.5.5 0 0 1 .5.5V6h-14V3.5a.5.5 0 0 1 .5-.5zM2 7h12v5.5a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5V7zm4 1.5v1h4v-1H6z"
-      />
     </svg>
   )
 }
@@ -151,8 +139,8 @@ export function CommitRow(props: CommitRowProps) {
               title={selector()}
             >
               <span class="ref-local-part">
-                <span class="ref-icon" style={{ 'background-color': lineColor() }}>
-                  <StashGlyph />
+                <span class="ref-icon">
+                  <GitIcon name="stash" size={11} />
                 </span>
                 <span class="ref-name">{selector()}</span>
               </span>
@@ -171,7 +159,7 @@ export function CommitRow(props: CommitRowProps) {
               }}
             >
               <span class="ref-local-part">
-                <span class="ref-icon" style={{ 'background-color': lineColor() }}>
+                <span class="ref-icon">
                   <FixupGlyph />
                 </span>
                 <span class="ref-name">{kind()}</span>

@@ -15,6 +15,10 @@
 - The top **Uncommitted changes** row now identifies an in-progress merge, rebase, cherry-pick, or revert, highlights the row, and shows the unresolved-file count. An inline **Abort** action opens a destructive-operation confirmation, runs the matching Git `--abort`, reports Git's error output on failure, and refreshes the graph on success. Operation paths are resolved by Git, so linked worktrees and submodules are supported. Conflict resolution remains in VS Code's built-in editor; rebase Continue/Skip controls are deferred.
 - Added a session-scoped **Hide Remote-Only Branches** toggle to the branch filter. It removes remote branches without a same-named local branch from graph history, reference badges, and both branch-list views while keeping remotes for local branches across every remote. It composes with Show Remote Branches, preserves unaffected branch selections, and remains enabled when switching repositories.
 
+### Changed
+
+- Standardized Git-related icons across the toolbar, context menus, and branch/remote/tag/stash badges with one VS Code-style 16px icon set. Context menus now visually distinguish read-only, state-changing, and destructive actions without replacing their labels or confirmation dialogs, while icon and danger colors follow VS Code theme variables for light and dark theme contrast.
+
 ## [0.6.3] - 2026-09-03
 
 ### Fixed

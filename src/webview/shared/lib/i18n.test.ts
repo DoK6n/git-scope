@@ -35,4 +35,12 @@ describe('t', () => {
     expect(t('Timeline period: {0}', '2026-09')).toBe('타임라인 기간: 2026-09')
     expect(t('Clear')).toBe('지우기')
   })
+
+  it('Git 아이콘 툴바의 접근 가능한 이름을 한국어로 제공한다', () => {
+    setLocale('ko')
+    expect(t('Reset HEAD by N commits')).toBe('HEAD를 N개 커밋만큼 되돌리기')
+    expect(t('Refresh graph')).toBe('그래프 새로고침')
+    expect(t('Stashes')).toBe('스태시')
+    expect(t('Worktrees')).toBe('워크트리')
+  })
 })

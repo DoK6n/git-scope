@@ -21,17 +21,19 @@ function withReload(action: Promise<void>): void {
 
 function buildStashMenu(stash: StashEntry): MenuItem[] {
   return [
-    { label: 'Apply Stash…', onClick: () => withReload(stashApply(stash.selector, false)) },
-    { label: 'Pop Stash…', onClick: () => withReload(stashApply(stash.selector, true)) },
-    { label: 'Create Branch from Stash…', onClick: () => withReload(stashBranch(stash.selector)) },
+    { label: 'Apply Stash…', intent: 'change', onClick: () => withReload(stashApply(stash.selector, false)) },
+    { label: 'Pop Stash…', intent: 'change', onClick: () => withReload(stashApply(stash.selector, true)) },
+    { label: 'Create Branch from Stash…', intent: 'change', onClick: () => withReload(stashBranch(stash.selector)) },
     {
       label: 'Drop Stash…',
+      intent: 'change',
       danger: true,
       separatorBefore: true,
       onClick: () => withReload(stashDrop(stash.selector)),
     },
     {
       label: 'Copy Stash Hash',
+      intent: 'read',
       separatorBefore: true,
       onClick: () => void request('copyToClipboard', { text: stash.hash }),
     },
