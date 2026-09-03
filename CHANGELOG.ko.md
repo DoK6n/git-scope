@@ -4,7 +4,7 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
-## [0.6.2] - 2026-09-02
+## [0.6.2] - 2026-09-03
 
 ### Fixed
 
