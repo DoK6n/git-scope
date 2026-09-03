@@ -1,7 +1,7 @@
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
 import { t } from '../../../shared/lib'
-import { confirmDialog, formDialog } from '../../../shared/ui'
+import { confirmDialog, errorDialog, formDialog } from '../../../shared/ui'
 
 /** 로컬 브랜치 checkout */
 export async function checkoutBranch(name: string): Promise<void> {
@@ -15,11 +15,16 @@ export async function checkoutBranch(name: string): Promise<void> {
   )
 }
 
-/** 원격 브랜치 checkout — 추적 로컬 브랜치명을 입력받아 생성 */
-export async function checkoutRemoteBranch(remoteName: string): Promise<void> {
+/** 원격 브랜치 checkout — 새 추적 브랜치를 만들거나 동명 로컬 브랜치를 안전하게 동기화 */
+export async function checkoutRemoteBranch(remoteName: string, remoteHint?: string): Promise<void> {
   const repo = graphStore.currentRepo()
   if (!repo) return
-  const suggested = remoteName.split('/').slice(1).join('/')
+  const remote = remoteHint ?? remoteName.split('/')[0]!
+  const branch = remoteName.startsWith(`${remote}/`)
+    ? remoteName.slice(remote.length + 1)
+    : remoteName.split('/').slice(1).join('/')
+  if (branch === '') return
+  const suggested = branch
   const values = await formDialog({
     title: `Checkout Remote Branch: ${remoteName}`,
     fields: [
@@ -28,14 +33,67 @@ export async function checkoutRemoteBranch(remoteName: string): Promise<void> {
     confirmLabel: 'Checkout',
   })
   if (!values || String(values.localName).trim() === '') return
+  const localName = String(values.localName).trim()
+
+  let plan
+  try {
+    plan = await request('getRemoteCheckoutPlan', { repo, remote, branch, localName })
+  } catch (error) {
+    await errorDialog({
+      title: t('Unable to Checkout Branch'),
+      message: error instanceof Error ? error.message : String(error),
+    })
+    return
+  }
+
+  let mode: 'create' | 'checkout-only' | 'checkout-and-pull' = 'create'
+  let successMessage = t('Checked out new tracking branch {0}', localName)
+  if (plan.localExists) {
+    const counts = t(
+      'Local branch {0} is {1} commit(s) ahead and {2} commit(s) behind {3}.',
+      localName,
+      plan.ahead,
+      plan.behind,
+      remoteName,
+    )
+    if (plan.ahead === 0) {
+      const confirmed = await confirmDialog({
+        title: t('Checkout and Pull Remote Branch'),
+        message: `${counts}\n\n${t(
+          'Checkout {0}, then pull from {1} with fast-forward only?',
+          localName,
+          remoteName,
+        )}`,
+        confirmLabel: t('Checkout and Pull'),
+      })
+      if (!confirmed) return
+      mode = 'checkout-and-pull'
+      successMessage = t('Checked out {0} and pulled {1}', localName, remoteName)
+    } else {
+      const confirmed = await confirmDialog({
+        title: t('Automatic Pull Blocked'),
+        message: `${counts}\n\n${t(
+          'Automatic pull will not run because the local branch is ahead or diverged. Checkout the local branch without pulling?',
+        )}`,
+        confirmLabel: t('Checkout Only'),
+      })
+      if (!confirmed) return
+      mode = 'checkout-only'
+      successMessage = t('Checked out {0} without pulling', localName)
+    }
+  }
+
   await graphStore.runAction(
     request('checkoutRemoteBranch', {
       repo,
-      remoteName,
-      localName: String(values.localName).trim(),
+      remote,
+      branch,
+      localName,
+      mode,
     }),
-    undefined,
-    'Unable to Checkout Branch',
+    successMessage,
+    t('Unable to Checkout Branch'),
+    true,
   )
 }
 

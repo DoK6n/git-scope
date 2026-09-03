@@ -52,7 +52,10 @@ export function buildRefMenu(ref: GitRef): MenuItem[] {
       return [{ label: 'Copy Ref Name', onClick: () => copy(ref.name) }]
     }
     return [
-      { label: 'Checkout as Local Branch…', onClick: () => void checkoutRemoteBranch(ref.name) },
+      {
+        label: 'Checkout as Local Branch…',
+        onClick: () => void checkoutRemoteBranch(ref.name, remote),
+      },
       {
         label: 'Create Branch from Here…',
         onClick: () => void createBranchAt(ref.name, ref.name),

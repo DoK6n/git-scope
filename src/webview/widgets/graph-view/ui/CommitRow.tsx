@@ -133,7 +133,7 @@ export function CommitRow(props: CommitRowProps) {
                         (graphStore.graph()?.worktreeBranches ?? []).includes(group.ref.name)
                       if (isCheckedOut || inWorktree) return
                       if (group.ref.type === 'head') void checkoutBranch(group.ref.name)
-                      else void checkoutRemoteBranch(group.ref.name)
+                      else void checkoutRemoteBranch(group.ref.name, group.ref.remote)
                     }
               }
             />

@@ -23,6 +23,7 @@ const READ_ONLY_REQUESTS = new Set<RequestCommand>([
   'getCommitLineStats',
   'getAuthorStats',
   'getCommitComparison',
+  'getRemoteCheckoutPlan',
   'openDiff',
   'getTagDetails',
   'openScmView',
@@ -482,8 +483,15 @@ export class Router {
       getCommitComparison: (p) => this.getRepo(p.repo).getComparison(p.fromHash, p.toHash),
       openDiff: (p) => this.openDiff(p),
       checkoutBranch: (p) => this.getRepo(p.repo).checkoutBranch(p.name),
+      getRemoteCheckoutPlan: (p) =>
+        this.getRepo(p.repo).getRemoteCheckoutPlan(p.remote, p.branch, p.localName),
       checkoutRemoteBranch: (p) =>
-        this.getRepo(p.repo).checkoutRemoteBranch(p.remoteName, p.localName),
+        this.getRepo(p.repo).checkoutRemoteBranch(
+          p.remote,
+          p.branch,
+          p.localName,
+          p.mode,
+        ),
       checkoutCommit: (p) => this.getRepo(p.repo).checkoutCommit(p.hash),
       createBranch: (p) => this.getRepo(p.repo).createBranch(p.name, p.at, p.checkout),
       deleteBranch: (p) => this.getRepo(p.repo).deleteBranch(p.name, p.force),

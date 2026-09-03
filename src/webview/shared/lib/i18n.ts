@@ -173,6 +173,20 @@ const KO: Record<string, string> = {
   'Worktree {0} done': 'worktree {0} 완료',
 
   // ── checkout ──
+  'Unable to Checkout Branch': '브랜치를 체크아웃할 수 없음',
+  'Checked out new tracking branch {0}': '새 추적 브랜치 {0} 체크아웃 완료',
+  'Local branch {0} is {1} commit(s) ahead and {2} commit(s) behind {3}.':
+    '로컬 브랜치 {0}은(는) {3}보다 {1}개 커밋 앞서 있고 {2}개 커밋 뒤처져 있습니다.',
+  'Checkout and Pull Remote Branch': '원격 브랜치 체크아웃 및 Pull',
+  'Checkout {0}, then pull from {1} with fast-forward only?':
+    '{0}을(를) 체크아웃한 뒤 {1}에서 fast-forward 전용으로 pull할까요?',
+  'Checkout and Pull': '체크아웃 및 Pull',
+  'Checked out {0} and pulled {1}': '{0} 체크아웃 및 {1} pull 완료',
+  'Automatic Pull Blocked': '자동 Pull 차단됨',
+  'Automatic pull will not run because the local branch is ahead or diverged. Checkout the local branch without pulling?':
+    '로컬 브랜치가 앞서 있거나 갈라져 있어 자동 pull을 실행하지 않습니다. pull 없이 로컬 브랜치만 체크아웃할까요?',
+  'Checkout Only': '체크아웃만',
+  'Checked out {0} without pulling': '{0}을(를) pull 없이 체크아웃했습니다',
   'Checking out commit {0} puts the repository in a detached HEAD state.\nContinue?':
     '{0} 커밋을 체크아웃하면 detached HEAD 상태가 됩니다.\n계속할까요?',
 
