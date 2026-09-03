@@ -1,4 +1,5 @@
 import type {
+  AuthorStatsEntry,
   Commit,
   FileChange,
   FileChangeStatus,
@@ -47,6 +48,25 @@ export function parseLog(output: string): Commit[] {
     })
   }
   return commits
+}
+
+/** 작성자 통계용 `git log --format` — mailmap 적용 필드 사용 */
+export const AUTHOR_STATS_FORMAT = '%aN%x00%aE'
+
+/** 정규 이메일 기준으로 작성자를 합치고 커밋 수 내림차순으로 정렬한다. */
+export function parseAuthorStats(output: string): AuthorStatsEntry[] {
+  const byEmail = new Map<string, AuthorStatsEntry>()
+  for (const line of output.split('\n')) {
+    if (line === '') continue
+    const [name = '', email = ''] = line.split(NUL)
+    const key = email !== '' ? email.toLowerCase() : `name:${name.toLowerCase()}`
+    const existing = byEmail.get(key)
+    if (existing) existing.commits++
+    else byEmail.set(key, { name, email, commits: 1 })
+  }
+  return [...byEmail.values()].sort(
+    (a, b) => b.commits - a.commits || a.name.localeCompare(b.name) || a.email.localeCompare(b.email),
+  )
 }
 
 /** for-each-ref 포맷: refname, 해시, (태그면) 참조 대상 해시. for-each-ref는 %00 문법을 쓴다 */

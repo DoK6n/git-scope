@@ -110,6 +110,16 @@ export interface RepoInfo {
 
 export type ActionResult = { ok: true } | { ok: false; error: string }
 
+export type AuthorStatsScope = 'currentBranch' | 'allRefs'
+export type AuthorStatsPeriod = 'all' | '30d' | '90d' | '365d'
+
+/** `.mailmap` 적용 후 정규화된 작성자별 커밋 통계 */
+export interface AuthorStatsEntry {
+  name: string
+  email: string
+  commits: number
+}
+
 /**
  * 파일/폴더 아이콘 — 활성 아이콘 테마에서 해석.
  * svg는 webview URI 문자열, 폰트 기반이면 fontChar+fontId(+색/크기)

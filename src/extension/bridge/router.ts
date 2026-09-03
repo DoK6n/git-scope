@@ -21,6 +21,7 @@ const READ_ONLY_REQUESTS = new Set<RequestCommand>([
   'getGraph',
   'getCommitDetails',
   'getCommitLineStats',
+  'getAuthorStats',
   'getCommitComparison',
   'openDiff',
   'getTagDetails',
@@ -477,6 +478,7 @@ export class Router {
       getCommitDetails: (p) => this.getRepo(p.repo).getCommitDetails(p.hash),
       getCommitLineStats: (p) =>
         this.getRepo(p.repo).getCommitLineStats(p.baseHash, p.hash),
+      getAuthorStats: (p) => this.getRepo(p.repo).getAuthorStats(p.scope, p.period),
       getCommitComparison: (p) => this.getRepo(p.repo).getComparison(p.fromHash, p.toHash),
       openDiff: (p) => this.openDiff(p),
       checkoutBranch: (p) => this.getRepo(p.repo).checkoutBranch(p.name),

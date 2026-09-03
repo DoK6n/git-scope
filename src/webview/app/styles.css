@@ -1710,3 +1710,99 @@ path.graph-line.doomed,
   justify-content: flex-end;
   gap: 6px;
 }
+
+/* ── 작성자별 커밋 통계 패널 ───────────────────── */
+.author-stats-panel {
+  width: 420px;
+  max-height: 72%;
+}
+
+.author-stats-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--vscode-panel-border, #444);
+}
+
+.author-stats-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+}
+
+.author-stats-controls select {
+  min-width: 0;
+  padding: 3px 6px;
+  background: var(--vscode-dropdown-background, #3c3c3c);
+  color: var(--vscode-dropdown-foreground, #ccc);
+  border: 1px solid var(--vscode-dropdown-border, #454545);
+  border-radius: 3px;
+  font: inherit;
+}
+
+.author-stats-controls p {
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.author-stats-list {
+  min-height: 80px;
+}
+
+.author-stats-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.author-stats-item:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.author-stats-identity {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.author-stats-identity strong,
+.author-stats-identity span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.author-stats-identity span {
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+}
+
+.author-stats-count {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.author-stats-error {
+  padding: 8px;
+  color: var(--vscode-errorForeground, #f48771);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.author-stats-footer {
+  align-items: center;
+  justify-content: space-between;
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+}

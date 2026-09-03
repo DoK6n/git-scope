@@ -1,5 +1,8 @@
 import type {
   ActionResult,
+  AuthorStatsEntry,
+  AuthorStatsPeriod,
+  AuthorStatsScope,
   CommitDetails,
   CommitLineStats,
   GraphData,
@@ -40,6 +43,12 @@ export interface RequestMap {
   getCommitLineStats: {
     params: { repo: string; hash: string; baseHash: string | null }
     result: CommitLineStats
+  }
+
+  /** 그래프의 증분 로딩과 무관한 전체 Git 히스토리 작성자 통계 */
+  getAuthorStats: {
+    params: { repo: string; scope: AuthorStatsScope; period: AuthorStatsPeriod }
+    result: AuthorStatsEntry[]
   }
 
   /** 두 커밋 비교 (M5) — from..to 변경 파일 목록 */

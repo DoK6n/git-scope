@@ -2,6 +2,7 @@ import { onMount, Show } from 'solid-js'
 import { graphStore } from '../entities/graph'
 import { SearchWidget } from '../features/search'
 import { ContextMenuHost, PromptHost } from '../shared/ui'
+import { AuthorStatsPanel } from '../widgets/author-stats-panel'
 import { GraphView } from '../widgets/graph-view'
 import { StashPanel } from '../widgets/stash-panel'
 import { Toolbar } from '../widgets/toolbar'
@@ -26,6 +27,7 @@ export function App() {
       </div>
       <WorktreePanel />
       <StashPanel />
+      <AuthorStatsPanel />
       <ContextMenuHost />
       <PromptHost />
     </div>

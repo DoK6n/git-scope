@@ -30,6 +30,8 @@ const KO: Record<string, string> = {
   'Search (glob: fix*, feat-?)': '검색 (glob 지원: fix*, feat-?)',
   'Open/close the stash panel': '스태시 목록 패널 열기/닫기',
   'Open/close the worktree panel': '워크트리 패널 열기/닫기',
+  'Open/close author statistics': '작성자 통계 열기/닫기',
+  Statistics: '통계',
   'Fetch — git fetch --all': 'Fetch — git fetch --all',
   'Fetch (prune) — clean up refs to branches deleted on the remote':
     'Fetch (prune) — 원격에서 삭제된 브랜치 참조 정리',
@@ -182,6 +184,27 @@ const KO: Record<string, string> = {
     '베이스 커밋이 어떤 브랜치/태그에서도 도달할 수 없습니다 (브랜치 삭제 또는 rebase). 그래프에는 표시되지 않지만 Apply/Drop은 가능합니다.',
   'Drop all checked stashes': '체크한 스태시 일괄 삭제',
   'Stash working tree changes': '워킹트리 변경사항을 스태시로 저장',
+
+  // ── 작성자 통계 패널 ──
+  'Author statistics': '작성자 통계',
+  'Author Statistics': '작성자 통계',
+  'Close author statistics': '작성자 통계 닫기',
+  Scope: '범위',
+  'Current branch': '현재 브랜치',
+  'All refs': '모든 참조',
+  Period: '기간',
+  'All time': '전체 기간',
+  'Last 30 days': '최근 30일',
+  'Last 90 days': '최근 90일',
+  'Last 365 days': '최근 365일',
+  'Counts the complete Git history for this scope, not the loaded graph rows.':
+    '로드된 그래프 행이 아닌 선택 범위의 전체 Git 히스토리를 집계합니다.',
+  'Loading…': '불러오는 중…',
+  'No commits in this range': '선택 범위에 커밋 없음',
+  commit: '커밋',
+  commits: '커밋',
+  '{0} authors · {1} commits': '작성자 {0}명 · 커밋 {1}개',
+  Refresh: '새로고침',
 
   // ── tag ──
   'Message (when annotated)': 'Message (annotated일 때)',

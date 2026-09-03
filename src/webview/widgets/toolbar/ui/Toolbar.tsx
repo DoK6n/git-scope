@@ -1,5 +1,6 @@
 import { createMemo, createSignal, For, Show } from 'solid-js'
 import { graphStore } from '../../../entities/graph'
+import { authorStatsStore } from '../../../features/author-stats'
 import { fetchAll, fetchDefault } from '../../../features/fetch'
 import { resetHeadN } from '../../../features/reset'
 import { stashPanelStore } from '../../../features/stash'
@@ -135,6 +136,24 @@ export function Toolbar() {
   const showAll = () => {
     void graphStore.applyBranchFilter(null)
     setFilterOpen(false)
+  }
+
+  const toggleAuthorStats = (): void => {
+    if (!authorStatsStore.panelOpen()) {
+      stashPanelStore.closePanel()
+      worktreeStore.closePanel()
+    }
+    void authorStatsStore.togglePanel()
+  }
+
+  const toggleStashes = (): void => {
+    if (!stashPanelStore.panelOpen()) authorStatsStore.closePanel()
+    void stashPanelStore.togglePanel()
+  }
+
+  const toggleWorktrees = (): void => {
+    if (!worktreeStore.panelOpen()) authorStatsStore.closePanel()
+    void worktreeStore.togglePanel()
   }
 
   const faceLabel = () => {
@@ -384,6 +403,14 @@ export function Toolbar() {
       <div class="toolbar-section toolbar-right">
         <button
           class="toolbar-btn"
+          data-tip={t('Open/close author statistics')}
+          classList={{ primary: authorStatsStore.panelOpen() }}
+          onClick={toggleAuthorStats}
+        >
+          ▥ {t('Statistics')}
+        </button>
+        <button
+          class="toolbar-btn"
           data-tip="git reset --soft|mixed|hard HEAD~N"
           onClick={() => void resetHeadN()}
         >
@@ -393,7 +420,7 @@ export function Toolbar() {
           class="toolbar-btn"
           data-tip={t('Open/close the stash panel')}
           classList={{ primary: stashPanelStore.panelOpen() }}
-          onClick={() => void stashPanelStore.togglePanel()}
+          onClick={toggleStashes}
         >
           ▤ Stashes
         </button>
@@ -401,7 +428,7 @@ export function Toolbar() {
           class="toolbar-btn"
           data-tip={t('Open/close the worktree panel')}
           classList={{ primary: worktreeStore.panelOpen() }}
-          onClick={() => void worktreeStore.togglePanel()}
+          onClick={toggleWorktrees}
         >
           ⊕ Worktrees
         </button>
