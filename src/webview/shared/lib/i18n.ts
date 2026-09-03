@@ -38,6 +38,27 @@ const KO: Record<string, string> = {
   'Fetched all remotes': 'git fetch --all 완료',
   'Fetched all remotes (prune)': 'git fetch --all --prune 완료',
 
+  // ── 타임라인 ──
+  'View mode': '보기 모드',
+  Graph: '그래프',
+  Timeline: '타임라인',
+  'Commit Timeline': '커밋 타임라인',
+  '{0} of {1} currently loaded commits': '현재 로드된 커밋 {1}개 중 {0}개',
+  Author: '작성자',
+  'Timeline author': '타임라인 작성자',
+  'All authors': '모든 작성자',
+  'Timeline interval': '타임라인 구간',
+  Day: '일',
+  Month: '월',
+  Year: '연',
+  'No loaded commits to show.': '표시할 로드된 커밋이 없습니다.',
+  'Commit activity timeline': '커밋 활동 타임라인',
+  '{0}: {1} commits': '{0}: 커밋 {1}개',
+  'Timeline authors': '타임라인 작성자',
+  'Timeline period: {0}': '타임라인 기간: {0}',
+  '{0} commits': '커밋 {0}개',
+  Clear: '지우기',
+
   // ── 그래프 · 뱃지 · 상세 ──
   'Double-click: git switch': '더블클릭: git switch',
   'HEAD — checked out branch': 'HEAD — 체크아웃된 브랜치',

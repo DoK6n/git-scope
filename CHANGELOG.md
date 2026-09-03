@@ -8,6 +8,7 @@
 
 - Commit details now show an asynchronously calculated effective `+N / −M` line count that excludes blank and comment-only changes for common text and code formats. Hovering the count reveals the raw `git diff --numstat` totals; unsupported formats safely retain their raw counts, binary files are reported separately, and a failed calculation never blocks the rest of the details view.
 - Added an **Author Statistics** toolbar panel that counts commits from the complete Git history rather than the incrementally loaded graph. Choose the current branch or all local/remote branches and tags, limit the range to all time or the last 30/90/365 days, and see every author's name, email, and commit count. `.mailmap` identities are normalized and combined automatically; detached HEAD and empty histories are handled explicitly.
+- Added a **Commit Timeline** mode to the graph toolbar. It charts the currently loaded commits as custom SVG stacked bars, switches between day/month/year buckets, and filters activity by author identity. Selecting a populated bucket returns to the graph with that date range applied and the first matching commit selected; the graph shows the active period and a Clear action to restore all loaded rows.
 
 ## [0.6.3] - 2026-09-03
 
