@@ -1378,10 +1378,34 @@ path.graph-line.doomed,
   overflow-y: auto;
 }
 
-.details-subject {
-  font-weight: 600;
+.details-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
   margin-bottom: 8px;
   padding-right: 20px;
+}
+
+.details-subject {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.details-line-stats {
+  flex-shrink: 0;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: help;
+}
+
+.details-line-stats.pending {
+  color: var(--vscode-descriptionForeground);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: normal;
+  cursor: default;
 }
 
 .details-fields {

@@ -58,6 +58,38 @@ export function InlineDetails(props: { top: number; left: number }) {
         : request('getCommitDetails', { repo: source.repo, hash: source.hash }),
   )
 
+  // 상세 본문을 먼저 보여준 뒤 라인 통계만 별도 git diff로 비동기 계산한다.
+  const [lineStatsFailed, setLineStatsFailed] = createSignal(false)
+  const [lineStats] = createResource(
+    () => {
+      const repo = graphStore.currentRepo()
+      const detail = details()
+      if (!repo || !detail || comparePair()) return null
+      return { repo, hash: detail.hash, baseHash: detail.parents[0] ?? null }
+    },
+    async (source) => {
+      setLineStatsFailed(false)
+      try {
+        return await request('getCommitLineStats', source)
+      } catch {
+        // 통계는 부가 정보다. diff 계산 실패가 상세 본문을 가리지 않게 한다.
+        setLineStatsFailed(true)
+        return null
+      }
+    },
+  )
+
+  const lineStatsTooltip = () => {
+    const stats = lineStats()
+    if (!stats) return ''
+    const notes = [t('Raw numstat: +{0} / −{1}', stats.rawAdditions, stats.rawDeletions)]
+    if (stats.fallbackFiles > 0) {
+      notes.push(t('{0} unsupported file(s) use raw counts', stats.fallbackFiles))
+    }
+    if (stats.binaryFiles > 0) notes.push(t('{0} binary file(s) excluded', stats.binaryFiles))
+    return notes.join(' · ')
+  }
+
   // 상세가 로드되면 트리에 등장하는 파일/폴더 이름의 아이콘을 미리 로드
   createEffect(() => {
     const d = details()
@@ -107,7 +139,27 @@ export function InlineDetails(props: { top: number; left: number }) {
                   <span class="details-hash">{comparePair()![1].slice(0, 8)}</span> — {t('all changed files between the two commits')}
                 </div>
               </Show>
-              <div class="details-subject">{d().body.split('\n')[0]}</div>
+              <div class="details-title-row">
+                <div class="details-subject">{d().body.split('\n')[0]}</div>
+                <Show when={!comparePair()}>
+                  <Show
+                    when={lineStats()}
+                    fallback={
+                      <span class="details-line-stats pending">
+                        {lineStatsFailed() ? t('Line stats unavailable') : t('Calculating lines…')}
+                      </span>
+                    }
+                  >
+                    {(stats) => (
+                      <span class="details-line-stats" data-tip={lineStatsTooltip()}>
+                        <span class="file-added">+{stats().additions}</span>
+                        {' / '}
+                        <span class="file-removed">−{stats().deletions}</span>
+                      </span>
+                    )}
+                  </Show>
+                </Show>
+              </div>
               <div class="details-fields">
                 <span class="details-field">
                   <b>Commit</b> <span class="details-hash">{d().hash}</span>

@@ -80,6 +80,18 @@ export interface CommitDetails {
   files: FileChange[]
 }
 
+/** 커밋 상세의 라인 변경 통계 — 실질 수치는 공백·주석 전용 줄을 제외한 근사치 */
+export interface CommitLineStats {
+  additions: number
+  deletions: number
+  rawAdditions: number
+  rawDeletions: number
+  /** 주석 근사를 지원하지 않아 raw 수치를 그대로 쓴 파일 수 */
+  fallbackFiles: number
+  /** numstat이 `-/-`를 보고해 라인 합계에서 제외된 파일 수 */
+  binaryFiles: number
+}
+
 export interface Worktree {
   path: string
   head: string

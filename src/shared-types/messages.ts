@@ -1,6 +1,7 @@
 import type {
   ActionResult,
   CommitDetails,
+  CommitLineStats,
   GraphData,
   IconSpec,
   RepoInfo,
@@ -33,6 +34,12 @@ export interface RequestMap {
   getCommitDetails: {
     params: { repo: string; hash: string }
     result: CommitDetails
+  }
+
+  /** 공백·주석 전용 줄을 근사 제외한 커밋 라인 통계 */
+  getCommitLineStats: {
+    params: { repo: string; hash: string; baseHash: string | null }
+    result: CommitLineStats
   }
 
   /** 두 커밋 비교 (M5) — from..to 변경 파일 목록 */

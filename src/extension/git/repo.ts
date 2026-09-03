@@ -4,6 +4,7 @@ import type {
   ActionResult,
   Commit,
   CommitDetails,
+  CommitLineStats,
   GraphData,
   StashEntry,
   TagDetails,
@@ -23,6 +24,7 @@ import {
   STASH_FORMAT,
   stripCommitMessageComments,
 } from './parse'
+import { calculateCommitLineStats } from './lineStats'
 
 /** git의 잘 알려진 빈 트리 해시 — 루트 커밋 디프의 베이스로 쓴다 */
 export const EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'
@@ -160,6 +162,29 @@ export class GitRepo {
   async getComparison(fromHash: string, toHash: string): Promise<CommitDetails> {
     const details = await this.getCommitDetails(toHash)
     return { ...details, files: await this.diffFiles(fromHash, toHash) }
+  }
+
+  /** 공백·주석 전용 변경 줄을 근사 제외한 커밋 라인 통계 */
+  async getCommitLineStats(baseHash: string | null, hash: string): Promise<CommitLineStats> {
+    const base = baseHash ?? EMPTY_TREE_HASH
+    const [numstat, patch] = await Promise.all([
+      this.git(['diff', '--numstat', '-z', '--find-renames', base, hash, '--']),
+      this.git([
+        '-c',
+        'core.quotePath=false',
+        'diff',
+        '--no-ext-diff',
+        '--no-color',
+        '--no-prefix',
+        '--unified=0',
+        '--find-renames',
+        base,
+        hash,
+        '--',
+      ]),
+    ])
+    const files = [...parseNumstat(numstat)].map(([path, stat]) => ({ path, ...stat }))
+    return calculateCommitLineStats(files, patch)
   }
 
   /** name-status(변경 종류) + numstat(추가/삭제 라인 수)을 합친 파일 목록 */

@@ -46,6 +46,11 @@ const KO: Record<string, string> = {
   'Copy absolute path': '절대 경로 복사',
   'Open file': '파일 열기',
   'all changed files between the two commits': '두 커밋 사이의 모든 변경 파일',
+  'Calculating lines…': '라인 수 계산 중…',
+  'Line stats unavailable': '라인 수를 계산할 수 없음',
+  'Raw numstat: +{0} / −{1}': '원시 numstat: +{0} / −{1}',
+  '{0} unsupported file(s) use raw counts': '미지원 파일 {0}개는 원시 수치 사용',
+  '{0} binary file(s) excluded': '바이너리 파일 {0}개는 합계에서 제외',
 
   // ── 브랜치 액션 ──
   'Branch {0} created (from {1})': '브랜치 {0} 생성 완료 (from {1})',
