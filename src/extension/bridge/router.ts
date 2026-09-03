@@ -493,7 +493,12 @@ export class Router {
       listRepos: () => this.listRepos(),
       getGraph: (p) => {
         this.activeRepo = p.repo
-        return this.getRepo(p.repo).getGraph(p.maxCommits, p.branches, p.includeRemotes)
+        return this.getRepo(p.repo).getGraph(
+          p.maxCommits,
+          p.branches,
+          p.includeRemotes,
+          p.hideRemoteOnlyBranches,
+        )
       },
       getCommitDetails: (p) => this.getRepo(p.repo).getCommitDetails(p.hash),
       getCommitLineStats: (p) =>

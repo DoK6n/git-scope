@@ -35,6 +35,8 @@ const [maxCommits, setMaxCommits] = createSignal(initialSettings().initialLoadCo
 const [branchFilter, setBranchFilter] = createSignal<string[] | null>(null)
 /** 원격 브랜치 표시 여부 — 끄면 로그·뱃지·드롭다운에서 원격 참조 제외 */
 const [showRemotes, setShowRemotesRaw] = createSignal(true)
+/** 대응 로컬 브랜치가 없는 원격 브랜치 숨김 — webview 세션 동안 저장소 전환 후에도 유지 */
+const [hideRemoteOnlyBranches, setHideRemoteOnlyBranchesRaw] = createSignal(false)
 const [selectedCommit, setSelectedCommitRaw] = createSignal<string | null>(null)
 /** Ctrl/Cmd+클릭으로 고른 비교 대상 커밋 (selectedCommit과 비교) */
 const [compareWith, setCompareWith] = createSignal<string | null>(null)
@@ -108,6 +110,7 @@ async function refresh(): Promise<void> {
       maxCommits: maxCommits(),
       branches: branchFilter(),
       includeRemotes: showRemotes(),
+      hideRemoteOnlyBranches: hideRemoteOnlyBranches(),
     })
     setGraph(data)
     setError(null)
@@ -154,6 +157,35 @@ async function setShowRemotes(show: boolean): Promise<void> {
     }
   }
   setShowRemotesRaw(show)
+  await refresh()
+}
+
+/** 원격 전용 브랜치 숨김 토글 — 숨겨지는 ref만 기존 allowlist에서 제거한다. */
+async function setHideRemoteOnlyBranches(hide: boolean): Promise<void> {
+  if (hide === hideRemoteOnlyBranches()) return
+  if (hide) {
+    const refs = graph()?.refs ?? []
+    const localBranches = new Set(
+      refs.filter((ref) => ref.type === 'head').map((ref) => ref.name),
+    )
+    const remoteOnly = new Set(
+      refs
+        .filter(
+          (ref) =>
+            ref.type === 'remote' &&
+            ref.remote !== undefined &&
+            ref.name !== `${ref.remote}/HEAD` &&
+            !localBranches.has(ref.name.slice(ref.remote.length + 1)),
+        )
+        .map((ref) => ref.name),
+    )
+    const current = branchFilter()
+    if (current) {
+      const next = current.filter((name) => !remoteOnly.has(name))
+      setBranchFilter(next.length === 0 ? null : next)
+    }
+  }
+  setHideRemoteOnlyBranchesRaw(hide)
   await refresh()
 }
 
@@ -207,6 +239,8 @@ export const graphStore = {
   branchFilter,
   showRemotes,
   setShowRemotes,
+  hideRemoteOnlyBranches,
+  setHideRemoteOnlyBranches,
   selectedCommit,
   setSelectedCommit,
   compareWith,

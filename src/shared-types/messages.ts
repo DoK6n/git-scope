@@ -33,6 +33,8 @@ export interface RequestMap {
       branches: string[] | null
       /** false면 원격 브랜치를 로그·ref 목록에서 제외 (Show Remote Branches 토글) */
       includeRemotes: boolean
+      /** true면 대응하는 로컬 브랜치가 없는 원격 브랜치를 제외 */
+      hideRemoteOnlyBranches: boolean
     }
     result: GraphData
   }

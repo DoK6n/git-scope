@@ -23,6 +23,10 @@ const KO: Record<string, string> = {
   // ── 툴바 · 브랜치 필터 ──
   'Select branches to show in the graph': '그래프에 표시할 브랜치 선택',
   'Show remote branches in the graph': '원격 브랜치를 그래프에 표시',
+  'Show Remote Branches': '원격 브랜치 표시',
+  'Hide remote branches without a local branch':
+    '대응하는 로컬 브랜치가 없는 원격 브랜치 숨기기',
+  'Hide Remote-Only Branches': '원격에만 있는 브랜치 숨기기',
   'Filter Branches… (glob: feature/*)': '브랜치 필터… (glob: feature/*)',
   'No matching branches': '일치하는 브랜치 없음',
   'Select/unselect all branches under this folder': '하위 브랜치 일괄 선택/해제',

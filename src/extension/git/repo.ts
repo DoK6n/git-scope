@@ -8,6 +8,7 @@ import type {
   Commit,
   CommitDetails,
   CommitLineStats,
+  GitRef,
   GraphData,
   InProgressOperation,
   InProgressOperationType,
@@ -65,6 +66,59 @@ export function authorStatsLogArgs(
   ]
 }
 
+/** 그래프·뱃지·필터 목록에 노출할 refs를 원격 표시 옵션에 맞춰 고른다. */
+export function visibleGraphRefs(
+  refs: GitRef[],
+  includeRemotes: boolean,
+  hideRemoteOnlyBranches: boolean,
+): GitRef[] {
+  if (!includeRemotes) return refs.filter((ref) => ref.type !== 'remote')
+  if (!hideRemoteOnlyBranches) return refs
+
+  const localBranches = new Set(
+    refs.filter((ref) => ref.type === 'head').map((ref) => ref.name),
+  )
+  return refs.filter((ref) => {
+    if (ref.type !== 'remote' || !ref.remote) return true
+    // origin/HEAD는 브랜치가 아닌 심볼릭 ref이며 기존 표시 의미를 유지한다.
+    if (ref.name === `${ref.remote}/HEAD`) return true
+    return localBranches.has(ref.name.slice(ref.remote.length + 1))
+  })
+}
+
+/** 브랜치 표시 옵션을 실제 git log revision 인자로 변환한다. 빈 배열이면 조회 대상이 없다. */
+export function graphRevisionArgs(
+  branches: string[] | null,
+  refs: GitRef[],
+  includeRemotes: boolean,
+  hideRemoteOnlyBranches: boolean,
+): string[] {
+  if (branches === null) {
+    if (!includeRemotes) return ['--branches', '--tags', 'HEAD']
+    if (!hideRemoteOnlyBranches) return ['--branches', '--remotes', '--tags', 'HEAD']
+    const visible = visibleGraphRefs(refs, true, true)
+      .filter(
+        (ref) =>
+          ref.type === 'remote' &&
+          ref.remote !== undefined &&
+          ref.name !== `${ref.remote}/HEAD`,
+      )
+      .map((ref) => `refs/remotes/${ref.name}`)
+    return ['--branches', ...visible, '--tags', 'HEAD']
+  }
+
+  if (includeRemotes && !hideRemoteOnlyBranches) return branches
+  const visibleNames = new Set(
+    visibleGraphRefs(refs, includeRemotes, hideRemoteOnlyBranches).map((ref) => ref.name),
+  )
+  const hiddenRemoteNames = new Set(
+    refs
+      .filter((ref) => ref.type === 'remote' && !visibleNames.has(ref.name))
+      .map((ref) => ref.name),
+  )
+  return branches.filter((name) => !hiddenRemoteNames.has(name))
+}
+
 /** 리포 하나에 대한 git 명령 실행기 */
 export class GitRepo {
   constructor(readonly root: string) {}
@@ -94,32 +148,53 @@ export class GitRepo {
     maxCommits: number,
     branches: string[] | null,
     includeRemotes = true,
+    hideRemoteOnlyBranches = false,
   ): Promise<GraphData> {
-    // 필터가 있으면 선택된 브랜치만 — HEAD를 넣으면 체크아웃 브랜치 이력이 항상 섞여
-    // 필터가 무력화되므로, HEAD는 전체 표시일 때만 포함한다
+    const refsPromise = this.git(['for-each-ref', `--format=${REF_FORMAT}`])
+    const headHashPromise = this.git(['rev-parse', 'HEAD'], [128])
+      .then((value) => (value.startsWith('HEAD') || value === '' ? null : value.trim()))
+      .catch(() => null)
+    const headBranchPromise = this.git(['symbolic-ref', '--short', '-q', 'HEAD'], [1]).then(
+      (value) => value.trim() || null,
+    )
+    const statusPromise = this.git(['status', '--porcelain', '-z'])
+    const worktreesPromise = this.listWorktrees().catch(() => [] as Worktree[])
+    // 원격 ref를 선별해야 할 때만 refs를 먼저 기다린다. 기본 경로는 log와 refs를 병렬 조회한다.
+    const needsRefAwareRevisions =
+      hideRemoteOnlyBranches || (!includeRemotes && branches !== null)
+    const refsBeforeLog = needsRefAwareRevisions ? await refsPromise : null
     const revisions =
-      branches === null
-        ? ['--branches', ...(includeRemotes ? ['--remotes'] : []), '--tags', 'HEAD']
-        : branches
+      refsBeforeLog === null
+        ? branches === null
+          ? ['--branches', ...(includeRemotes ? ['--remotes'] : []), '--tags', 'HEAD']
+          : branches
+        : graphRevisionArgs(
+            branches,
+            parseRefs(refsBeforeLog),
+            includeRemotes,
+            hideRemoteOnlyBranches,
+          )
     const [logOut, refsOut, headHash, headBranch, statusOut, worktrees] = await Promise.all([
-      this.git([
-        'log',
-        '--date-order',
-        `-n`,
-        String(maxCommits + 1),
-        `--format=${LOG_FORMAT}`,
-        ...revisions,
-        '--',
-      ]).catch((e) => {
-        // 커밋이 하나도 없는 리포는 log가 실패한다
-        if (e instanceof GitError && /does not have any commits|bad revision/i.test(e.stderr)) return ''
-        throw e
-      }),
-      this.git(['for-each-ref', `--format=${REF_FORMAT}`]),
-      this.git(['rev-parse', 'HEAD'], [128]).then((s) => (s.startsWith('HEAD') || s === '' ? null : s.trim())).catch(() => null),
-      this.git(['symbolic-ref', '--short', '-q', 'HEAD'], [1]).then((s) => s.trim() || null),
-      this.git(['status', '--porcelain', '-z']),
-      this.listWorktrees().catch(() => [] as Worktree[]),
+      revisions.length === 0
+        ? Promise.resolve('')
+        : this.git([
+            'log',
+            '--date-order',
+            `-n`,
+            String(maxCommits + 1),
+            `--format=${LOG_FORMAT}`,
+            ...revisions,
+            '--',
+          ]).catch((e) => {
+            // 커밋이 하나도 없는 리포는 log가 실패한다
+            if (e instanceof GitError && /does not have any commits|bad revision/i.test(e.stderr)) return ''
+            throw e
+          }),
+      refsPromise,
+      headHashPromise,
+      headBranchPromise,
+      statusPromise,
+      worktreesPromise,
     ])
     const [stashOut, operation] = await Promise.all([
       this.git(['stash', 'list', `--format=${STASH_FORMAT}`]).catch(() => ''),
@@ -172,7 +247,7 @@ export class GitRepo {
 
     return {
       commits,
-      refs: parseRefs(refsOut).filter((r) => includeRemotes || r.type !== 'remote'),
+      refs: visibleGraphRefs(parseRefs(refsOut), includeRemotes, hideRemoteOnlyBranches),
       headHash,
       headBranch,
       uncommittedCount,
