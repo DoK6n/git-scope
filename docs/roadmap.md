@@ -133,6 +133,26 @@
 
 ---
 
+### 14. 워크트리·서브모듈에서 커밋 메시지 기본값 채우기 `[planned]`
+
+0.6.3에서 squash 머지 뒤 커밋 메시지 기본값을 `MERGE_MSG`에 옮겨 적도록 고쳤다(`seedSquashMergeMessage`). 경로는 `rev-parse --git-path`로 얻으므로 워크트리·서브모듈에서도 **올바른 파일에 정확히 쓴다**. 그런데 그 파일을 읽어 입력칸에 넣는 쪽은 VS Code 내장 git이고, 그쪽이 워크트리에서 읽지 못한다 — `extensions/git/src/git.ts`의 `getMergeMessage()`가 `path.join(repositoryRoot, '.git', 'MERGE_MSG')`로 경로를 조립하는데 워크트리·서브모듈의 `.git`은 디렉토리가 아니라 gitdir 경로가 적힌 파일이라 `ENOTDIR`로 실패하고, `catch`가 이를 "메시지 없음"으로 삼킨다. 결과적으로 GitScope가 제대로 써도 입력칸은 빈 채로 남는다.
+
+- **R-51** 워크트리·서브모듈에서는 `MERGE_MSG` 기록에 더해 **내장 git 익스텐션 API로 입력칸에 직접 넣는다** (`vscode.git` → `getAPI(1)` → `getRepository(root).inputBox.value`). 내장 git이 `MERGE_MSG`를 못 읽는 환경에서도 터미널에서 커밋할 때와 같은 기본 메시지가 뜬다.
+- **R-52** 일반 저장소에서는 직접 주입하지 않는다. 내장 git이 `MERGE_MSG`를 정상적으로 읽으므로 중복 경로가 되고 사용자 입력 보호 규칙과 어긋난다. `.git`이 파일인지 여부(= 워크트리·서브모듈)로 분기한다.
+- **R-53** 이미 입력칸에 사용자가 쓴 내용이 있으면 덮어쓰지 않는다. 0.6.3의 "주석이 아닌 줄이 있으면 유지" 규칙을 입력칸에도 동일하게 적용한다.
+- **R-54** 내장 git이 없거나 비활성(`git.enabled: false`)이거나 API 버전이 맞지 않거나 `getRepository()`가 `null`이면 조용히 넘어간다. 머지 결과 자체에는 영향이 없어야 한다 (0.6.3과 동일한 실패 정책).
+- **R-55** squash 전용이 아니라 **머지 계열 액션 공통**으로 적용한다. 일반 머지(`--no-ff` 포함)·체리픽·리버트도 같은 경로로 기본 메시지가 사라진다.
+- **R-56** 근본 원인은 업스트림에 있으므로 수정 제안을 병행한다. `getMergeMessage()`·`getSquashMessage()`가 이미 익스텐션 내부에 있는 `dotGit.path`를 쓰도록 바꾸는 소규모 변경이며, 반영되면 R-51 우회를 제거할 수 있다.
+
+**미확정**
+
+- 주입 시점: 머지 명령 직후 한 번으로 충분한지, 이후 내장 git이 `commitTemplate`을 빈 값으로 갱신하며 지워버리는지 확인 필요. 워크벤치는 입력칸에 값이 있고 그것이 직전 템플릿과 다르면 덮어쓰지 않으므로(`scmInput.ts`) 한 번으로 충분할 가능성이 높다.
+- `git.showCommitInput: false`로 입력칸을 숨긴 사용자에게는 주입 자체를 건너뛸지.
+- 서브모듈을 GitScope가 어떤 단위로 저장소로 취급하는지(`listRepos`)에 따라 대상 판정 기준이 달라질 수 있다.
+- 같은 경로 조립 버그로 워크트리에서는 내장 git의 `MERGE_HEAD`·`rebase-merge`·`CHERRY_PICK_HEAD` 감지도 실패한다. 13번(R-45)의 상태 판정을 GitScope가 자체적으로 하면 이 영향은 받지 않지만, 내장 git의 context key(`gitMergeInProgress`)에 기대는 UI는 워크트리에서 동작하지 않는다는 점을 전제로 둔다.
+
+---
+
 ## v0.8.0 — 에디터 인라인 blame
 
 ### 12. 라인별 최근 수정자 표시 `[research]`
@@ -165,4 +185,5 @@
 | 10 | 브랜치 뱃지 우클릭 → 해당 브랜치 숨기기 | v0.7.0 | `[draft]` |
 | 11 | 다이얼로그 열릴 때 입력 필드 자동 포커스 | v0.7.0 | `[planned]` |
 | 13 | 충돌 상태 표시 + 중단 버튼 (Uncommitted changes 행) | v0.7.0 | `[planned]` |
+| 14 | 워크트리·서브모듈에서 커밋 메시지 기본값 채우기 | v0.7.0 | `[planned]` |
 | 12 | 에디터 라인별 최근 수정자 표시 | v0.8.0 | `[research]` |
