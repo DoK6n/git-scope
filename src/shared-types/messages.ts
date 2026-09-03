@@ -3,6 +3,7 @@ import type {
   AuthorStatsEntry,
   AuthorStatsPeriod,
   AuthorStatsScope,
+  BranchPullPlan,
   CommitDetails,
   CommitLineStats,
   GraphData,
@@ -155,6 +156,14 @@ export interface RequestMap {
   pullBranch: { params: { repo: string; remote: string; branch: string }; result: ActionResult }
   /** 현재 브랜치의 설정된 upstream과 pull 전략을 그대로 사용 */
   pullCurrent: { params: { repo: string }; result: ActionResult }
+  getBranchPullPlan: {
+    params: { repo: string; branch: string }
+    result: BranchPullPlan
+  }
+  pullBranchWithoutCheckout: {
+    params: { repo: string; branch: string; remote: string; remoteRef: string }
+    result: ActionResult
+  }
   deleteRemoteBranch: {
     params: { repo: string; remote: string; name: string }
     result: ActionResult

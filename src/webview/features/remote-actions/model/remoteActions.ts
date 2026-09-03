@@ -1,7 +1,7 @@
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
 import { t } from '../../../shared/lib'
-import { confirmDialog, formDialog } from '../../../shared/ui'
+import { confirmDialog, errorDialog, formDialog } from '../../../shared/ui'
 
 function repo(): string | null {
   return graphStore.currentRepo()
@@ -57,6 +57,87 @@ export async function pullBranch(remote: string, branch: string): Promise<void> 
   await graphStore.runAction(
     request('pullBranch', { repo: r, remote, branch }),
     t('Pulled {0}', `${remote}/${branch}`),
+  )
+}
+
+/** 로컬 브랜치의 upstream을 현재 checkout/워킹 트리 변경 없이 fast-forward */
+export async function pullLocalBranch(branch: string): Promise<void> {
+  const r = repo()
+  if (!r) return
+
+  let plan
+  try {
+    plan = await request('getBranchPullPlan', { repo: r, branch })
+  } catch (error) {
+    await errorDialog({
+      title: t('Unable to Pull Branch'),
+      message: error instanceof Error ? error.message : String(error),
+    })
+    return
+  }
+
+  if (!plan.upstream) {
+    await errorDialog({
+      title: t('Unable to Pull Branch'),
+      message: t('Branch {0} has no upstream branch.', branch),
+    })
+    return
+  }
+
+  if (plan.isCurrent) {
+    const source = plan.upstream.remoteRef.replace(/^refs\/heads\//, '')
+    await pullBranch(plan.upstream.remote, source)
+    return
+  }
+
+  const counts = t(
+    'Branch {0} is {1} commit(s) ahead and {2} commit(s) behind {3}.',
+    branch,
+    plan.ahead,
+    plan.behind,
+    plan.upstream.displayName,
+  )
+  if (plan.worktreePath) {
+    await errorDialog({
+      title: t('Unable to Pull Branch'),
+      message: `${counts}\n\n${t(
+        'This branch is checked out in worktree {0}. Pull it from that worktree instead.',
+        plan.worktreePath,
+      )}`,
+    })
+    return
+  }
+  if (plan.ahead > 0) {
+    await errorDialog({
+      title: t('Fast-forward Pull Blocked'),
+      message: `${counts}\n\n${t(
+        'The branch is ahead or diverged, so it cannot be updated by fast-forward only.',
+      )}`,
+    })
+    return
+  }
+
+  const confirmed = await confirmDialog({
+    title: t('Pull Branch Without Checkout'),
+    message: `${counts}\n\n${t(
+      'Fast-forward {0} from {1} without changing the current branch or working tree?',
+      branch,
+      plan.upstream.displayName,
+    )}`,
+    confirmLabel: t('Pull Branch'),
+  })
+  if (!confirmed) return
+
+  await graphStore.runAction(
+    request('pullBranchWithoutCheckout', {
+      repo: r,
+      branch,
+      remote: plan.upstream.remote,
+      remoteRef: plan.upstream.remoteRef,
+    }),
+    t('Pulled {0} without checkout', branch),
+    t('Unable to Pull Branch'),
+    true,
   )
 }
 

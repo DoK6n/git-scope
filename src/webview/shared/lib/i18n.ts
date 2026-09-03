@@ -115,6 +115,21 @@ const KO: Record<string, string> = {
   'Fetches {0} into local branch {1} (fast-forward only).':
     '{0} → 로컬 {1} 브랜치로 fetch 합니다 (fast-forward만).',
   'Fetched {0} → {1}': 'fetch {0} → {1} 완료',
+  'Pull Branch…': '브랜치 Pull…',
+  'Unable to Pull Branch': '브랜치를 Pull할 수 없음',
+  'Branch {0} has no upstream branch.': '브랜치 {0}에 upstream 브랜치가 없습니다.',
+  'Branch {0} is {1} commit(s) ahead and {2} commit(s) behind {3}.':
+    '브랜치 {0}은(는) {3}보다 {1}개 커밋 앞서 있고 {2}개 커밋 뒤처져 있습니다.',
+  'This branch is checked out in worktree {0}. Pull it from that worktree instead.':
+    '이 브랜치는 worktree {0}에 체크아웃되어 있습니다. 해당 worktree에서 Pull하세요.',
+  'Fast-forward Pull Blocked': 'Fast-forward Pull 차단됨',
+  'The branch is ahead or diverged, so it cannot be updated by fast-forward only.':
+    '브랜치가 앞서 있거나 갈라져 있어 fast-forward만으로 갱신할 수 없습니다.',
+  'Pull Branch Without Checkout': '체크아웃 없이 브랜치 Pull',
+  'Fast-forward {0} from {1} without changing the current branch or working tree?':
+    '현재 브랜치나 워킹 트리를 바꾸지 않고 {1}에서 {0}을(를) fast-forward할까요?',
+  'Pull Branch': '브랜치 Pull',
+  'Pulled {0} without checkout': '{0}을(를) 체크아웃 없이 Pull 완료',
   'Pushed tag {0}': 'push tag {0} 완료',
 
   // ── merge / rebase / cherry-pick / revert / drop / reword ──

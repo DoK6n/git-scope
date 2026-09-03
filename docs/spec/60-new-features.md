@@ -372,3 +372,24 @@ VS Code 내장 git이 이미 하는 일이지만 두 군데에 구멍이 있다.
 - 버튼을 누르면 현재 브랜치가 설정한 upstream과 pull 전략을 사용해 pull한다. 성공하면 완료 알림을 표시하고 그래프를 갱신한다.
 - 현재 브랜치에 upstream이 없거나 detached HEAD이면 버튼을 비활성화하고, 툴팁으로 upstream이 없어 실행할 수 없음을 알린다.
 - 충돌을 포함해 pull이 실패하면 Git의 오류 출력을 그대로 사용자에게 표시하고, 그래프를 다시 조회해 충돌 상태와 워킹 트리 변경을 즉시 반영한다. 실패한 상태를 임의로 되돌리거나 숨기지 않는다.
+
+## 20. 브랜치 뱃지에서 체크아웃 없이 Pull `[done]`
+
+로컬 브랜치 뱃지의 **Pull Branch…** 액션은 그 브랜치의 설정된 upstream을 사용해 동기화한다. 다른 브랜치를 선택해도 현재 HEAD와 워킹 트리는 바꾸지 않는다.
+
+### 동작
+
+- 현재 체크아웃된 브랜치에서는 기존의 일반 pull 확인·실행 경로를 사용한다.
+- 다른 브랜치에서는 실행 전에 설정된 upstream과 정확한 ahead/behind 수를 보여주고 확인을 받는다.
+- 로컬이 upstream보다 앞서지 않은 경우에만 `git fetch <remote> <upstream-ref>:refs/heads/<local-branch>` 형태의 non-forced fetch로 로컬 ref를 fast-forward한다.
+- upstream이 없거나 없어졌거나, 로컬이 앞서거나 갈라졌거나, 다른 worktree에서 체크아웃된 브랜치이면 ref를 갱신하지 않고 이유를 알린다.
+- 성공·실패 뒤 그래프를 갱신한다. Git이 원격 변경·인증·ref 경합 등을 거부하면 stderr를 그대로 표시한다.
+
+### 안전 규칙
+
+- 원격명과 원격 브랜치명은 브랜치 이름으로 추측하지 않고 `for-each-ref`의 upstream 메타데이터에서 얻는다.
+- 확인 다이얼로그 뒤 상태가 바뀔 수 있으므로 mutation 직전에 upstream, checkout worktree, ahead/behind 상태를 다시 검사한다.
+- merge, rebase, reset, force fetch, 임시 checkout은 사용하지 않는다.
+- upstream이 없는 브랜치에 임의의 `origin/<동명 브랜치>`를 연결하거나 생성하지 않는다.
+
+(출처: GitScope v0.7.0 로드맵 R-23~R-25)

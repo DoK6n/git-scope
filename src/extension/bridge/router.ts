@@ -24,6 +24,7 @@ const READ_ONLY_REQUESTS = new Set<RequestCommand>([
   'getAuthorStats',
   'getCommitComparison',
   'getRemoteCheckoutPlan',
+  'getBranchPullPlan',
   'openDiff',
   'getTagDetails',
   'openScmView',
@@ -538,6 +539,13 @@ export class Router {
         this.getRepo(p.repo).pushBranch(p.name, p.remote, p.setUpstream, p.force),
       pullBranch: (p) => this.getRepo(p.repo).pullBranch(p.remote, p.branch),
       pullCurrent: (p) => this.getRepo(p.repo).pullCurrent(),
+      getBranchPullPlan: (p) => this.getRepo(p.repo).getBranchPullPlan(p.branch),
+      pullBranchWithoutCheckout: (p) =>
+        this.getRepo(p.repo).pullBranchWithoutCheckout(
+          p.branch,
+          p.remote,
+          p.remoteRef,
+        ),
       deleteRemoteBranch: (p) => this.getRepo(p.repo).deleteRemoteBranch(p.remote, p.name),
       fetchIntoLocal: (p) =>
         this.getRepo(p.repo).fetchIntoLocal(p.remote, p.remoteBranch, p.localBranch),

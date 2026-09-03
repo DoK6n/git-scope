@@ -43,4 +43,12 @@ describe('t', () => {
     expect(t('Stashes')).toBe('스태시')
     expect(t('Worktrees')).toBe('워크트리')
   })
+
+  it('체크아웃 없는 브랜치 pull 문구를 번역한다', () => {
+    setLocale('ko')
+    expect(t('Pull Branch…')).toBe('브랜치 Pull…')
+    expect(t('Branch {0} has no upstream branch.', 'feat/local')).toBe(
+      '브랜치 feat/local에 upstream 브랜치가 없습니다.',
+    )
+  })
 })

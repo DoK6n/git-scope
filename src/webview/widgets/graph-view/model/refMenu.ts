@@ -7,6 +7,7 @@ import {
   deleteRemoteBranch,
   fetchIntoLocal,
   pullBranch,
+  pullLocalBranch,
   pushBranch,
   pushTag,
 } from '../../../features/remote-actions'
@@ -14,6 +15,7 @@ import { deleteTag, viewTagDetails } from '../../../features/tag'
 import { worktreeStore } from '../../../features/worktree'
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
+import { t } from '../../../shared/lib'
 import type { MenuItem } from '../../../shared/ui'
 
 const copy = (text: string) => void request('copyToClipboard', { text })
@@ -114,6 +116,7 @@ export function buildRefMenu(ref: GitRef): MenuItem[] {
     )
   }
   items.push({ label: 'Push Branch…', intent: 'change', onClick: () => void pushBranch(ref.name) })
+  items.push({ label: t('Pull Branch…'), intent: 'change', onClick: () => void pullLocalBranch(ref.name) })
   if (!isCheckedOut) {
     items.push({
       label: 'Delete Branch…',

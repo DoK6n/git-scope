@@ -5,6 +5,7 @@ import type {
   AuthorStatsEntry,
   AuthorStatsPeriod,
   AuthorStatsScope,
+  BranchPullPlan,
   Commit,
   CommitDetails,
   CommitLineStats,
@@ -38,6 +39,12 @@ import {
   stripCommitMessageComments,
 } from './parse'
 import { calculateCommitLineStats } from './lineStats'
+import {
+  branchAheadBehindArgs,
+  branchPullMetadataArgs,
+  parseBranchPullMetadata,
+  pullBranchWithoutCheckoutArgs,
+} from './branchPull'
 import {
   aheadBehindArgs,
   createTrackingBranchArgs,
@@ -723,6 +730,91 @@ export class GitRepo {
 
   pullCurrent(): Promise<ActionResult> {
     return this.action(['pull'])
+  }
+
+  async getBranchPullPlan(branch: string): Promise<BranchPullPlan> {
+    const metadata = parseBranchPullMetadata(
+      await this.git(branchPullMetadataArgs(branch)),
+      branch,
+    )
+    if (!metadata) throw new Error(`Local branch "${branch}" does not exist.`)
+
+    const current = await this.git(['symbolic-ref', '--short', '-q', 'HEAD'], [1])
+      .then((value) => value.trim())
+      .catch(() => '')
+    if (!metadata.upstreamRef) {
+      return {
+        upstream: null,
+        ahead: 0,
+        behind: 0,
+        worktreePath: metadata.worktreePath,
+        isCurrent: current === branch,
+      }
+    }
+
+    const counts = parseAheadBehind(
+      await this.git(branchAheadBehindArgs(branch, metadata.upstreamRef)),
+    )
+    return {
+      upstream: {
+        displayName: metadata.upstreamDisplayName!,
+        remote: metadata.remote!,
+        remoteRef: metadata.remoteRef!,
+      },
+      ...counts,
+      worktreePath: metadata.worktreePath,
+      isCurrent: current === branch,
+    }
+  }
+
+  async pullBranchWithoutCheckout(
+    branch: string,
+    expectedRemote: string,
+    expectedRemoteRef: string,
+  ): Promise<ActionResult> {
+    try {
+      // 확인 이후 ref/upstream/worktree 상태가 바뀌었을 수 있으므로 mutation 직전에 재검사한다.
+      const plan = await this.getBranchPullPlan(branch)
+      if (!plan.upstream) {
+        return { ok: false, error: `Branch "${branch}" has no upstream branch.` }
+      }
+      if (
+        plan.upstream.remote !== expectedRemote ||
+        plan.upstream.remoteRef !== expectedRemoteRef
+      ) {
+        return {
+          ok: false,
+          error: `The upstream of branch "${branch}" changed. Review the branch and try again.`,
+        }
+      }
+      if (plan.isCurrent) {
+        return {
+          ok: false,
+          error: `Branch "${branch}" is now checked out in the current worktree. Use the regular Pull action instead.`,
+        }
+      }
+      if (plan.worktreePath) {
+        return {
+          ok: false,
+          error: `Branch "${branch}" is checked out in worktree "${plan.worktreePath}" and cannot be updated without checkout there.`,
+        }
+      }
+      if (plan.ahead > 0) {
+        return {
+          ok: false,
+          error: `Fast-forward pull stopped: branch "${branch}" is ${plan.ahead} ahead and ${plan.behind} behind ${plan.upstream.displayName}. No ref was updated.`,
+        }
+      }
+      return this.action(
+        pullBranchWithoutCheckoutArgs(
+          branch,
+          plan.upstream.remote,
+          plan.upstream.remoteRef,
+        ),
+      )
+    } catch (error) {
+      return this.actionError(error)
+    }
   }
 
   deleteRemoteBranch(remote: string, name: string): Promise<ActionResult> {

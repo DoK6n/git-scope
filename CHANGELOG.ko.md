@@ -19,6 +19,7 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 - 그래프 최상단의 **Uncommitted changes** 행에서 진행 중인 merge, rebase, cherry-pick, revert를 노란 경고 뱃지로 구분하고, 실제 해결이 필요한 파일 수만 붉은 오류 뱃지로 표시하며 행 전체는 물들이지 않습니다. 브랜치 드래그앤드롭을 포함한 merge, rebase, cherry-pick, revert 액션은 실패해도 그래프를 갱신하므로 Git 오류와 함께 작업 상태가 즉시 나타납니다. locale별 툴팁이 있는 아이콘 전용 **중단** 액션은 기존 파괴적 작업 확인 다이얼로그를 거쳐 해당 Git `--abort`를 실행하고, 실패하면 Git 오류 출력을 보여주며 성공하면 그래프를 갱신합니다. 작업 상태 경로는 Git으로 해석하므로 linked worktree와 서브모듈도 지원합니다. 충돌 해결은 VS Code 내장 에디터에 그대로 맡기며 rebase Continue/Skip 컨트롤은 이번 범위에서 제외했습니다.
 - 브랜치 필터에 세션 범위의 **원격 전용 브랜치 숨기기** 토글을 추가했습니다. 같은 이름의 로컬 브랜치가 없는 원격 브랜치를 그래프 히스토리·레퍼런스 뱃지·두 브랜치 목록 보기에서 제거하고, 로컬 브랜치에 대응하는 원격은 모든 remote에서 유지합니다. Show Remote Branches와 함께 동작하며 영향받지 않는 브랜치 선택을 보존하고, 저장소를 전환해도 활성 상태를 유지합니다.
 - Fetch 바로 왼쪽에 **Pull** 버튼을 추가했습니다. 저장소에 설정된 pull 전략을 존중하면서 현재 브랜치를 구성된 upstream에서 pull하고, 성공하면 그래프를 갱신합니다. upstream이 없거나 detached HEAD이면 이유를 설명하는 툴팁과 함께 버튼이 비활성화되며, 충돌 같은 pull 실패는 Git 오류 출력을 가공하지 않고 그대로 보여줍니다.
+- 로컬 브랜치 뱃지에 해당 브랜치의 설정된 upstream을 사용하는 **브랜치 Pull…** 동작을 추가했습니다. 현재 브랜치는 일반 pull 흐름을 따르고, 다른 브랜치는 HEAD나 워킹 트리를 바꾸지 않는 non-forced fetch refspec으로 갱신합니다. upstream 없음, ahead 또는 diverged 상태, 다른 worktree에서 체크아웃된 브랜치는 구체적인 이유와 함께 거부하며, 실행 중 Git 실패의 stderr는 그대로 보여줍니다.
 
 ### Changed
 

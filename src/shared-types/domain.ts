@@ -154,6 +154,25 @@ export interface RemoteCheckoutPlan {
   behind: number
 }
 
+/** 로컬 브랜치를 checkout 없이 pull하기 전의 upstream/분기 상태 */
+export interface BranchPullPlan {
+  upstream: {
+    /** `%(upstream:short)` — 사용자 표시용 */
+    displayName: string
+    /** `%(upstream:remotename)` — fetch 대상 remote */
+    remote: string
+    /** `%(upstream:remoteref)` — fetch source ref */
+    remoteRef: string
+  } | null
+  /** 로컬에만 있는 커밋 수 */
+  ahead: number
+  /** upstream 추적 ref에만 있는 커밋 수 */
+  behind: number
+  /** 어느 worktree에서든 checkout되어 있으면 그 절대 경로 */
+  worktreePath: string | null
+  isCurrent: boolean
+}
+
 /**
  * 파일/폴더 아이콘 — 활성 아이콘 테마에서 해석.
  * svg는 webview URI 문자열, 폰트 기반이면 fontChar+fontId(+색/크기)
