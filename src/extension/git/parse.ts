@@ -167,6 +167,14 @@ export function parseNumstat(output: string): Map<string, NumstatEntry> {
 /** stash list --format 문자열 (LOG_FORMAT + %gd 셀렉터) */
 export const STASH_FORMAT = '%H%x00%gd%x00%P%x00%an%x00%ae%x00%at%x00%ct%x00%s'
 
+/** git이 만드는 "WIP on <branch>: …" / "On <branch>: …" 제목을 표시 정보로 분리한다. */
+export function parseStashSubject(subject: string): { branch: string | null; message: string } {
+  const match = /^(?:WIP on|On) ([^:]+):\s?(.*)$/.exec(subject)
+  return match
+    ? { branch: match[1]!, message: match[2]! }
+    : { branch: null, message: subject }
+}
+
 /** `git stash list --format=STASH_FORMAT` 출력 파싱 */
 export function parseStashList(output: string): StashEntry[] {
   const stashes: StashEntry[] = []
@@ -176,6 +184,7 @@ export function parseStashList(output: string): StashEntry[] {
     if (fields.length < 8) continue
     const parents = fields[2] === '' ? [] : fields[2]!.split(' ')
     if (parents.length === 0) continue
+    const subject = fields.slice(7).join(NUL)
     stashes.push({
       hash: fields[0]!,
       selector: fields[1]!,
@@ -184,7 +193,8 @@ export function parseStashList(output: string): StashEntry[] {
       authorEmail: fields[4]!,
       authorDate: Number(fields[5]),
       commitDate: Number(fields[6]),
-      subject: fields.slice(7).join(NUL),
+      subject,
+      ...parseStashSubject(subject),
     })
   }
   return stashes

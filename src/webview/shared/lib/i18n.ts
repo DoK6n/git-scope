@@ -219,6 +219,16 @@ const KO: Record<string, string> = {
     '베이스 커밋이 어떤 브랜치/태그에서도 도달할 수 없습니다 (브랜치 삭제 또는 rebase). 그래프에는 표시되지 않지만 Apply/Drop은 가능합니다.',
   'Drop all checked stashes': '체크한 스태시 일괄 삭제',
   'Stash working tree changes': '워킹트리 변경사항을 스태시로 저장',
+  'Refresh stashes': '스태시 새로고침',
+  'Close stash panel': '스태시 패널 닫기',
+  'Show changed files': '변경 파일 보기',
+  'No changed files': '변경 파일 없음',
+  'Apply stash': '스태시 적용',
+  'Pop stash': '스태시 적용 후 삭제',
+  'Compare stash': '스태시 비교',
+  'Drop stash': '스태시 삭제',
+  'This orphan stash can only be compared one file at a time below.':
+    '이 고아 스태시는 아래 파일 목록에서 파일별로만 비교할 수 있습니다.',
 
   // ── 작성자 통계 패널 ──
   'Author statistics': '작성자 통계',

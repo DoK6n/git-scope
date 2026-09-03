@@ -9,6 +9,7 @@ import type {
   IconSpec,
   RepoInfo,
   RemoteCheckoutPlan,
+  StashFileChange,
   StashEntry,
   TagDetails,
   Worktree,
@@ -191,6 +192,11 @@ export interface RequestMap {
   fetch: { params: { repo: string; prune: boolean }; result: ActionResult }
   /** 스태시 목록 (스태시 패널용) */
   listStashes: { params: { repo: string }; result: StashEntry[] }
+  /** 스태시에 포함된 변경 파일과 각 파일의 실제 diff 객체 쌍 (행을 펼칠 때 지연 조회) */
+  getStashFiles: {
+    params: { repo: string; selector: string }
+    result: StashFileChange[]
+  }
   listWorktrees: { params: { repo: string }; result: Worktree[] }
   addWorktree: {
     params: {
