@@ -6,6 +6,7 @@ import { graphStore } from '../../../entities/graph'
 import { dropBranchOn, isBranchDrag, startBranchDrag } from '../../../features/branch-dnd'
 import { checkoutBranch, checkoutRemoteBranch } from '../../../features/checkout'
 import { fixupKind, scrollToFixupTarget } from '../../../features/fixup'
+import { ConflictOperationControls } from '../../../features/conflict-operation'
 import { BRANCH_PALETTE, formatDate, shortHash, t } from '../../../shared/lib'
 import { openContextMenu } from '../../../shared/ui'
 import { buildRefMenu } from '../model/refMenu'
@@ -77,6 +78,9 @@ export function CommitRow(props: CommitRowProps) {
         selected: props.selected,
         compared: props.compared,
         uncommitted: props.commit.isUncommitted,
+        'operation-in-progress': Boolean(
+          props.commit.isUncommitted && graphStore.graph()?.operation,
+        ),
         stash: props.commit.stashSelector !== undefined,
         'search-match': props.searchMatch,
         'search-current': props.searchCurrent,
@@ -176,6 +180,9 @@ export function CommitRow(props: CommitRowProps) {
           )}
         </Show>
         <span class="commit-subject">{props.commit.subject}</span>
+        <Show when={props.commit.isUncommitted ? graphStore.graph()?.operation : null}>
+          {(operation) => <ConflictOperationControls operation={operation()} />}
+        </Show>
         <Show when={props.resetErased}>
           <span class="reset-chip">reset</span>
         </Show>

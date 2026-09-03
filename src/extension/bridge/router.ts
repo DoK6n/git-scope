@@ -160,6 +160,10 @@ export class Router {
             name === 'packed-refs' ||
             name.startsWith('refs') ||
             name.endsWith('_HEAD') ||
+            name === 'rebase-merge' ||
+            name.startsWith('rebase-merge/') ||
+            name === 'rebase-apply' ||
+            name.startsWith('rebase-apply/') ||
             name.endsWith('/HEAD') // 다른 worktree의 HEAD 이동 (commondir/worktrees/*/HEAD)
           if (!relevant) return
           // 앱 자신의 변경 요청이 낸 이벤트로 다시 갱신하면 클릭 한 번에 그래프가
@@ -269,6 +273,20 @@ export class Router {
         parts.push(`index:${stat.mtimeMs}`)
       } catch {
         parts.push('index:-')
+      }
+      for (const marker of [
+        'MERGE_HEAD',
+        'rebase-merge',
+        'rebase-apply',
+        'CHERRY_PICK_HEAD',
+        'REVERT_HEAD',
+      ]) {
+        try {
+          const stat = await fs.promises.stat(path.join(dir, marker))
+          parts.push(`${marker}:${stat.mtimeMs}`)
+        } catch {
+          parts.push(`${marker}:-`)
+        }
       }
     }
     const [refs, status] = await Promise.all([
@@ -542,6 +560,7 @@ export class Router {
         }
       },
       reset: (p) => this.getRepo(p.repo).reset(p.to, p.mode),
+      abortOperation: (p) => this.getRepo(p.repo).abortOperation(p.operation),
       fetch: (p) => this.getRepo(p.repo).fetch(p.prune),
       listStashes: (p) => this.getRepo(p.repo).listStashes(),
       getStashFiles: (p) => this.getRepo(p.repo).getStashFiles(p.selector),

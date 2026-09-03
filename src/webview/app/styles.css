@@ -911,6 +911,53 @@ path.graph-line-hit {
   color: var(--vscode-descriptionForeground);
 }
 
+.commit-row.uncommitted.operation-in-progress {
+  background: var(--vscode-inputValidation-warningBackground, rgba(90, 74, 29, 0.7));
+  box-shadow: inset 3px 0 0 var(--vscode-inputValidation-warningBorder, #cca700);
+}
+
+.commit-row.uncommitted.operation-in-progress:hover {
+  background: var(--vscode-list-hoverBackground, rgba(90, 93, 94, 0.31));
+  box-shadow: inset 3px 0 0 var(--vscode-inputValidation-warningBorder, #cca700);
+}
+
+.conflict-operation-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.operation-badge,
+.conflict-count {
+  font-size: 10px;
+  line-height: 16px;
+  padding: 0 6px;
+  border-radius: 8px;
+  border: 1px solid var(--vscode-inputValidation-warningBorder, #cca700);
+  color: var(--vscode-inputValidation-warningForeground, var(--vscode-foreground));
+  font-style: normal;
+}
+
+.operation-badge {
+  font-weight: 600;
+}
+
+.conflict-abort-btn {
+  border: 1px solid var(--vscode-inputValidation-errorBorder, #be1100);
+  border-radius: 3px;
+  padding: 0 7px;
+  height: 20px;
+  background: var(--vscode-inputValidation-errorBackground, #5a1d1d);
+  color: var(--vscode-inputValidation-errorForeground, var(--vscode-foreground));
+  font: inherit;
+  cursor: pointer;
+}
+
+.conflict-abort-btn:hover {
+  background: var(--vscode-button-secondaryHoverBackground, #45494e);
+}
+
 .commit-row.compared {
   background: var(--vscode-list-inactiveSelectionBackground, rgba(255, 255, 255, 0.08));
   outline: 1px dashed var(--vscode-focusBorder, #007acc);

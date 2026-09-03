@@ -214,6 +214,21 @@ export function countPorcelainEntries(output: string): number {
   return count
 }
 
+/** `git status --porcelain -z` 출력에서 unmerged 상태인 파일 수를 센다. */
+export function countUnmergedEntries(output: string): number {
+  const unmerged = new Set(['DD', 'AU', 'UD', 'UA', 'DU', 'AA', 'UU'])
+  let count = 0
+  const parts = output.split(NUL)
+  for (let i = 0; i < parts.length; i++) {
+    const entry = parts[i]
+    if (!entry) continue
+    if (unmerged.has(entry.slice(0, 2))) count++
+    // rename/copy는 다음 NUL 필드가 이전 경로다
+    if (entry.startsWith('R') || entry.startsWith('C')) i++
+  }
+  return count
+}
+
 /**
  * 커밋 메시지 파일(`MERGE_MSG`, `SQUASH_MSG`, `COMMIT_EDITMSG`)에서 주석 줄을 걷어낸다.
  *
