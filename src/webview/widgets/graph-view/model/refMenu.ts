@@ -24,6 +24,7 @@ function dropdownToggleItem(name: string): MenuItem {
   const isSelected = current?.includes(name) ?? false
   return {
     label: isSelected ? 'Unselect in Branches Dropdown' : 'Select in Branches Dropdown',
+    intent: 'read',
     onClick: () => {
       const next = isSelected
         ? (current ?? []).filter((n) => n !== name)
@@ -37,10 +38,10 @@ function dropdownToggleItem(name: string): MenuItem {
 export function buildRefMenu(ref: GitRef): MenuItem[] {
   if (ref.type === 'tag') {
     return [
-      { label: 'View Tag Details', onClick: () => void viewTagDetails(ref.name) },
-      { label: 'Push Tag…', onClick: () => void pushTag(ref.name) },
-      { label: 'Delete Tag…', danger: true, onClick: () => void deleteTag(ref.name) },
-      { label: 'Copy Tag Name', separatorBefore: true, onClick: () => copy(ref.name) },
+      { label: 'View Tag Details', intent: 'read', onClick: () => void viewTagDetails(ref.name) },
+      { label: 'Push Tag…', intent: 'change', onClick: () => void pushTag(ref.name) },
+      { label: 'Delete Tag…', intent: 'change', danger: true, onClick: () => void deleteTag(ref.name) },
+      { label: 'Copy Tag Name', intent: 'read', separatorBefore: true, onClick: () => copy(ref.name) },
     ]
   }
 
@@ -49,31 +50,35 @@ export function buildRefMenu(ref: GitRef): MenuItem[] {
     const branchName = ref.name.slice(remote.length + 1)
     // origin/HEAD 심볼릭 참조는 브랜치 액션 대상이 아니다
     if (branchName === 'HEAD') {
-      return [{ label: 'Copy Ref Name', onClick: () => copy(ref.name) }]
+      return [{ label: 'Copy Ref Name', intent: 'read', onClick: () => copy(ref.name) }]
     }
     return [
       {
         label: 'Checkout as Local Branch…',
+        intent: 'change',
         onClick: () => void checkoutRemoteBranch(ref.name, remote),
       },
       {
         label: 'Create Branch from Here…',
+        intent: 'change',
         onClick: () => void createBranchAt(ref.name, ref.name),
       },
-      { label: 'Merge into Current Branch…', onClick: () => void mergeInto(ref.name) },
-      { label: 'Pull into Current Branch…', onClick: () => void pullBranch(remote, branchName) },
+      { label: 'Merge into Current Branch…', intent: 'change', onClick: () => void mergeInto(ref.name) },
+      { label: 'Pull into Current Branch…', intent: 'change', onClick: () => void pullBranch(remote, branchName) },
       {
         label: 'Fetch into Local Branch…',
+        intent: 'change',
         onClick: () => void fetchIntoLocal(remote, branchName),
       },
       {
         label: 'Delete Remote Branch…',
+        intent: 'change',
         danger: true,
         separatorBefore: true,
         onClick: () => void deleteRemoteBranch(remote, branchName),
       },
       { separatorBefore: true, ...dropdownToggleItem(ref.name) },
-      { label: 'Copy Branch Name', onClick: () => copy(ref.name) },
+      { label: 'Copy Branch Name', intent: 'read', onClick: () => copy(ref.name) },
     ]
   }
 
@@ -82,38 +87,42 @@ export function buildRefMenu(ref: GitRef): MenuItem[] {
   const isWorktree = (graphStore.graph()?.worktreeBranches ?? []).includes(ref.name)
   const items: MenuItem[] = []
   if (!isCheckedOut && !isWorktree) {
-    items.push({ label: 'Checkout Branch', onClick: () => void checkoutBranch(ref.name) })
+    items.push({ label: 'Checkout Branch', intent: 'change', onClick: () => void checkoutBranch(ref.name) })
   }
   if (isWorktree) {
     // worktree에 체크아웃된 브랜치는 checkout 불가(git 제약) → 해당 worktree를 새 창으로
     items.push({
       label: 'Open Worktree in New Window',
+      intent: 'read',
       onClick: () => void worktreeStore.openWorktreeForBranch(ref.name),
     })
   }
   items.push({
     label: 'Create Branch from Here…',
+    intent: 'change',
     onClick: () => void createBranchAt(ref.name, ref.name),
   })
-  items.push({ label: 'Rename Branch…', onClick: () => void renameBranch(ref.name) })
+  items.push({ label: 'Rename Branch…', intent: 'change', onClick: () => void renameBranch(ref.name) })
   if (!isCheckedOut) {
     items.push(
-      { label: 'Merge into Current Branch…', onClick: () => void mergeInto(ref.name) },
+      { label: 'Merge into Current Branch…', intent: 'change', onClick: () => void mergeInto(ref.name) },
       {
         label: 'Rebase Current Branch on Branch…',
+        intent: 'change',
         onClick: () => void rebaseOnto(ref.name, ref.name),
       },
     )
   }
-  items.push({ label: 'Push Branch…', onClick: () => void pushBranch(ref.name) })
+  items.push({ label: 'Push Branch…', intent: 'change', onClick: () => void pushBranch(ref.name) })
   if (!isCheckedOut) {
     items.push({
       label: 'Delete Branch…',
+      intent: 'change',
       danger: true,
       onClick: () => void deleteBranch(ref.name),
     })
   }
   items.push({ separatorBefore: true, ...dropdownToggleItem(ref.name) })
-  items.push({ label: 'Copy Branch Name', onClick: () => copy(ref.name) })
+  items.push({ label: 'Copy Branch Name', intent: 'read', onClick: () => copy(ref.name) })
   return items
 }

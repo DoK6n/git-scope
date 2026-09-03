@@ -1,7 +1,10 @@
 import { createSignal, For, Show } from 'solid-js'
+import { GitIcon } from './icons/GitIcon'
 
 export interface MenuItem {
   label: string
+  /** read = 보기/복사, change = 저장소·표시 상태 변경. danger가 true면 파괴 아이콘이 우선한다. */
+  intent: 'read' | 'change'
   danger?: boolean
   separatorBefore?: boolean
   onClick: () => void
@@ -47,13 +50,27 @@ export function ContextMenuHost() {
                   </Show>
                   <button
                     class="context-menu-item"
-                    classList={{ danger: item.danger }}
+                    classList={{
+                      danger: item.danger,
+                      read: !item.danger && item.intent === 'read',
+                      change: !item.danger && item.intent === 'change',
+                    }}
                     onClick={() => {
                       closeContextMenu()
                       item.onClick()
                     }}
                   >
-                    {item.label}
+                    <span
+                      class="context-menu-icon"
+                      classList={{
+                        danger: item.danger,
+                        read: !item.danger && item.intent === 'read',
+                        change: !item.danger && item.intent === 'change',
+                      }}
+                    >
+                      <GitIcon name={item.danger ? 'danger' : item.intent} size={14} />
+                    </span>
+                    <span>{item.label}</span>
                   </button>
                 </>
               )}
