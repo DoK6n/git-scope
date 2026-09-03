@@ -153,6 +153,8 @@ export interface RequestMap {
     result: ActionResult
   }
   pullBranch: { params: { repo: string; remote: string; branch: string }; result: ActionResult }
+  /** 현재 브랜치의 설정된 upstream과 pull 전략을 그대로 사용 */
+  pullCurrent: { params: { repo: string }; result: ActionResult }
   deleteRemoteBranch: {
     params: { repo: string; remote: string; name: string }
     result: ActionResult

@@ -2,6 +2,7 @@ import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { graphStore } from '../../../entities/graph'
 import { authorStatsStore } from '../../../features/author-stats'
 import { fetchAll, fetchDefault } from '../../../features/fetch'
+import { pullCurrent } from '../../../features/pull'
 import { resetHeadN } from '../../../features/reset'
 import { stashPanelStore } from '../../../features/stash'
 import { timelineStore } from '../../../features/timeline'
@@ -126,6 +127,15 @@ export function Toolbar() {
     if (!filter) return 'Show All'
     if (filter.length === 1) return filter[0]!
     return t('{0} branches', filter.length)
+  }
+
+  const pullTooltip = () => {
+    const graph = graphStore.graph()
+    if (!graph?.headBranch) return t('Cannot pull in detached HEAD state.')
+    const upstream = graph.headUpstream
+    return upstream
+      ? t('Pull current branch from {0}', `${upstream.remote}/${upstream.branch}`)
+      : t('Current branch has no upstream.')
   }
 
   const OptionRow = (p: {
@@ -439,7 +449,16 @@ export function Toolbar() {
           <span>{t('Worktrees')}</span>
         </button>
         <button
-          class="toolbar-btn icon-btn"
+          class="toolbar-btn icon-btn toolbar-pull"
+          data-tip={pullTooltip()}
+          aria-label={pullTooltip()}
+          disabled={!graphStore.graph()?.headUpstream}
+          onClick={() => void pullCurrent()}
+        >
+          <GitIcon name="pull" size={15} />
+        </button>
+        <button
+          class="toolbar-btn icon-btn toolbar-fetch"
           data-tip={t('Fetch — git fetch --all')}
           aria-label={t('Fetch — git fetch --all')}
           onClick={() => void fetchDefault()}

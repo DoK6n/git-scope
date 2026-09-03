@@ -33,6 +33,7 @@ describe('Git toolbar icons', () => {
       'reset',
       'stash',
       'worktree',
+      'pull',
       'fetch',
       'prune',
       'refresh',

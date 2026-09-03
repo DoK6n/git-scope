@@ -141,3 +141,26 @@ describe('authorStatsLogArgs', () => {
     }
   })
 })
+
+describe('GitRepo head upstream', () => {
+  it('그래프 데이터에 현재 브랜치의 upstream을 포함한다', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'git-scope-upstream-'))
+    const git = (...args: string[]) => execFileSync('git', args, { cwd: root, stdio: 'pipe' })
+    try {
+      git('init', '--quiet', '-b', 'main')
+      git('config', 'user.name', 'Test')
+      git('config', 'user.email', 'test@example.com')
+      writeFileSync(join(root, 'README.md'), 'test\n')
+      git('add', 'README.md')
+      git('commit', '--quiet', '-m', 'initial')
+      git('remote', 'add', 'origin', 'https://example.invalid/repo.git')
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD')
+      git('branch', '--set-upstream-to=origin/main', 'main')
+
+      const graph = await new GitRepo(root).getGraph(10, null)
+      expect(graph.headUpstream).toEqual({ remote: 'origin', branch: 'main' })
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+})

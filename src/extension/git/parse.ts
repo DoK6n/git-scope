@@ -1,5 +1,6 @@
 import type {
   AuthorStatsEntry,
+  BranchUpstream,
   Commit,
   FileChange,
   FileChangeStatus,
@@ -71,6 +72,22 @@ export function parseAuthorStats(output: string): AuthorStatsEntry[] {
 
 /** for-each-ref 포맷: refname, 해시, (태그면) 참조 대상 해시. for-each-ref는 %00 문법을 쓴다 */
 export const REF_FORMAT = '%(refname)%00%(objectname)%00%(*objectname)'
+
+/** 현재 브랜치와 upstream 원격/브랜치를 한 번에 읽는 for-each-ref 포맷. */
+export const HEAD_UPSTREAM_FORMAT = '%(HEAD)%00%(upstream:remotename)%00%(upstream:remoteref)'
+
+export function parseHeadUpstream(output: string): BranchUpstream | null {
+  for (const line of output.split('\n')) {
+    const [head, remote, remoteRef] = line.split(NUL)
+    if (head?.trim() !== '*' || !remote || !remoteRef) continue
+    const prefix = 'refs/heads/'
+    return {
+      remote,
+      branch: remoteRef.startsWith(prefix) ? remoteRef.slice(prefix.length) : remoteRef,
+    }
+  }
+  return null
+}
 
 /** `git for-each-ref --format=REF_FORMAT` 출력 파싱 */
 export function parseRefs(output: string): GitRef[] {

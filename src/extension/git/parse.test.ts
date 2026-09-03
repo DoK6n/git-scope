@@ -3,6 +3,7 @@ import {
   countPorcelainEntries,
   parseAuthorStats,
   countUnmergedEntries,
+  parseHeadUpstream,
   parseLog,
   parseNameStatus,
   parseRefs,
@@ -108,6 +109,21 @@ describe('parseRefs', () => {
       { name: 'v1.0.0', hash: 'ccc', type: 'tag' },
       { name: 'v0.1.0-light', hash: 'ddd', type: 'tag' },
     ])
+  })
+})
+
+describe('parseHeadUpstream', () => {
+  it('현재 브랜치 행에서 upstream 원격과 브랜치명을 파싱한다', () => {
+    const out = [
+      [' ', 'origin', 'refs/heads/other'].join(NUL),
+      ['*', 'upstream', 'refs/heads/feature/pull'].join(NUL),
+    ].join('\n')
+    expect(parseHeadUpstream(out)).toEqual({ remote: 'upstream', branch: 'feature/pull' })
+  })
+
+  it('detached HEAD 또는 upstream 미설정이면 null이다', () => {
+    expect(parseHeadUpstream([' ', 'origin', 'refs/heads/main'].join(NUL))).toBeNull()
+    expect(parseHeadUpstream(['*', '', ''].join(NUL))).toBeNull()
   })
 })
 
