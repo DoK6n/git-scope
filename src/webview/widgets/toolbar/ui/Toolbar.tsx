@@ -304,15 +304,30 @@ export function Toolbar() {
                 />
               </div>
               <div class="branch-filter-head">
-                <span
-                  class="toolbar-check"
-                  classList={{ checked: graphStore.showRemotes() }}
-                  title={t('Show remote branches in the graph')}
-                  onClick={() => void graphStore.setShowRemotes(!graphStore.showRemotes())}
-                >
-                  <span class="branch-option-check">✓</span>
-                  Show Remote Branches
-                </span>
+                <div class="branch-filter-scope-toggles">
+                  <span
+                    class="toolbar-check"
+                    classList={{ checked: graphStore.showRemotes() }}
+                    title={t('Show remote branches in the graph')}
+                    onClick={() => void graphStore.setShowRemotes(!graphStore.showRemotes())}
+                  >
+                    <span class="branch-option-check">✓</span>
+                    {t('Show Remote Branches')}
+                  </span>
+                  <span
+                    class="toolbar-check"
+                    classList={{ checked: graphStore.hideRemoteOnlyBranches() }}
+                    title={t('Hide remote branches without a local branch')}
+                    onClick={() =>
+                      void graphStore.setHideRemoteOnlyBranches(
+                        !graphStore.hideRemoteOnlyBranches(),
+                      )
+                    }
+                  >
+                    <span class="branch-option-check">✓</span>
+                    {t('Hide Remote-Only Branches')}
+                  </span>
+                </div>
                 <span class="files-view-toggle">
                   <button
                     class="toolbar-btn"

@@ -354,7 +354,7 @@ body {
   font-size: 12px;
 }
 
-/* 드롭다운 헤더: Show Remote Branches 토글 + Tree/List 뷰 전환 */
+/* 드롭다운 헤더: 원격 표시 범위 토글 + Tree/List 뷰 전환 */
 .branch-filter-head {
   display: flex;
   align-items: center;
@@ -362,6 +362,13 @@ body {
   gap: 10px;
   padding: 5px 8px;
   border-bottom: 1px solid var(--vscode-panel-border, #444);
+}
+
+.branch-filter-scope-toggles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
 }
 
 .branch-filter-head .files-view-toggle {
@@ -378,7 +385,7 @@ body {
   font-size: 12px;
 }
 
-/* Show Remote Branches 토글 — 다른 항목과 같은 ✓ 마크 방식 */
+/* 원격 표시 범위 토글 — 다른 항목과 같은 ✓ 마크 방식 */
 .toolbar-check:hover .branch-option-check {
   visibility: visible;
   opacity: 0.35;
