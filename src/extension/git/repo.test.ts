@@ -80,7 +80,8 @@ describe('원격 전용 브랜치 필터', () => {
 
   it('그래프 조회에서 원격 전용 ref와 그 브랜치에만 있는 커밋을 제외한다', async () => {
     const root = mkdtempSync(join(tmpdir(), 'git-scope-hide-remote-only-'))
-    const git = (args: string[]) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim()
+    const git = (args: string[]) =>
+      execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim()
     try {
       git(['init', '--quiet'])
       git(['config', 'user.name', 'Test User'])
@@ -100,6 +101,95 @@ describe('원격 전용 브랜치 필터', () => {
       expect(graph.refs.map((ref) => ref.name)).toContain('origin/main')
       expect(graph.refs.map((ref) => ref.name)).not.toContain('origin/other')
       expect(graph.commits.map((commit) => commit.hash)).not.toContain(remoteOnly)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('개별 브랜치 숨김', () => {
+  it('Show All에서도 숨긴 ref와 전용 커밋을 revset에서 제외한다', () => {
+    expect(
+      graphRevisionArgs(
+        null,
+        refs,
+        true,
+        false,
+        ['main', 'origin/team/other'],
+        'main',
+      ),
+    ).toEqual([
+      'refs/heads/team/shared',
+      'refs/remotes/origin/main',
+      'refs/remotes/origin/team/shared',
+      'refs/remotes/upstream/main',
+      '--tags',
+    ])
+  })
+
+  it('blocklist가 allowlist보다 우선하고 원격 표시 경계도 지킨다', () => {
+    expect(
+      graphRevisionArgs(
+        ['main', 'team/shared', 'origin/team/other'],
+        refs,
+        true,
+        false,
+        ['team/shared'],
+        'main',
+      ),
+    ).toEqual(['main', 'origin/team/other'])
+    expect(
+      graphRevisionArgs(
+        ['main', 'origin/team/other'],
+        refs,
+        false,
+        false,
+        ['team/shared'],
+        'main',
+      ),
+    ).toEqual(['main'])
+  })
+
+  it('원격 전용 필터는 수동 숨김 전의 전체 로컬 ref를 기준으로 짝을 판단한다', () => {
+    expect(visibleGraphRefs(refs, true, true, ['main']).map((ref) => ref.name)).toEqual([
+      'team/shared',
+      'origin/main',
+      'origin/team/shared',
+      'upstream/main',
+      'origin/HEAD',
+      'v1',
+    ])
+  })
+
+  it('숨긴 브랜치의 전용 커밋과 ref badge를 함께 제외한다', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'git-scope-hidden-branch-'))
+    const git = (...args: string[]) =>
+      execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim()
+    try {
+      git('init', '--quiet', '--initial-branch=main')
+      git('config', 'user.name', 'Test')
+      git('config', 'user.email', 'test@example.com')
+      writeFileSync(join(root, 'base.txt'), 'base\n')
+      git('add', '.')
+      git('commit', '--quiet', '-m', 'base')
+      git('switch', '--quiet', '-c', 'feature/secret')
+      writeFileSync(join(root, 'secret.txt'), 'secret\n')
+      git('add', '.')
+      git('commit', '--quiet', '-m', 'secret only')
+      const secretHash = git('rev-parse', 'HEAD')
+      git('switch', '--quiet', 'main')
+
+      const graph = await new GitRepo(root).getGraph(
+        100,
+        null,
+        true,
+        false,
+        ['feature/secret'],
+      )
+
+      expect(graph.refs.map((ref) => ref.name)).not.toContain('feature/secret')
+      expect(graph.commits.map((commit) => commit.hash)).not.toContain(secretHash)
+      expect(graph.refs.map((ref) => ref.name)).toContain('main')
     } finally {
       rmSync(root, { recursive: true, force: true })
     }

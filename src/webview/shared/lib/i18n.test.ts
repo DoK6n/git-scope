@@ -51,4 +51,12 @@ describe('t', () => {
       '브랜치 feat/local에 upstream 브랜치가 없습니다.',
     )
   })
+
+  it('개별 브랜치 숨김과 복구 문구를 번역한다', () => {
+    setLocale('ko')
+    expect(t('Hide Branch')).toBe('이 브랜치 숨기기')
+    expect(t('Hidden Branches ({0})', 2)).toBe('숨긴 브랜치 (2)')
+    expect(t('Unhide Branch')).toBe('브랜치 숨김 해제')
+    expect(t('Unhide All')).toBe('모두 숨김 해제')
+  })
 })

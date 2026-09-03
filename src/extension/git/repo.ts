@@ -75,24 +75,31 @@ export function authorStatsLogArgs(
   ]
 }
 
-/** 그래프·뱃지·필터 목록에 노출할 refs를 원격 표시 옵션에 맞춰 고른다. */
+/** 그래프·뱃지·필터 목록에 노출할 refs에 범위 규칙과 수동 숨김을 적용한다. */
 export function visibleGraphRefs(
   refs: GitRef[],
   includeRemotes: boolean,
   hideRemoteOnlyBranches: boolean,
+  hiddenBranchNames: string[] = [],
 ): GitRef[] {
-  if (!includeRemotes) return refs.filter((ref) => ref.type !== 'remote')
-  if (!hideRemoteOnlyBranches) return refs
-
   const localBranches = new Set(
     refs.filter((ref) => ref.type === 'head').map((ref) => ref.name),
   )
-  return refs.filter((ref) => {
-    if (ref.type !== 'remote' || !ref.remote) return true
-    // origin/HEAD는 브랜치가 아닌 심볼릭 ref이며 기존 표시 의미를 유지한다.
-    if (ref.name === `${ref.remote}/HEAD`) return true
-    return localBranches.has(ref.name.slice(ref.remote.length + 1))
-  })
+  const hidden = new Set(hiddenBranchNames)
+  return refs
+    .filter((ref) => {
+      if (ref.type !== 'remote') return true
+      if (!includeRemotes) return false
+      if (!hideRemoteOnlyBranches || !ref.remote) return true
+      // origin/HEAD는 브랜치가 아닌 심볼릭 ref이며 기존 표시 의미를 유지한다.
+      if (ref.name === `${ref.remote}/HEAD`) return true
+      return localBranches.has(ref.name.slice(ref.remote.length + 1))
+    })
+    .filter((ref) => {
+      if (ref.type === 'tag') return true
+      if (ref.type === 'remote' && ref.remote && ref.name === `${ref.remote}/HEAD`) return true
+      return !hidden.has(ref.name)
+    })
 }
 
 /** 브랜치 표시 옵션을 실제 git log revision 인자로 변환한다. 빈 배열이면 조회 대상이 없다. */
@@ -101,7 +108,35 @@ export function graphRevisionArgs(
   refs: GitRef[],
   includeRemotes: boolean,
   hideRemoteOnlyBranches: boolean,
+  hiddenBranchNames: string[] = [],
+  headBranch: string | null = null,
 ): string[] {
+  if (hiddenBranchNames.length > 0) {
+    const visible = visibleGraphRefs(
+      refs,
+      includeRemotes,
+      hideRemoteOnlyBranches,
+      hiddenBranchNames,
+    )
+    if (branches !== null) {
+      const visibleNames = new Set(visible.map((ref) => ref.name))
+      return branches.filter((name) => visibleNames.has(name))
+    }
+
+    const revisions = visible
+      .filter(
+        (ref) =>
+          ref.type === 'head' ||
+          (ref.type === 'remote' && ref.remote && ref.name !== `${ref.remote}/HEAD`),
+      )
+      .map((ref) =>
+        ref.type === 'head' ? `refs/heads/${ref.name}` : `refs/remotes/${ref.name}`,
+      )
+    revisions.push('--tags')
+    if (headBranch === null) revisions.push('HEAD')
+    return revisions
+  }
+
   if (branches === null) {
     if (!includeRemotes) return ['--branches', '--tags', 'HEAD']
     if (!hideRemoteOnlyBranches) return ['--branches', '--remotes', '--tags', 'HEAD']
@@ -158,6 +193,7 @@ export class GitRepo {
     branches: string[] | null,
     includeRemotes = true,
     hideRemoteOnlyBranches = false,
+    hiddenBranchNames: string[] = [],
   ): Promise<GraphData> {
     const refsPromise = this.git(['for-each-ref', `--format=${REF_FORMAT}`])
     const headHashPromise = this.git(['rev-parse', 'HEAD'], [128])
@@ -177,8 +213,12 @@ export class GitRepo {
     const worktreesPromise = this.listWorktrees().catch(() => [] as Worktree[])
     // 원격 ref를 선별해야 할 때만 refs를 먼저 기다린다. 기본 경로는 log와 refs를 병렬 조회한다.
     const needsRefAwareRevisions =
-      hideRemoteOnlyBranches || (!includeRemotes && branches !== null)
-    const refsBeforeLog = needsRefAwareRevisions ? await refsPromise : null
+      hideRemoteOnlyBranches ||
+      hiddenBranchNames.length > 0 ||
+      (!includeRemotes && branches !== null)
+    const [refsBeforeLog, headBranchBeforeLog] = needsRefAwareRevisions
+      ? await Promise.all([refsPromise, headBranchPromise])
+      : [null, null]
     const revisions =
       refsBeforeLog === null
         ? branches === null
@@ -189,6 +229,8 @@ export class GitRepo {
             parseRefs(refsBeforeLog),
             includeRemotes,
             hideRemoteOnlyBranches,
+            hiddenBranchNames,
+            headBranchBeforeLog,
           )
     const [logOut, refsOut, headHash, headBranch, headUpstreamOut, statusOut, worktrees] =
       await Promise.all([
@@ -269,7 +311,12 @@ export class GitRepo {
 
     return {
       commits,
-      refs: visibleGraphRefs(parseRefs(refsOut), includeRemotes, hideRemoteOnlyBranches),
+      refs: visibleGraphRefs(
+        parseRefs(refsOut),
+        includeRemotes,
+        hideRemoteOnlyBranches,
+        hiddenBranchNames,
+      ),
       headHash,
       headBranch,
       headUpstream: parseHeadUpstream(headUpstreamOut),

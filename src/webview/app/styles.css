@@ -397,6 +397,52 @@ body {
   margin-right: 0;
 }
 
+.hidden-branches {
+  flex-shrink: 0;
+  max-height: 120px;
+  overflow-y: auto;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--vscode-panel-border, #444);
+  background: var(--vscode-textBlockQuote-background, rgba(127, 127, 127, 0.08));
+}
+
+.hidden-branches-head,
+.hidden-branch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 24px;
+}
+
+.hidden-branches-head {
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.hidden-branch-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hidden-branch-action {
+  flex-shrink: 0;
+  padding: 1px 4px;
+  color: var(--vscode-textLink-foreground);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+}
+
+.hidden-branch-action:hover {
+  text-decoration: underline;
+}
+
 .toolbar-check {
   display: inline-flex;
   align-items: center;

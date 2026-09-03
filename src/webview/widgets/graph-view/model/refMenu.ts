@@ -80,6 +80,7 @@ export function buildRefMenu(ref: GitRef): MenuItem[] {
         onClick: () => void deleteRemoteBranch(remote, branchName),
       },
       { separatorBefore: true, ...dropdownToggleItem(ref.name) },
+      { label: t('Hide Branch'), intent: 'change', onClick: () => void graphStore.hideBranch(ref.name) },
       { label: 'Copy Branch Name', intent: 'read', onClick: () => copy(ref.name) },
     ]
   }
@@ -126,6 +127,7 @@ export function buildRefMenu(ref: GitRef): MenuItem[] {
     })
   }
   items.push({ separatorBefore: true, ...dropdownToggleItem(ref.name) })
+  items.push({ label: t('Hide Branch'), intent: 'change', onClick: () => void graphStore.hideBranch(ref.name) })
   items.push({ label: 'Copy Branch Name', intent: 'read', onClick: () => copy(ref.name) })
   return items
 }

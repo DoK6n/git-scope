@@ -36,6 +36,8 @@ export interface RequestMap {
       includeRemotes: boolean
       /** true면 대응하는 로컬 브랜치가 없는 원격 브랜치를 제외 */
       hideRemoteOnlyBranches: boolean
+      /** 사용자가 현재 저장소에서 직접 숨긴 브랜치 ref 이름 목록 */
+      hiddenBranchNames: string[]
     }
     result: GraphData
   }

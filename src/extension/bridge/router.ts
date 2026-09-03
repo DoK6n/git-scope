@@ -500,6 +500,7 @@ export class Router {
           p.branches,
           p.includeRemotes,
           p.hideRemoteOnlyBranches,
+          p.hiddenBranchNames,
         )
       },
       getCommitDetails: (p) => this.getRepo(p.repo).getCommitDetails(p.hash),

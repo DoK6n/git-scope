@@ -37,6 +37,14 @@ const [branchFilter, setBranchFilter] = createSignal<string[] | null>(null)
 const [showRemotes, setShowRemotesRaw] = createSignal(true)
 /** 대응 로컬 브랜치가 없는 원격 브랜치 숨김 — webview 세션 동안 저장소 전환 후에도 유지 */
 const [hideRemoteOnlyBranches, setHideRemoteOnlyBranchesRaw] = createSignal(false)
+/** 수동 숨김은 이름 충돌을 피하도록 저장소별 세션 blocklist로 보관한다. */
+const [manuallyHiddenBranchNamesByRepo, setManuallyHiddenBranchNamesByRepo] = createSignal<
+  Record<string, string[]>
+>({})
+const hiddenBranchNames = createMemo(() => {
+  const repo = currentRepo()
+  return repo === null ? [] : (manuallyHiddenBranchNamesByRepo()[repo] ?? [])
+})
 const [selectedCommit, setSelectedCommitRaw] = createSignal<string | null>(null)
 /** Ctrl/Cmd+클릭으로 고른 비교 대상 커밋 (selectedCommit과 비교) */
 const [compareWith, setCompareWith] = createSignal<string | null>(null)
@@ -111,6 +119,7 @@ async function refresh(): Promise<void> {
       branches: branchFilter(),
       includeRemotes: showRemotes(),
       hideRemoteOnlyBranches: hideRemoteOnlyBranches(),
+      hiddenBranchNames: hiddenBranchNames(),
     })
     setGraph(data)
     setError(null)
@@ -141,6 +150,31 @@ async function applyBranchFilter(refs: string[] | null): Promise<void> {
   setBranchFilter(refs)
   setMaxCommits(settings().initialLoadCommits)
   await refresh()
+}
+
+async function updateHiddenBranches(update: (current: string[]) => string[]): Promise<void> {
+  const repo = currentRepo()
+  if (repo === null) return
+  setManuallyHiddenBranchNamesByRepo((byRepo) => ({
+    ...byRepo,
+    [repo]: update(byRepo[repo] ?? []),
+  }))
+  setMaxCommits(settings().initialLoadCommits)
+  await refresh()
+}
+
+async function hideBranch(name: string): Promise<void> {
+  if (hiddenBranchNames().includes(name)) return
+  await updateHiddenBranches((current) => [...current, name].sort())
+}
+
+async function unhideBranch(name: string): Promise<void> {
+  await updateHiddenBranches((current) => current.filter((branch) => branch !== name))
+}
+
+async function clearHiddenBranches(): Promise<void> {
+  if (hiddenBranchNames().length === 0) return
+  await updateHiddenBranches(() => [])
 }
 
 /** 원격 브랜치 표시 토글 — 끌 때 필터에 남아 있는 원격 선택도 함께 제거 */
@@ -237,6 +271,10 @@ export const graphStore = {
   error,
   setError,
   branchFilter,
+  hiddenBranchNames,
+  hideBranch,
+  unhideBranch,
+  clearHiddenBranches,
   showRemotes,
   setShowRemotes,
   hideRemoteOnlyBranches,

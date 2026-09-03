@@ -393,3 +393,21 @@ VS Code 내장 git이 이미 하는 일이지만 두 군데에 구멍이 있다.
 - upstream이 없는 브랜치에 임의의 `origin/<동명 브랜치>`를 연결하거나 생성하지 않는다.
 
 (출처: GitScope v0.7.0 로드맵 R-23~R-25)
+
+## 21. 브랜치 뱃지에서 개별 브랜치 숨김 `[done]`
+
+로컬·원격 브랜치 뱃지에서 직접 선택한 브랜치를 현재 저장소의 그래프에서 숨기고, 브랜치 드롭다운에서 안전하게 복구한다.
+
+### 동작
+
+- 로컬·원격 브랜치 뱃지의 컨텍스트 메뉴에 **Hide Branch**를 제공한다. 태그와 `origin/HEAD` 같은 symbolic remote ref에는 제공하지 않는다.
+- 숨긴 브랜치는 Show All 또는 allowlist 선택 상태와 관계없이 Git log revset, ref 뱃지, List/Tree 필터 목록에서 함께 제외한다. allowlist 자체는 유지해 숨김 해제 시 이전 선택 상태를 복원한다.
+- 브랜치 드롭다운은 숨긴 이름과 개수를 표시하고, 개별 **Unhide Branch**와 **Unhide All**을 제공한다.
+- 수동 blocklist는 현재 webview 세션 동안 저장소별로 유지한다. 저장소를 전환하면 해당 저장소의 목록만 적용하고, 돌아오면 이전 목록을 복원한다.
+
+### 원격 전용 숨김과의 조합
+
+- remote-only 판정은 수동 숨김 전 전체 refs의 로컬 대응 관계로 먼저 계산하고, 수동 blocklist를 마지막에 적용한다. 로컬 브랜치를 수동으로 숨겨도 대응 원격 브랜치가 remote-only로 재분류되지 않는다.
+- `origin/HEAD` 같은 symbolic ref는 표시용 badge/ref로 유지하지만 Git log revset 후보에서는 제외해 숨긴 기본 브랜치의 커밋이 우회 유입되지 않게 한다.
+
+상세 필터 명세는 `30-search-filter.md` §30.4.4를 따른다. (출처: GitScope v0.7.0 로드맵 R-32~R-35)

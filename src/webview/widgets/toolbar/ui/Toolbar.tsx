@@ -311,6 +311,33 @@ export function Toolbar() {
                   </button>
                 </span>
               </div>
+              <Show when={graphStore.hiddenBranchNames().length > 0}>
+                <div class="hidden-branches">
+                  <div class="hidden-branches-head">
+                    <span>{t('Hidden Branches ({0})', graphStore.hiddenBranchNames().length)}</span>
+                    <button
+                      class="hidden-branch-action"
+                      onClick={() => void graphStore.clearHiddenBranches()}
+                    >
+                      {t('Unhide All')}
+                    </button>
+                  </div>
+                  <For each={graphStore.hiddenBranchNames()}>
+                    {(name) => (
+                      <div class="hidden-branch-row" title={name}>
+                        <span class="hidden-branch-name">{name}</span>
+                        <button
+                          class="hidden-branch-action"
+                          aria-label={`${t('Unhide Branch')}: ${name}`}
+                          onClick={() => void graphStore.unhideBranch(name)}
+                        >
+                          {t('Unhide Branch')}
+                        </button>
+                      </div>
+                    )}
+                  </For>
+                </div>
+              </Show>
               <div class="branch-filter-list">
                 <OptionRow
                   checked={graphStore.branchFilter() === null}
