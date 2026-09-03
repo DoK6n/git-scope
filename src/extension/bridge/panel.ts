@@ -41,8 +41,30 @@ export class GraphPanel {
   ) {
     panel.webview.html = this.buildHtml(context)
 
-    // .git 변경 감지 → webview에 갱신 신호 (액션·터미널 작업 모두 커버)
+    // .git·워킹트리 변경 감지 → webview에 갱신 신호 (액션·터미널 작업 모두 커버).
+    // 패널이 안 보이는 동안에는 감시 처리를 통째로 건너뛰고(Router.isActive),
+    // 다시 보이는 순간 한 번만 갱신한다 — 보이지도 않는 그래프 때문에 백그라운드에서
+    // git이 계속 도는 것을 막는다.
+    router.isActive = () => panel.visible
     router.onRepoActivity = () => this.post({ kind: 'event', event: 'repoChanged' })
+    let wasVisible = panel.visible
+    panel.onDidChangeViewState(
+      () => {
+        if (panel.visible === wasVisible) return
+        wasVisible = panel.visible
+        if (panel.visible) void router.refreshIfChanged()
+      },
+      undefined,
+      this.disposables,
+    )
+    // 다른 창·터미널에서 작업하다 돌아온 경우 — 숨어 있는 동안 놓친 변경까지 반영
+    vscode.window.onDidChangeWindowState(
+      (state) => {
+        if (state.focused && panel.visible) void router.refreshIfChanged()
+      },
+      undefined,
+      this.disposables,
+    )
 
     panel.webview.onDidReceiveMessage(
       async (message: BridgeRequest) => {
@@ -76,6 +98,7 @@ export class GraphPanel {
     panel.onDidDispose(() => {
       GraphPanel.current = undefined
       router.onRepoActivity = null
+      router.isActive = null
       for (const d of this.disposables) d.dispose()
     })
   }

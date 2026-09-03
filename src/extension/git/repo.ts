@@ -458,22 +458,24 @@ export class GitRepo {
   async listStashes(): Promise<StashEntry[]> {
     const out = await this.git(['stash', 'list', `--format=${STASH_FORMAT}`]).catch(() => '')
     const stashes = parseStashList(out)
-    // 베이스 커밋이 브랜치/태그 어디에서도 도달 불가하면 고아 — 그래프에 표시될 수 없다
-    await Promise.all(
-      stashes.map(async (stash) => {
-        const refs = await this.git([
-          'for-each-ref',
-          '--count=1',
-          '--format=%(refname)',
-          '--contains',
-          stash.baseHash,
-          'refs/heads',
-          'refs/remotes',
-          'refs/tags',
-        ]).catch(() => null)
-        if (refs !== null) stash.isOrphan = refs.trim() === ''
-      }),
-    )
+    if (stashes.length === 0) return stashes
+    // 베이스 커밋이 브랜치/태그 어디에서도 도달 불가하면 고아 — 그래프에 표시될 수 없다.
+    // 스태시마다 조회하면 스태시 수만큼 git 프로세스가 뜨므로 한 번에 판정한다:
+    // `--no-walk`로 조상 추적 없이, 주어진 커밋 중 어떤 ref에서도 도달 불가한 것만 출력된다.
+    const bases = [...new Set(stashes.map((stash) => stash.baseHash))]
+    const unreachable = await this.git([
+      'rev-list',
+      '--no-walk',
+      ...bases,
+      '--not',
+      '--branches',
+      '--remotes',
+      '--tags',
+    ]).catch(() => null)
+    if (unreachable !== null) {
+      const orphans = new Set(unreachable.split('\n').filter((hash) => hash !== ''))
+      for (const stash of stashes) stash.isOrphan = orphans.has(stash.baseHash)
+    }
     return stashes
   }
 

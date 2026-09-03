@@ -42,8 +42,23 @@ export class Router {
   /** 리포의 .git 변경 감지 콜백 — GraphPanel이 주입 (webview에 repoChanged 전달) */
   onRepoActivity: (() => void) | null = null
 
+  /** 그래프가 화면에 보이는지 — GraphPanel이 주입. 안 보이면 감시 처리를 통째로 건너뛴다 */
+  isActive: (() => boolean) | null = null
+
   private watchers = new Map<string, fs.FSWatcher[]>()
   private worktreeWatchers = new Map<string, vscode.FileSystemWatcher>()
+  /** 리포별 gitdir·commondir — 변경 여부를 mtime으로 싸게 판정할 때 쓴다 */
+  private gitDirs = new Map<string, string[]>()
+  /** 마지막으로 그래프를 그린 리포 — 포커스 복귀 시 이 리포만 확인한다 */
+  private activeRepo: string | null = null
+  /** 리포별 마지막 상태 서명(refs·HEAD·index) */
+  private lastSignature = new Map<string, string>()
+  /** 액션 직후 상태 기록이 진행 중인 리포 — 감시 이벤트가 이걸 기다린다 */
+  private stateRecording = new Map<string, Promise<void>>()
+  /** 리포별 `디렉토리 → gitignore 대상인가` 캐시 — 채워지면 무시 대상 이벤트를 git 없이 버린다 */
+  private ignoredDirs = new Map<string, Map<string, boolean>>()
+  /** 리포별 마지막 `git status` 출력 — 실제로 달라졌을 때만 갱신하기 위한 서명 */
+  private lastStatus = new Map<string, string>()
 
   /** 처리 중인 변경 요청 수 / 마지막 변경 완료 시각 — 자기 유발 감시 이벤트 억제용 */
   private runningMutations = 0
@@ -59,6 +74,10 @@ export class Router {
     this.watchers.clear()
     for (const watcher of this.worktreeWatchers.values()) watcher.dispose()
     this.worktreeWatchers.clear()
+    this.lastStatus.clear()
+    this.lastSignature.clear()
+    this.ignoredDirs.clear()
+    this.gitDirs.clear()
   }
 
   /**
@@ -86,6 +105,7 @@ export class Router {
     } catch {
       dirs.add(path.join(root, '.git'))
     }
+    this.gitDirs.set(root, [...dirs])
     const list = this.watchers.get(root)
     if (!list) return
     // 갱신은 최소 2초 간격 — 코드젠·캐시처럼 파일을 연달아 쓰는 도구가 있어도
@@ -101,7 +121,7 @@ export class Router {
         return
       }
       lastFired = Date.now()
-      this.onRepoActivity?.()
+      void this.notifyIfChanged(root)
     }
     let timer: ReturnType<typeof setTimeout> | undefined
     const scheduleActivity = (): void => {
@@ -133,16 +153,20 @@ export class Router {
       }
     }
 
-    // Source Control의 Discard Changes처럼 index를 건드리지 않고 working tree 파일만
-    // 바꾸는 작업도 감지한다. .git은 위의 전용 watcher가 처리하므로 여기서는 제외한다.
-    // gitignore 대상(dist/ 빌드 산출물 등)의 쓰기는 그래프와 무관한데도 매번 갱신을
-    // 일으켜 사실상 무한 리로드가 된다 — 배치로 모아 check-ignore로 걸러낸다.
+    // 워킹트리도 감시한다 — IDE Source Control의 Discard Changes나 터미널 작업처럼
+    // .git을 건드리지 않는 변경도 uncommitted 행에 반영해야 하기 때문이다.
+    // 다만 이벤트 1건의 단가를 0에 가깝게 유지하는 게 핵심이다: 예전에는 배치마다
+    // `git check-ignore`를 띄우고 전체 그래프를 재조회해서, 파일이 많은 저장소에서
+    // 실제 변경이 없는데도 2초마다 git 7~8개가 영구히 도는 상태가 됐다.
+    // 이제 두 개의 게이트를 거친다 — (1) mtime으로 "정말 바뀐 파일인지" 로컬 판정(git 0개),
+    // (2) 통과한 경우에만 status 서명을 비교해 실제로 달라졌을 때만 webview에 알린다.
     const worktreeWatcher = vscode.workspace.createFileSystemWatcher(
       new vscode.RelativePattern(root, '**/*'),
     )
-    const pendingPaths = new Set<string>()
-    let ignoreTimer: ReturnType<typeof setTimeout> | undefined
-    const onWorktreeActivity = (uri: vscode.Uri): void => {
+    const pending = new Map<string, 'touched' | 'deleted'>()
+    let batchTimer: ReturnType<typeof setTimeout> | undefined
+    const onWorktreeEvent = (uri: vscode.Uri, kind: 'touched' | 'deleted'): void => {
+      if (this.isActive?.() === false) return
       const relative = path.relative(root, uri.fsPath)
       if (
         relative === '' ||
@@ -152,39 +176,172 @@ export class Router {
         path.isAbsolute(relative)
       )
         return
-      pendingPaths.add(relative)
-      clearTimeout(ignoreTimer)
-      ignoreTimer = setTimeout(() => {
-        const paths = [...pendingPaths]
-        pendingPaths.clear()
-        void this.allIgnored(root, paths).then((ignored) => {
-          if (!ignored) fireActivity()
-        })
+      pending.set(relative, kind)
+      clearTimeout(batchTimer)
+      batchTimer = setTimeout(() => {
+        const batch = [...pending]
+        pending.clear()
+        void this.onWorktreeBatch(root, batch, fireActivity)
       }, 400)
     }
-    worktreeWatcher.onDidChange(onWorktreeActivity)
-    worktreeWatcher.onDidCreate(onWorktreeActivity)
-    worktreeWatcher.onDidDelete(onWorktreeActivity)
+    worktreeWatcher.onDidChange((uri) => onWorktreeEvent(uri, 'touched'))
+    worktreeWatcher.onDidCreate((uri) => onWorktreeEvent(uri, 'touched'))
+    worktreeWatcher.onDidDelete((uri) => onWorktreeEvent(uri, 'deleted'))
     this.worktreeWatchers.set(root, worktreeWatcher)
   }
 
+  /** 창·패널이 다시 활성화됐을 때의 확인 — 마지막으로 그래프를 그린 리포만 본다 */
+  async refreshIfChanged(): Promise<void> {
+    if (this.activeRepo === null) return
+    await this.notifyIfChanged(this.activeRepo)
+  }
+
   /**
-   * 경로들이 전부 gitignore 대상인지 — 하나라도 무시 대상이 아니면 false.
-   * 판정에 실패하면 갱신하는 쪽(false)이 안전하다.
+   * 모든 감시 경로가 통과하는 단일 게이트 — 리포 상태가 **직전에 알던 것과 다를 때만** 갱신을 알린다.
+   * 앱 자신의 액션이 낸 감시 이벤트는 recordState가 남긴 서명과 같으므로 여기서 걸러진다.
+   * (예전에는 액션 완료 후 800ms 뮤트에만 의존해서, stash처럼 .git과 워킹트리를 함께
+   *  바꾸는 액션은 2초 뒤 워처 이벤트로 그래프가 한 번 더 그려졌다.)
    */
-  private async allIgnored(root: string, paths: string[]): Promise<boolean> {
-    if (paths.length === 0) return true
-    try {
-      const out = await execGit(['check-ignore', '--stdin', '-z'], {
-        cwd: root,
-        stdin: paths.map((p) => `${p}\0`).join(''),
-        allowExitCodes: [1], // 1 = 무시 대상 없음
-      })
-      const ignoredCount = out.split('\0').filter((p) => p !== '').length
-      return ignoredCount === paths.length
-    } catch {
-      return false
+  private async notifyIfChanged(root: string): Promise<void> {
+    if (this.isActive?.() === false) return
+    if (this.runningMutations > 0) return
+    await this.stateRecording.get(root)
+    let changed = false
+    const state = await this.readState(root)
+    for (const [store, value] of [
+      [this.lastSignature, state.signature],
+      [this.lastStatus, state.status],
+    ] as const) {
+      const previous = store.get(root)
+      if (previous !== undefined && previous !== value) changed = true
+      store.set(root, value)
     }
+    if (changed) this.onRepoActivity?.()
+  }
+
+  /** 액션 직후의 상태를 서명으로 남긴다 — 그 액션이 유발한 감시 이벤트의 중복 갱신을 막는다 */
+  private recordState(root: string): void {
+    const recording = this.readState(root).then((state) => {
+      this.lastSignature.set(root, state.signature)
+      this.lastStatus.set(root, state.status)
+    })
+    this.stateRecording.set(root, recording)
+    void recording.finally(() => {
+      if (this.stateRecording.get(root) === recording) this.stateRecording.delete(root)
+    })
+  }
+
+  /**
+   * 리포 상태 읽기 — refs 전체(git 1회), HEAD 내용과 index mtime(파일시스템), 워킹트리 status(git 1회).
+   * refs를 mtime으로 판정하면 `refs/heads/feat/x`처럼 중첩된 ref 갱신이 상위 디렉토리
+   * mtime에 드러나지 않아 fetch·커밋을 놓친다 — 그래서 refs만은 git에 직접 묻는다.
+   */
+  private async readState(root: string): Promise<{ signature: string; status: string }> {
+    const parts: string[] = []
+    for (const dir of this.gitDirs.get(root) ?? [path.join(root, '.git')]) {
+      try {
+        const head = await fs.promises.readFile(path.join(dir, 'HEAD'), 'utf8')
+        parts.push(`HEAD:${head.trim()}`)
+      } catch {
+        parts.push('HEAD:-')
+      }
+      try {
+        const stat = await fs.promises.stat(path.join(dir, 'index'))
+        parts.push(`index:${stat.mtimeMs}`)
+      } catch {
+        parts.push('index:-')
+      }
+    }
+    const [refs, status] = await Promise.all([
+      execGit(['for-each-ref', '--format=%(objectname) %(refname)'], { cwd: root }).catch(
+        () => 'refs:-',
+      ),
+      execGit(['status', '--porcelain', '-z'], { cwd: root }).catch(() => 'status:-'),
+    ])
+    parts.push(refs)
+    return { signature: parts.join('|'), status }
+  }
+
+  /**
+   * 배치에서 gitignore 대상 경로를 걸러낸다 — 빌드 산출물·캐시(`.next`, `dist`, turbopack 등)를
+   * 계속 쓰는 도구가 돌아도 감시 비용이 붙지 않게 한다.
+   *
+   * 판정은 **디렉토리 단위로 캐시**한다: git에서 디렉토리가 제외 대상이면 그 안의 모든 경로도
+   * 제외 대상이므로, `.next/dev/cache/turbopack`을 한 번 판정해두면 그 아래에서 쏟아지는
+   * 이벤트는 git 프로세스 없이 버려진다. 캐시가 채워진 뒤에는 호출당 git 0개.
+   */
+  private async withoutIgnored(
+    root: string,
+    batch: [string, 'touched' | 'deleted'][],
+  ): Promise<[string, 'touched' | 'deleted'][]> {
+    let cache = this.ignoredDirs.get(root)
+    if (!cache) {
+      cache = new Map()
+      this.ignoredDirs.set(root, cache)
+    }
+    // .gitignore가 바뀌면 판정이 뒤집힐 수 있다 — 캐시를 버리고 다시 묻는다
+    if (batch.some(([relative]) => path.basename(relative) === '.gitignore')) cache.clear()
+    // 거대한 트리에서 무한히 자라지 않게 상한을 둔다
+    if (cache.size > 4000) cache.clear()
+
+    const dirOf = (relative: string): string => {
+      const dir = path.dirname(relative)
+      return dir === '.' ? '' : dir
+    }
+    const unknown = [
+      ...new Set(batch.map(([relative]) => dirOf(relative)).filter((d) => d !== '' && !cache.has(d))),
+    ]
+    if (unknown.length > 0) {
+      try {
+        const out = await execGit(['check-ignore', '--stdin', '-z'], {
+          cwd: root,
+          stdin: unknown.map((d) => `${d}\0`).join(''),
+          allowExitCodes: [1], // 1 = 무시 대상 없음
+        })
+        const ignored = new Set(out.split('\0').filter((p) => p !== ''))
+        for (const dir of unknown) cache.set(dir, ignored.has(dir))
+      } catch {
+        // 판정 실패는 캐시하지 않는다 — 이번 배치는 통과시키고 다음에 다시 묻는다
+      }
+    }
+    return batch.filter(([relative]) => cache.get(dirOf(relative)) !== true)
+  }
+
+  /** 워처가 준 경로 중 하나라도 최근에 실제로 바뀌었는지 — git 프로세스 없이 mtime만 본다 */
+  private async batchHasRealChange(
+    root: string,
+    batch: [string, 'touched' | 'deleted'][],
+  ): Promise<boolean> {
+    const now = Date.now()
+    // 한 번에 쏟아지는 경로가 많아도 판정 비용을 상수로 묶는다
+    for (const [relative, kind] of batch.slice(0, 200)) {
+      if (kind === 'deleted') return true
+      try {
+        const stat = await fs.promises.stat(path.join(root, relative))
+        if (stat.isDirectory()) continue
+        if (now - stat.mtimeMs < 10_000) return true
+      } catch {
+        return true // 이벤트 사이에 사라진 파일 — 실제 변경으로 본다
+      }
+    }
+    return false
+  }
+
+  /**
+   * 워킹트리 변경 배치 처리 — 실제 변경이 있고 status 출력까지 달라졌을 때만 갱신을 알린다.
+   * 이미 수정된 파일을 계속 저장하는 경우처럼 status가 그대로면 그래프는 건드리지 않는다.
+   */
+  private async onWorktreeBatch(
+    root: string,
+    batch: [string, 'touched' | 'deleted'][],
+    fireActivity: () => void,
+  ): Promise<void> {
+    if (this.isActive?.() === false) return
+    if (this.runningMutations > 0 || Date.now() - this.lastMutationDone < 800) return
+    const relevant = await this.withoutIgnored(root, batch)
+    if (relevant.length === 0) return
+    if (!(await this.batchHasRealChange(root, relevant))) return
+    fireActivity()
   }
 
   private mapIconUri(spec: IconSpec | null): IconSpec | null {
@@ -263,6 +420,8 @@ export class Router {
       if (mutatesRepo) {
         this.runningMutations--
         this.lastMutationDone = Date.now()
+        const params = request.params as { repo?: unknown }
+        if (typeof params.repo === 'string') this.recordState(params.repo)
       }
     }
   }
@@ -272,7 +431,10 @@ export class Router {
   ): Promise<RequestMap[C]['result']> {
     const handlers: { [K in RequestCommand]: Handler<K> } = {
       listRepos: () => this.listRepos(),
-      getGraph: (p) => this.getRepo(p.repo).getGraph(p.maxCommits, p.branches, p.includeRemotes),
+      getGraph: (p) => {
+        this.activeRepo = p.repo
+        return this.getRepo(p.repo).getGraph(p.maxCommits, p.branches, p.includeRemotes)
+      },
       getCommitDetails: (p) => this.getRepo(p.repo).getCommitDetails(p.hash),
       getCommitComparison: (p) => this.getRepo(p.repo).getComparison(p.fromHash, p.toHash),
       openDiff: (p) => this.openDiff(p),
