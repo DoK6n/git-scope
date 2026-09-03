@@ -25,4 +25,14 @@ describe('t', () => {
       'dev의 커밋 해시가 바뀌고 HEAD가 dev으로 이동합니다.',
     )
   })
+
+  it('타임라인 노출 문구와 개수를 번역한다', () => {
+    setLocale('ko')
+    expect(t('Commit Timeline')).toBe('커밋 타임라인')
+    expect(t('{0} of {1} currently loaded commits', 2, 10)).toBe(
+      '현재 로드된 커밋 10개 중 2개',
+    )
+    expect(t('Timeline period: {0}', '2026-09')).toBe('타임라인 기간: 2026-09')
+    expect(t('Clear')).toBe('지우기')
+  })
 })

@@ -1,9 +1,10 @@
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import type { Commit, GitRef } from '@shared-types/domain'
-import { graphStore } from '../../../entities/graph'
+import { graphStore, layoutGraph } from '../../../entities/graph'
 import type { Segment } from '../../../entities/graph'
 import { computeDragResetPlan, confirmDragReset, dragResetStore } from '../../../features/reset'
 import { searchStore } from '../../../features/search'
+import { filterCommitsByRange, timelineStore } from '../../../features/timeline'
 import { t } from '../../../shared/lib'
 import { CommitRow } from './CommitRow'
 import { DETAILS_H, InlineDetails } from './InlineDetails'
@@ -61,7 +62,21 @@ export function GraphView() {
     onCleanup(() => observer.disconnect())
   })
 
-  const commits = createMemo<Commit[]>(() => graphStore.graph()?.commits ?? [])
+  const allCommits = createMemo<Commit[]>(() => graphStore.graph()?.commits ?? [])
+  const commits = createMemo<Commit[]>(() =>
+    filterCommitsByRange(allCommits(), timelineStore.dateFilter()),
+  )
+  /** 기간 필터 후 행 인덱스를 원본 그래프 인덱스로 역매핑 */
+  const sourceIndices = createMemo(() => {
+    const byHash = new Map(allCommits().map((commit, index) => [commit.hash, index]))
+    return commits().map((commit) => byHash.get(commit.hash) ?? -1)
+  })
+  const displayIndexForSource = (sourceIndex: number): number =>
+    sourceIndices().findIndex((index) => index === sourceIndex)
+  const visibleLayout = createMemo(() => {
+    if (timelineStore.dateFilter() === null) return graphStore.layout()
+    return layoutGraph(commits(), false)
+  })
 
   /** 선택된 커밋의 행 인덱스 — 이 행 바로 아래에 인라인 상세가 열린다 */
   const selectedIndex = createMemo<number | null>(() => {
@@ -75,7 +90,7 @@ export function GraphView() {
   const selectedLine = createMemo<number | null>(() => {
     const index = selectedIndex()
     if (index === null) return null
-    return graphStore.layout()?.rows[index]?.color ?? null
+    return visibleLayout()?.rows[index]?.color ?? null
   })
 
   /** 행 i의 화면 y 오프셋 — 상세 패널 아래 행들은 패널 높이만큼 밀린다 */
@@ -89,7 +104,10 @@ export function GraphView() {
   createEffect(() => {
     const target = searchStore.scrollTarget()
     if (target === null || !containerRef) return
-    containerRef.scrollTop = Math.max(0, rowTop(target) - containerRef.clientHeight / 2)
+    const displayIndex = displayIndexForSource(target)
+    if (displayIndex >= 0) {
+      containerRef.scrollTop = Math.max(0, rowTop(displayIndex) - containerRef.clientHeight / 2)
+    }
     searchStore.consumeScrollTarget()
   })
 
@@ -97,8 +115,17 @@ export function GraphView() {
   createEffect(() => {
     const target = graphStore.scrollTargetRow()
     if (target === null || !containerRef) return
-    containerRef.scrollTop = Math.max(0, rowTop(target) - containerRef.clientHeight / 2)
+    const displayIndex = displayIndexForSource(target)
+    if (displayIndex >= 0) {
+      containerRef.scrollTop = Math.max(0, rowTop(displayIndex) - containerRef.clientHeight / 2)
+    }
     graphStore.consumeScrollTarget()
+  })
+
+  // 타임라인에서 선택한 기간으로 진입하면 결과 첫 행으로 이동한다.
+  createEffect(() => {
+    timelineStore.dateFilter()
+    if (containerRef) containerRef.scrollTop = 0
   })
 
   // ── drag-to-reset (스펙 60-new-features §10) ─────────────────────────
@@ -107,6 +134,7 @@ export function GraphView() {
 
   /** HEAD 커밋(합성 uncommitted 노드 제외)의 행 인덱스 */
   const headRow = createMemo<number | null>(() => {
+    if (timelineStore.dateFilter() !== null) return null
     const head = graphStore.graph()?.headHash
     if (!head) return null
     const idx = commits().findIndex((c) => c.hash === head && !c.isUncommitted)
@@ -263,7 +291,7 @@ export function GraphView() {
   })
 
   const visibleSegments = createMemo(() => {
-    const layout = graphStore.layout()
+    const layout = visibleLayout()
     if (!layout) return []
     const { start, end } = range()
     // MVP: 선형 필터. 대형 리포에서 병목이 되면 row 인덱스 도입
@@ -275,7 +303,7 @@ export function GraphView() {
   const graphWidth = createMemo(() => {
     const manual = columnStore.graphManual()
     if (manual !== null) return manual
-    const lanes = graphStore.layout()?.laneCount ?? 1
+    const lanes = visibleLayout()?.laneCount ?? 1
     return lanes * LANE_W + 8
   })
 
@@ -286,7 +314,10 @@ export function GraphView() {
   const onScroll = (e: Event) => {
     const el = e.currentTarget as HTMLDivElement
     setScrollTop(el.scrollTop)
-    if (el.scrollTop + el.clientHeight > el.scrollHeight - ROW_H * 20) {
+    if (
+      timelineStore.dateFilter() === null &&
+      el.scrollTop + el.clientHeight > el.scrollHeight - ROW_H * 20
+    ) {
       void graphStore.loadMore()
     }
   }
@@ -318,6 +349,17 @@ export function GraphView() {
         '--col-hash-w': `${columnStore.widths().hash}px`,
       }}
     >
+      <Show when={timelineStore.dateFilter()}>
+        {(filter) => (
+          <div class="timeline-filter-bar" role="status">
+            <span>{t('Timeline period: {0}', filter().label)}</span>
+            <span>{t('{0} commits', commits().length)}</span>
+            <button class="toolbar-btn" onClick={() => timelineStore.clearDateFilter()}>
+              {t('Clear')}
+            </button>
+          </div>
+        )}
+      </Show>
       <div class="graph-header">
         <div class="hcell" style={{ width: `${graphWidth()}px` }}>
           Graph
@@ -366,11 +408,11 @@ export function GraphView() {
                   top={rowTop(i)}
                   graphWidth={graphWidth()}
                   refs={refsByHash().get(commit()!.hash) ?? []}
-                  colorIndex={graphStore.layout()?.rows[i]?.color ?? 0}
+                  colorIndex={visibleLayout()?.rows[i]?.color ?? 0}
                   selected={graphStore.selectedCommit() === commit()!.hash}
                   compared={graphStore.compareWith() === commit()!.hash}
-                  searchMatch={searchStore.matchSet().has(i)}
-                  searchCurrent={searchStore.currentRow() === i}
+                  searchMatch={searchStore.matchSet().has(sourceIndices()[i] ?? -1)}
+                  searchCurrent={searchStore.currentRow() === (sourceIndices()[i] ?? -1)}
                   resetDoomed={doomedRows()?.has(i) ?? false}
                   resetErased={erasedSet().has(commit()!.hash)}
                   resetNewHead={resetTargetHash() === commit()!.hash}
@@ -428,7 +470,7 @@ export function GraphView() {
           </For>
           <For each={visibleIndices()}>
             {(i) => {
-              const row = () => graphStore.layout()?.rows[i]
+              const row = () => visibleLayout()?.rows[i]
               const commit = () => commits()[i]
               return (
                 <Show when={row() && commit()}>

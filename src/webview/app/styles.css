@@ -73,6 +73,23 @@ body {
   flex: 1 1 0;
 }
 
+.timeline-mode-toggle,
+.timeline-unit-toggle {
+  display: inline-flex;
+}
+
+.timeline-mode-toggle .toolbar-btn:first-child,
+.timeline-unit-toggle .toolbar-btn:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.timeline-mode-toggle .toolbar-btn:last-child,
+.timeline-unit-toggle .toolbar-btn:last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
 .toolbar-right {
   justify-content: flex-end;
 }
@@ -661,6 +678,149 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
+}
+
+/* ── 커밋 타임라인 ─────────────────────────────────── */
+.timeline-view {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 18px 20px;
+}
+
+.timeline-controls {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.timeline-controls h2 {
+  margin: 0 0 3px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.timeline-scope {
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+}
+
+.timeline-control-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.timeline-control-group label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+}
+
+.timeline-control-group select {
+  width: min(320px, 38vw);
+  height: 25px;
+  padding: 2px 22px 2px 7px;
+  color: var(--vscode-dropdown-foreground);
+  background: var(--vscode-dropdown-background);
+  border: 1px solid var(--vscode-dropdown-border, transparent);
+  font: inherit;
+}
+
+.timeline-chart-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--vscode-panel-border, #444);
+  background: var(--vscode-editor-background);
+}
+
+.timeline-chart {
+  display: block;
+  color: var(--vscode-descriptionForeground);
+}
+
+.timeline-axis,
+.timeline-empty-mark {
+  stroke: var(--vscode-panel-border, #666);
+}
+
+.timeline-axis-label,
+.timeline-bucket-label {
+  fill: var(--vscode-descriptionForeground);
+  font-size: 10px;
+}
+
+.timeline-bar {
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.timeline-bucket:hover .timeline-bar,
+.timeline-bucket:focus .timeline-bar {
+  opacity: 1;
+  stroke: var(--vscode-foreground);
+  stroke-width: 1;
+}
+
+.timeline-bucket:focus {
+  outline: none;
+}
+
+.timeline-bucket.empty {
+  cursor: default;
+}
+
+.timeline-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 14px;
+  margin-top: 12px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+}
+
+.timeline-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.timeline-legend-swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+.timeline-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 31px;
+  padding: 3px 10px;
+  color: var(--vscode-foreground);
+  background: var(--vscode-inputValidation-infoBackground, #063b49);
+  border-bottom: 1px solid var(--vscode-inputValidation-infoBorder, #007acc);
+  font-size: 11px;
+}
+
+.timeline-filter-bar .toolbar-btn {
+  margin-left: auto;
+  padding-block: 2px;
+}
+
+@media (max-width: 700px) {
+  .timeline-controls,
+  .timeline-control-group {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .timeline-control-group select {
+    width: 100%;
+  }
 }
 
 .graph-canvas {

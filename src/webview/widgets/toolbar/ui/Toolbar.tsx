@@ -4,6 +4,7 @@ import { authorStatsStore } from '../../../features/author-stats'
 import { fetchAll, fetchDefault } from '../../../features/fetch'
 import { resetHeadN } from '../../../features/reset'
 import { stashPanelStore } from '../../../features/stash'
+import { timelineStore } from '../../../features/timeline'
 import { worktreeStore } from '../../../features/worktree'
 import { makeMatcher, t } from '../../../shared/lib'
 import { branchLeafName, buildBranchTree, leafBranches } from '../lib/branchTree'
@@ -395,6 +396,23 @@ export function Toolbar() {
               </div>
             </div>
           </Show>
+        </div>
+
+        <div class="timeline-mode-toggle" role="group" aria-label={t('View mode')}>
+          <button
+            class="toolbar-btn"
+            classList={{ primary: timelineStore.viewMode() === 'graph' }}
+            onClick={() => timelineStore.setViewMode('graph')}
+          >
+            {t('Graph')}
+          </button>
+          <button
+            class="toolbar-btn"
+            classList={{ primary: timelineStore.viewMode() === 'timeline' }}
+            onClick={() => timelineStore.setViewMode('timeline')}
+          >
+            {t('Timeline')}
+          </button>
         </div>
 
       </div>
