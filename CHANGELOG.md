@@ -4,6 +4,16 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed the Source Control commit message box staying empty after a merge-family action inside a **linked worktree or a submodule**. VS Code's built-in git builds the path as `<root>/.git/MERGE_MSG`, but in those repositories `.git` is not a directory — it is a file holding the path to the real git directory — so the read fails with `ENOTDIR` and is silently treated as "no message". Git Scope now resolves the path with `rev-parse --git-path` and writes the default message straight into the Source Control input for those repositories, so `merge`, `cherry-pick`, `revert` and `pull` all offer the same default message a terminal `git commit` would. Ordinary repositories are untouched, since the built-in git reads them correctly. A message already being written is never overwritten, and failing to fill it in never affects the outcome of the action itself.
+
+## [0.6.3] - 2026-09-03
+
+### Fixed
+
+- Fixed the Source Control commit message box being empty after a **squash merge** from the graph. Git writes the default message for an ordinary merge to `MERGE_MSG` but puts a squash merge's summary in `SQUASH_MSG`, and the Source Control input reads only `MERGE_MSG` (on a conflict it holds nothing but the conflicted-file comments). The box now shows the same default message `git commit` would offer in a terminal. Conflict comments are preserved, and a message already being written is never overwritten.
+
 ## [0.6.2] - 2026-09-03
 
 ### Fixed

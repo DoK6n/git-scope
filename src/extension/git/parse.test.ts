@@ -5,6 +5,7 @@ import {
   parseNameStatus,
   parseRefs,
   parseWorktrees,
+  stripCommitMessageComments,
 } from './parse'
 
 const NUL = '\0'
@@ -175,5 +176,41 @@ describe('parseWorktrees', () => {
       { path: '/repo-wt', head: 'bbb', branch: 'feature/x', isMain: false, locked: false },
       { path: '/repo-detached', head: 'ccc', branch: null, isMain: false, locked: false },
     ])
+  })
+})
+
+describe('stripCommitMessageComments', () => {
+  it('충돌 머지의 MERGE_MSG에서 제목만 남긴다', () => {
+    // git merge 충돌 시 실제로 기록되는 내용
+    const raw = "Merge branch 'feature'\n\n# Conflicts:\n#\tsrc/app.ts\n#\tsrc/util.ts\n"
+    expect(stripCommitMessageComments(raw)).toBe("Merge branch 'feature'")
+  })
+
+  it('squash 머지의 SQUASH_MSG 본문을 보존한다', () => {
+    const raw = [
+      'Squashed commit of the following:',
+      '',
+      'commit 7174b92b484da667dab464d9dffdc4887612e8d4',
+      'Author: Kim Dokyun <dokyun@example.com>',
+      '',
+      '    refactor: 응답에서 필요한 필드만 추출',
+      '',
+    ].join('\n')
+    const result = stripCommitMessageComments(raw)
+    expect(result.startsWith('Squashed commit of the following:')).toBe(true)
+    expect(result).toContain('refactor: 응답에서 필요한 필드만 추출')
+  })
+
+  it('주석만 있는 파일은 빈 문자열이 된다 — squash 충돌 시의 MERGE_MSG', () => {
+    expect(stripCommitMessageComments('\n# Conflicts:\n#\tuser.srv.ts\n')).toBe('')
+  })
+
+  it('들여쓴 주석도 제거하지만 본문의 # 는 남긴다', () => {
+    expect(stripCommitMessageComments('  # 주석\nfix: #123 처리\n')).toBe('fix: #123 처리')
+  })
+
+  it('빈 입력은 빈 문자열', () => {
+    expect(stripCommitMessageComments('')).toBe('')
+    expect(stripCommitMessageComments('\n\n  \n')).toBe('')
   })
 })

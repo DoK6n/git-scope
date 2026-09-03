@@ -7,6 +7,7 @@ import { AvatarService } from '../git/avatars'
 import { EMPTY_TREE_HASH, GitRepo } from '../git/repo'
 import { execGit } from '../git/exec'
 import { makeGitUri } from '../git/contentProvider'
+import { seedScmCommitMessage } from '../git/scmInput'
 import type { FileIconService } from '../icons/fileIcons'
 import type { IconSpec } from '@shared-types/domain'
 import { sendActionEvent } from '../telemetry'
@@ -31,6 +32,20 @@ const READ_ONLY_REQUESTS = new Set<RequestCommand>([
   'notify',
   'copyToClipboard',
   'openFile',
+])
+
+/**
+ * 충돌로 멈출 수 있어서 커밋 메시지 기본값이 필요한 액션들.
+ *
+ * 이 액션 뒤에는 git이 `MERGE_MSG`(또는 `SQUASH_MSG`)에 기본 메시지를 남긴다. 내장 git이
+ * 그 파일을 못 읽는 저장소에서는 GitScope가 소스 제어 입력칸에 직접 넣어준다.
+ */
+const MERGE_LIKE_REQUESTS = new Set<RequestCommand>([
+  'merge',
+  'mergeBranchInto',
+  'cherryPick',
+  'revert',
+  'pullBranch',
 ])
 
 /** webview 요청을 GitRepo/VS Code API 호출로 라우팅한다 */
@@ -412,6 +427,10 @@ export class Router {
             : true
         sendActionEvent(request.command, ok, Date.now() - started)
       }
+      if (MERGE_LIKE_REQUESTS.has(request.command)) {
+        const params = request.params as { repo?: unknown }
+        if (typeof params.repo === 'string') await this.seedCommitMessage(params.repo)
+      }
       return result
     } catch (e) {
       if (mutatesRepo) sendActionEvent(request.command, false, Date.now() - started)
@@ -423,6 +442,25 @@ export class Router {
         const params = request.params as { repo?: unknown }
         if (typeof params.repo === 'string') this.recordState(params.repo)
       }
+    }
+  }
+
+  /**
+   * 충돌로 멈춘 머지 계열 액션 뒤에 소스 제어 커밋 메시지 입력칸을 채운다.
+   *
+   * 일반 저장소에서는 내장 git이 `MERGE_MSG`를 읽어 알아서 채우므로 아무것도 하지 않는다.
+   * worktree·서브모듈처럼 `.git`이 파일인 저장소에서만 개입한다 — 내장 git이 경로를
+   * `<root>/.git/MERGE_MSG`로 조립해 읽지 못하기 때문에(`ENOTDIR`) 입력칸이 빈 채로 남는다.
+   */
+  private async seedCommitMessage(root: string): Promise<void> {
+    try {
+      const repo = this.getRepo(root)
+      if (!(await repo.usesGitDirFile())) return
+      const message = await repo.readPendingCommitMessage()
+      if (message === null) return
+      await seedScmCommitMessage(root, message)
+    } catch {
+      // 기본 메시지를 못 채워도 액션 결과에는 영향이 없다
     }
   }
 

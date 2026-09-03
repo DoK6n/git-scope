@@ -165,3 +165,35 @@ GitScope가 원본 Git Graph 대비 추가로 제공하는 신규 기능의 명�
 - root 커밋까지 전부 지우는 드래그는 허용하지 않는다 (타겟 부모가 없음 — §1 undo와 동일 제약)
 - 점 mousedown이 기존 행 클릭(상세뷰 토글)·뱃지 드래그(§7)와 충돌하지 않아야 한다: 일정 거리(4px) 이상 세로 이동 시에만 드래그로 판정, 그 전에 mouseup이면 일반 클릭으로 처리
 - stash 노드는 first-parent 체인에 나타나지 않으므로 자연히 제외된다
+
+## 11. 머지 계열 액션 후 커밋 메시지 기본값 채우기 `[done]`
+
+원본에는 없는 보완 동작. 그래프에서 머지·체리픽·리버트·pull을 실행해 충돌로 멈췄을 때, 소스 제어 커밋 메시지 입력칸에 터미널에서 `git commit`을 했을 때와 같은 기본 메시지가 뜨게 한다.
+
+VS Code 내장 git이 이미 하는 일이지만 두 군데에 구멍이 있다.
+
+| 구멍 | 원인 | 대응 |
+|---|---|---|
+| squash 머지 | 내장 git의 입력칸은 `MERGE_MSG`를 읽는데 squash 요약은 `SQUASH_MSG`에 기록된다. 충돌까지 나면 `MERGE_MSG`에는 `# Conflicts:` 주석만 남는다 | `SQUASH_MSG` 내용을 `MERGE_MSG`로 옮겨 적는다 |
+| worktree · 서브모듈 | 내장 git이 경로를 `<root>/.git/MERGE_MSG`로 조립한다. 이 저장소들의 `.git`은 디렉토리가 아니라 gitdir 경로가 적힌 파일이라 `ENOTDIR`로 실패하고, 내장 git은 이를 "메시지 없음"으로 처리한다 | GitScope가 입력칸에 직접 값을 넣는다 |
+
+### 동작
+
+- 대상 액션: `merge`(일반·`--no-ff`·`--squash`), `mergeBranchInto`, `cherryPick`, `revert`, `pullBranch`
+- squash 머지 직후 `SQUASH_MSG` → `MERGE_MSG` 이관. `MERGE_MSG`에 주석이 아닌 줄이 이미 있으면 사용자나 git이 쓴 메시지이므로 덮어쓰지 않고, 충돌 파일 주석은 뒤에 그대로 붙여 보존한다
+- `<root>/.git`이 디렉토리가 **아닌** 저장소에서만 입력칸에 직접 주입한다. 일반 저장소는 내장 git이 정상적으로 읽으므로 개입하지 않는다
+- 주입할 메시지는 내장 git과 같은 우선순위(`MERGE_MSG` → `SQUASH_MSG`)로 읽고 같은 방식으로 주석 줄을 걷어낸다. 걷어낸 결과가 비면 넣지 않는다
+- 입력칸에 주석이 아닌 줄이 이미 있으면 덮어쓰지 않는다
+
+### 규칙
+
+- `.git` 하위 파일 경로는 **항상 `rev-parse --git-path`로 얻는다.** `<root>/.git/<name>` 조립은 worktree·서브모듈·`--separate-git-dir` 저장소에서 깨진다 — 내장 git의 버그가 바로 이것이다
+- 입력칸 주입은 내장 git 익스텐션의 공개 API(`vscode.git` → `getAPI(1)` → `getRepository().inputBox`)를 쓴다. 타입은 npm에 배포되지 않으므로 필요한 부분만 직접 선언한다
+- 내장 git이 없거나 비활성(`git.enabled: false`)이거나 API 버전이 맞지 않으면 조용히 넘어간다. **기본 메시지를 못 채워도 액션 결과에는 영향이 없어야 한다**
+- `core.commentChar`는 지원하지 않는다 — 기본값 `#`만 주석으로 본다. 내장 git도 같은 제약이라 동작을 일치시킨다
+- `commit.template`은 다루지 않는다. 내장 git이 이 경로와 무관하게 항상 읽는다
+
+### 비목표
+
+- 내장 git의 경로 조립 버그 자체를 고치는 것은 업스트림 몫이다. 반영되면 이 항목의 주입 경로는 제거할 수 있다
+- 같은 버그로 worktree에서는 내장 git의 `MERGE_HEAD`·`rebase-merge`·`CHERRY_PICK_HEAD` 감지도 실패한다. 따라서 `gitMergeInProgress` 같은 내장 git context key에 의존하는 UI는 만들지 않는다 — 진행 중 작업 판정은 GitScope가 자체적으로 한다
