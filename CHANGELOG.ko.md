@@ -4,6 +4,10 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
+### Fixed
+
+- 그래프에서 **squash 머지**를 한 뒤 소스 제어의 커밋 메시지 칸이 비어 있던 문제를 고쳤습니다. git은 일반 머지의 기본 메시지를 `MERGE_MSG`에 쓰지만 squash 머지는 `SQUASH_MSG`에 쓰는데, IDE의 소스 제어 입력칸은 `MERGE_MSG`만 읽습니다(충돌이 나면 충돌 파일 주석만 들어갑니다). 이제 squash 머지 후 터미널에서 `git commit` 했을 때와 같은 기본 메시지가 입력칸에 뜹니다. 충돌 파일 주석은 그대로 유지되고, 이미 작성 중인 메시지가 있으면 덮어쓰지 않습니다.
+
 ## [0.6.2] - 2026-09-03
 
 ### Fixed

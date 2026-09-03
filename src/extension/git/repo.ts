@@ -1,3 +1,5 @@
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import type {
   ActionResult,
   Commit,
@@ -209,12 +211,46 @@ export class GitRepo {
     return this.action(['branch', '-m', oldName, newName])
   }
 
-  merge(target: string, noFf: boolean, squash: boolean): Promise<ActionResult> {
+  async merge(target: string, noFf: boolean, squash: boolean): Promise<ActionResult> {
     const args = ['merge']
     if (squash) args.push('--squash')
     else if (noFf) args.push('--no-ff')
     args.push(target)
-    return this.action(args)
+    const result = await this.action(args)
+    if (squash) await this.seedSquashMergeMessage()
+    return result
+  }
+
+  /**
+   * squash 머지 뒤 커밋 메시지 기본값을 채운다.
+   *
+   * git은 일반 머지의 기본 메시지를 `MERGE_MSG`에 쓰지만, squash 머지는 `SQUASH_MSG`에 쓴다.
+   * `git commit`은 둘 다 알아서 읽는 반면 IDE의 소스 제어 입력칸은 `MERGE_MSG`만 읽기 때문에,
+   * 그래프에서 squash 머지를 하면 커밋 메시지 칸이 빈 채로 남는다(충돌이 나면 `MERGE_MSG`에
+   * 충돌 파일 주석만 들어간다). 터미널에서 커밋할 때와 같은 기본값이 뜨도록 옮겨 적는다.
+   */
+  private async seedSquashMergeMessage(): Promise<void> {
+    try {
+      // --git-path는 worktree·서브모듈처럼 .git이 디렉토리가 아닌 경우도 올바른 경로를 준다
+      const out = await this.git(['rev-parse', '--git-path', 'SQUASH_MSG', '--git-path', 'MERGE_MSG'])
+      const [squashPath, mergePath] = out.trim().split('\n')
+      if (squashPath === undefined || mergePath === undefined) return
+      const squashMessage = await fs.promises.readFile(path.resolve(this.root, squashPath), 'utf8')
+      if (squashMessage.trim() === '') return
+      const existing = await fs.promises
+        .readFile(path.resolve(this.root, mergePath), 'utf8')
+        .catch(() => '')
+      // 주석이 아닌 줄이 이미 있으면 사용자나 git이 쓴 메시지다 — 덮어쓰지 않는다
+      const hasMessage = existing
+        .split('\n')
+        .some((line) => line.trim() !== '' && !line.startsWith('#'))
+      if (hasMessage) return
+      const merged =
+        existing.trim() === '' ? squashMessage : `${squashMessage.trimEnd()}\n\n${existing}`
+      await fs.promises.writeFile(path.resolve(this.root, mergePath), merged)
+    } catch {
+      // 기본 메시지를 못 채워도 머지 자체에는 영향이 없다
+    }
   }
 
   createTag(name: string, at: string, message: string | null): Promise<ActionResult> {
