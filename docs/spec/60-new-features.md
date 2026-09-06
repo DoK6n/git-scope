@@ -314,7 +314,7 @@ VS Code 내장 git이 이미 하는 일이지만 두 군데에 구멍이 있다.
 
 - 진행 중인 작업이 있으면 `Uncommitted changes` 행에 작업 종류를 `merging` / `rebasing` / `cherry-picking` / `reverting` 뱃지로 표시한다.
 - 해결되지 않은 파일이 있으면 뱃지 옆에 충돌 파일 개수를 표시한다.
-- 작업·충돌 뱃지는 오류 상태임을 알 수 있는 붉은 계열로 표시하되, 행 전체의 배경과 왼쪽 강조는 평소 uncommitted changes 행과 동일하게 유지한다.
+- 작업 종류 뱃지는 진행 중 상태를 나타내는 노란 경고 계열로 표시하고, 실제 해결이 필요한 충돌 수 뱃지만 붉은 오류 계열로 표시한다. 행 전체의 배경과 왼쪽 강조는 평소 uncommitted changes 행과 동일하게 유지한다.
 - 작업 상태가 없으면 기존 uncommitted changes 행의 표시와 동작을 그대로 유지한다.
 - 그래프에서 merge·rebase·cherry-pick·revert가 충돌로 실패하면 Git 오류와 동시에 그래프를 다시 조회해 작업 종류와 충돌 수를 창 재오픈 없이 즉시 표시한다. 브랜치 drag-and-drop의 merge·rebase도 동일하다.
 

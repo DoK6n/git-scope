@@ -10,18 +10,33 @@ function rule(selector: string): string {
   return styles.slice(start, end + 1)
 }
 
+function lastRule(selector: string): string {
+  const start = styles.lastIndexOf(selector)
+  if (start < 0) return ''
+  const end = styles.indexOf('}', start)
+  return styles.slice(start, end + 1)
+}
+
 describe('conflict operation styles', () => {
   it('작업 진행 행 전체에 별도 배경이나 좌측 강조를 적용하지 않는다', () => {
     expect(styles).not.toContain('.commit-row.uncommitted.operation-in-progress {')
     expect(styles).not.toContain('.commit-row.uncommitted.operation-in-progress:hover')
   })
 
-  it('작업·충돌 뱃지는 VS Code error theme 색상을 사용한다', () => {
-    const badges = rule('.operation-badge,\n.conflict-count')
-    expect(badges).toContain('--vscode-inputValidation-errorBorder')
-    expect(badges).toContain('--vscode-inputValidation-errorBackground')
-    expect(badges).toContain('--vscode-inputValidation-errorForeground')
-    expect(badges).not.toContain('--vscode-inputValidation-warning')
+  it('작업 종류 뱃지는 VS Code warning theme 색상을 사용한다', () => {
+    const operation = rule('.operation-badge {')
+    expect(operation).toContain('--vscode-inputValidation-warningBorder')
+    expect(operation).toContain('--vscode-inputValidation-warningBackground')
+    expect(operation).toContain('--vscode-inputValidation-warningForeground')
+    expect(operation).not.toContain('--vscode-inputValidation-error')
+  })
+
+  it('충돌 수 뱃지는 VS Code error theme 색상을 사용한다', () => {
+    const conflict = lastRule('.conflict-count {')
+    expect(conflict).toContain('--vscode-inputValidation-errorBorder')
+    expect(conflict).toContain('--vscode-inputValidation-errorBackground')
+    expect(conflict).toContain('--vscode-inputValidation-errorForeground')
+    expect(conflict).not.toContain('--vscode-inputValidation-warning')
   })
 
   it('Abort는 정사각형 icon-only 버튼 레이아웃이다', () => {

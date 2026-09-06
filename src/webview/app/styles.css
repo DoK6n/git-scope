@@ -955,14 +955,20 @@ path.graph-line-hit {
   line-height: 16px;
   padding: 0 6px;
   border-radius: 8px;
-  border: 1px solid var(--vscode-inputValidation-errorBorder, #be1100);
-  background: var(--vscode-inputValidation-errorBackground, #5a1d1d);
-  color: var(--vscode-inputValidation-errorForeground, var(--vscode-foreground, #f48771));
   font-style: normal;
 }
 
 .operation-badge {
+  border: 1px solid var(--vscode-inputValidation-warningBorder, #cca700);
+  background: var(--vscode-inputValidation-warningBackground, #5a4a1d);
+  color: var(--vscode-inputValidation-warningForeground, var(--vscode-foreground, #f0d75a));
   font-weight: 600;
+}
+
+.conflict-count {
+  border: 1px solid var(--vscode-inputValidation-errorBorder, #be1100);
+  background: var(--vscode-inputValidation-errorBackground, #5a1d1d);
+  color: var(--vscode-inputValidation-errorForeground, var(--vscode-foreground, #f48771));
 }
 
 .conflict-abort-btn {
