@@ -15,6 +15,11 @@ export type GitIconName =
   | 'fetch'
   | 'prune'
   | 'refresh'
+  | 'add'
+  | 'close'
+  | 'stash-apply'
+  | 'stash-pop'
+  | 'compare'
 
 const PATHS: Record<GitIconName, string[]> = {
   branch: [
@@ -40,6 +45,14 @@ const PATHS: Record<GitIconName, string[]> = {
   ],
   prune: ['M5.2 5.3 13.5 13M5.2 10.7 13.5 3', 'M3.5 2.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM3.5 9.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z'],
   refresh: ['M13.5 5.5V2.5l-1.7 1.7A5.5 5.5 0 1 0 13.3 10', 'M13.5 2.5h-3'],
+  add: ['M8 2.5v11M2.5 8h11'],
+  close: ['M3 3l10 10M13 3L3 13'],
+  'stash-apply': ['M2.5 11v2h11v-2', 'M8 2.5v8M5.5 8 8 10.5 10.5 8'],
+  'stash-pop': ['M2.5 11v2h11v-2', 'M8 10.5v-8M5.5 5 8 2.5 10.5 5'],
+  compare: [
+    'M5 3v8a2 2 0 0 0 2 2h2M3 5l2-2 2 2',
+    'M11 13V5a2 2 0 0 0-2-2H7M9 11l2 2 2-2',
+  ],
 }
 
 export function GitIcon(props: { name: GitIconName; size?: number; class?: string }) {

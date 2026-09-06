@@ -11,7 +11,7 @@ import {
 import { worktreeStore } from '../../../features/worktree'
 import { request } from '../../../shared/api'
 import { formatDate, formatRelativeTime, t } from '../../../shared/lib'
-import { openContextMenu } from '../../../shared/ui'
+import { GitIcon, openContextMenu } from '../../../shared/ui'
 import type { MenuItem } from '../../../shared/ui'
 
 /** 액션 후 스태시 목록·그래프가 함께 갱신되도록 감싼다. */
@@ -95,30 +95,33 @@ export function StashPanel() {
           <span>Stashes ({stashPanelStore.stashes().length})</span>
           <span class="stash-header-actions">
             <button
-              class="worktree-action-btn"
+              class="stash-header-btn"
               title={t('Stash working tree changes')}
+              data-tip={t('Stash working tree changes')}
               aria-label={t('Stash working tree changes')}
               disabled={(graphStore.graph()?.uncommittedCount ?? 0) === 0}
               onClick={() => withReload(stashPush())}
             >
-              +
+              <GitIcon name="add" size={16} />
             </button>
             <button
-              class="worktree-action-btn"
+              class="stash-header-btn"
               title={t('Refresh stashes')}
+              data-tip={t('Refresh stashes')}
               aria-label={t('Refresh stashes')}
               disabled={stashPanelStore.loading()}
               onClick={() => void stashPanelStore.reload()}
             >
-              ↻
+              <GitIcon name="refresh" size={16} />
             </button>
             <button
-              class="details-close"
-              style={{ position: 'static' }}
+              class="stash-header-btn"
+              title={t('Close stash panel')}
+              data-tip={t('Close stash panel')}
               onClick={stashPanelStore.closePanel}
               aria-label={t('Close stash panel')}
             >
-              ✕
+              <GitIcon name="close" size={16} />
             </button>
           </span>
         </div>
@@ -170,34 +173,38 @@ export function StashPanel() {
                         <button
                           class="stash-action-btn"
                           title={t('Apply stash')}
+                          data-tip={t('Apply stash')}
                           aria-label={t('Apply stash')}
                           onClick={stopAnd(() => withReload(stashApply(stash.selector, false)))}
                         >
-                          ↓
+                          <GitIcon name="stash-apply" size={16} />
                         </button>
                         <button
                           class="stash-action-btn"
                           title={t('Pop stash')}
+                          data-tip={t('Pop stash')}
                           aria-label={t('Pop stash')}
                           onClick={stopAnd(() => withReload(stashApply(stash.selector, true)))}
                         >
-                          ⇣
+                          <GitIcon name="stash-pop" size={16} />
                         </button>
                         <button
                           class="stash-action-btn"
                           title={t('Compare stash')}
+                          data-tip={t('Compare stash')}
                           aria-label={t('Compare stash')}
                           onClick={stopAnd(() => compareStash(stash))}
                         >
-                          ⇄
+                          <GitIcon name="compare" size={16} />
                         </button>
                         <button
                           class="stash-action-btn danger"
                           title={t('Drop stash')}
+                          data-tip={t('Drop stash')}
                           aria-label={t('Drop stash')}
                           onClick={stopAnd(() => withReload(stashDrop(stash.selector)))}
                         >
-                          ×
+                          <GitIcon name="danger" size={16} />
                         </button>
                       </span>
                     </div>

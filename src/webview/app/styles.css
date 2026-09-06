@@ -1070,6 +1070,11 @@ path.graph-line.doomed,
 /* 스태시 라벨 뱃지 — 색상은 브랜치 뱃지와 동일하게 그래프 라인 색을 따른다 (인라인 style) */
 
 /* ── 스태시 목록 패널 — worktree 패널이 함께 열리면 그 왼쪽으로 비킨다 ───── */
+.worktree-panel.stash-panel {
+  width: 560px;
+  max-width: calc(100% - 20px);
+}
+
 .stash-panel.shifted {
   right: 400px;
 }
@@ -1081,7 +1086,26 @@ path.graph-line.doomed,
   gap: 2px;
 }
 
-.stash-header-actions .worktree-action-btn:disabled {
+.stash-header-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+}
+
+.stash-header-btn:hover {
+  color: var(--vscode-foreground);
+  background: var(--vscode-toolbar-hoverBackground, rgba(255, 255, 255, 0.12));
+}
+
+.stash-header-btn:disabled {
   cursor: default;
   opacity: 0.35;
 }
@@ -1101,12 +1125,13 @@ path.graph-line.doomed,
 
 .stash-item {
   cursor: pointer;
-  height: auto;
-  min-height: 40px;
-  padding: 4px 6px;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 2px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0 6px;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .stash-item:hover {
@@ -1121,8 +1146,12 @@ path.graph-line.doomed,
   gap: 5px;
 }
 
+.stash-item-main {
+  flex: 1;
+}
+
 .stash-item-meta {
-  padding-left: 42px;
+  flex-shrink: 0;
 }
 
 .stash-expand {
@@ -1210,16 +1239,14 @@ path.graph-line.doomed,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: 0;
   border-radius: 3px;
   background: none;
   color: var(--vscode-descriptionForeground);
   cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
 }
 
 .stash-action-btn:hover {

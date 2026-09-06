@@ -97,9 +97,23 @@ describe('StashPanel enhancements', () => {
 
   it('개수·브랜치·메시지를 표시하고 펼칠 때 파일을 지연 조회해 diff를 연다', async () => {
     expect(document.querySelector('.stash-header')?.textContent).toContain('Stashes (1)')
+    expect(
+      [...document.querySelectorAll('.stash-header-actions [data-icon]')].map((icon) =>
+        icon.getAttribute('data-icon'),
+      ),
+    ).toEqual(['add', 'refresh', 'close'])
     expect(document.querySelector('.stash-branch-badge')?.textContent).toBe('feature/panel')
     expect(document.querySelector('.stash-item-subject')?.textContent).toBe('keep local work')
     expect(document.querySelector('.stash-item-date')?.textContent).toBe('last week')
+    expect(
+      [...document.querySelectorAll('.stash-inline-actions [data-icon]')].map((icon) =>
+        icon.getAttribute('data-icon'),
+      ),
+    ).toEqual(['stash-apply', 'stash-pop', 'compare', 'danger'])
+    for (const button of document.querySelectorAll('.stash-header-actions button, .stash-inline-actions button')) {
+      expect(button.getAttribute('data-tip')).toBeTruthy()
+      expect(button.getAttribute('aria-label')).toBeTruthy()
+    }
 
     document.querySelector<HTMLButtonElement>('.stash-expand')!.click()
     await flush()
