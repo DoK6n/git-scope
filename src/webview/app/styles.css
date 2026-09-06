@@ -1491,7 +1491,7 @@ path.graph-line.doomed,
   height: auto;
   align-self: stretch;
   border-radius: 0;
-  color: var(--vscode-badge-foreground, var(--vscode-foreground));
+  color: #1e1e1e;
   background: var(--vscode-badge-background, #4d4d4d);
   border-right: 1px solid var(--ref-color, var(--vscode-panel-border, #444));
   flex-shrink: 0;

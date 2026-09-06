@@ -84,7 +84,7 @@ export function RefBadge(props: RefBadgeProps) {
       }}
     >
       <span class="ref-local-part">
-        <span class="ref-icon">
+        <span class="ref-icon" style={{ 'background-color': color() }}>
           <GitIcon name={icon()} size={11} />
         </span>
         <Show when={props.isWorktree}>
