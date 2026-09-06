@@ -40,6 +40,19 @@ export interface GitRef {
   remote?: string
 }
 
+export type InProgressOperationType = 'merge' | 'rebase' | 'cherry-pick' | 'revert'
+
+export interface InProgressOperation {
+  type: InProgressOperationType
+  /** `git status --porcelain -z`에서 unmerged 상태인 파일 수 */
+  conflictCount: number
+}
+
+export interface BranchUpstream {
+  remote: string
+  branch: string
+}
+
 export interface GraphData {
   commits: Commit[]
   refs: GitRef[]
@@ -47,8 +60,12 @@ export interface GraphData {
   headHash: string | null
   /** 체크아웃된 브랜치명 (detached면 null) */
   headBranch: string | null
+  /** 현재 브랜치가 추적하는 upstream (미설정 또는 detached면 null) */
+  headUpstream: BranchUpstream | null
   /** 워킹트리 변경 파일 수 */
   uncommittedCount: number
+  /** 충돌 등으로 완료되지 않은 merge/rebase/cherry-pick/revert */
+  operation: InProgressOperation | null
   /** 요청한 개수보다 커밋이 더 남아 있는지 */
   moreAvailable: boolean
   /** worktree에 체크아웃되어 있는 브랜치명 목록 (main worktree 제외) */
@@ -68,6 +85,12 @@ export interface FileChange {
   deletions?: number
 }
 
+/** 스태시 파일 diff를 열 때 사용할 실제 Git 객체 쌍. */
+export interface StashFileChange extends FileChange {
+  hash: string
+  baseHash: string
+}
+
 export interface CommitDetails {
   hash: string
   parents: string[]
@@ -78,6 +101,18 @@ export interface CommitDetails {
   commitDate: number
   body: string
   files: FileChange[]
+}
+
+/** 커밋 상세의 라인 변경 통계 — 실질 수치는 공백·주석 전용 줄을 제외한 근사치 */
+export interface CommitLineStats {
+  additions: number
+  deletions: number
+  rawAdditions: number
+  rawDeletions: number
+  /** 주석 근사를 지원하지 않아 raw 수치를 그대로 쓴 파일 수 */
+  fallbackFiles: number
+  /** numstat이 `-/-`를 보고해 라인 합계에서 제외된 파일 수 */
+  binaryFiles: number
 }
 
 export interface Worktree {
@@ -97,6 +132,46 @@ export interface RepoInfo {
 }
 
 export type ActionResult = { ok: true } | { ok: false; error: string }
+
+export type AuthorStatsScope = 'currentBranch' | 'allRefs'
+export type AuthorStatsPeriod = 'all' | '30d' | '90d' | '365d'
+
+/** `.mailmap` 적용 후 정규화된 작성자별 커밋 통계 */
+export interface AuthorStatsEntry {
+  name: string
+  email: string
+  commits: number
+  /** 기존 아바타 조회에 사용할 이 범위의 최신 작성 커밋 */
+  commitHash: string
+}
+
+/** 원격 체크아웃 전, 입력한 로컬 브랜치와 선택한 원격 ref의 관계 */
+export interface RemoteCheckoutPlan {
+  localExists: boolean
+  /** 로컬에만 있는 커밋 수 */
+  ahead: number
+  /** 선택한 원격 ref에만 있는 커밋 수 */
+  behind: number
+}
+
+/** 로컬 브랜치를 checkout 없이 pull하기 전의 upstream/분기 상태 */
+export interface BranchPullPlan {
+  upstream: {
+    /** `%(upstream:short)` — 사용자 표시용 */
+    displayName: string
+    /** `%(upstream:remotename)` — fetch 대상 remote */
+    remote: string
+    /** `%(upstream:remoteref)` — fetch source ref */
+    remoteRef: string
+  } | null
+  /** 로컬에만 있는 커밋 수 */
+  ahead: number
+  /** upstream 추적 ref에만 있는 커밋 수 */
+  behind: number
+  /** 어느 worktree에서든 checkout되어 있으면 그 절대 경로 */
+  worktreePath: string | null
+  isCurrent: boolean
+}
 
 /**
  * 파일/폴더 아이콘 — 활성 아이콘 테마에서 해석.
@@ -122,6 +197,10 @@ export interface StashEntry {
   authorDate: number
   commitDate: number
   subject: string
+  /** 생성 당시 브랜치명. 오래되거나 비표준인 스태시 제목에서는 null */
+  branch: string | null
+  /** "On <branch>:" / "WIP on <branch>:" 접두사를 제외한 표시용 메시지 */
+  message: string
   /**
    * 베이스 커밋이 어떤 브랜치/태그에서도 도달 불가(고아) — 브랜치 삭제·rebase 후 남은 스태시.
    * listStashes에서만 계산한다 (그래프 합성 경로는 미설정)

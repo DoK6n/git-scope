@@ -1,34 +1,9 @@
 import type { GitRef } from '@shared-types/domain'
 import { createSignal, For, Show } from 'solid-js'
 import { t } from '../../../shared/lib'
+import { GitIcon } from '../../../shared/ui'
+import type { GitIconName } from '../../../shared/ui'
 import type { RefGroup } from '../lib/group'
-
-/** 칩 안에 그리는 미니 브랜치 글리프 */
-function BranchGlyph() {
-  return (
-    <svg viewBox="0 0 16 16" width="10" height="10">
-      <g fill="none" stroke="currentColor" stroke-width="2.2">
-        <circle cx="5" cy="3.5" r="1.7" />
-        <circle cx="5" cy="12.5" r="1.7" />
-        <circle cx="11.5" cy="5" r="1.7" />
-        <path d="M5 5.2 V10.8" />
-        <path d="M11.5 6.8 C11.5 9.6, 5 8.4, 5 10.4" />
-      </g>
-    </svg>
-  )
-}
-
-/** 태그용 미니 글리프 */
-function TagGlyph() {
-  return (
-    <svg viewBox="0 0 16 16" width="10" height="10">
-      <path
-        fill="currentColor"
-        d="M2 2h5.2L14 8.8a1.5 1.5 0 0 1 0 2.1l-3.1 3.1a1.5 1.5 0 0 1-2.1 0L2 7.2V2zm3.2 4.2a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"
-      />
-    </svg>
-  )
-}
 
 interface RefBadgeProps {
   group: RefGroup
@@ -59,6 +34,11 @@ interface RefBadgeProps {
 export function RefBadge(props: RefBadgeProps) {
   const gitRef = () => props.group.ref
   const color = () => props.color
+  const icon = (): GitIconName => {
+    if (gitRef().type === 'tag') return 'tag'
+    if (gitRef().type === 'remote') return 'remote'
+    return 'branch'
+  }
   const [dragOver, setDragOver] = createSignal(false)
   return (
     <>
@@ -105,9 +85,7 @@ export function RefBadge(props: RefBadgeProps) {
     >
       <span class="ref-local-part">
         <span class="ref-icon" style={{ 'background-color': color() }}>
-          <Show when={gitRef().type === 'tag'} fallback={<BranchGlyph />}>
-            <TagGlyph />
-          </Show>
+          <GitIcon name={icon()} size={11} />
         </span>
         <Show when={props.isWorktree}>
           <span class="ref-worktree-mark" title={t('checked out in a worktree')}>⊕</span>
@@ -130,6 +108,7 @@ export function RefBadge(props: RefBadgeProps) {
               props.onRemoteContextMenu?.(remote, e)
             }}
           >
+            <GitIcon name="remote" size={10} />
             {remote.remote}
           </span>
         )}

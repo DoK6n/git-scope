@@ -23,18 +23,54 @@ const KO: Record<string, string> = {
   // ── 툴바 · 브랜치 필터 ──
   'Select branches to show in the graph': '그래프에 표시할 브랜치 선택',
   'Show remote branches in the graph': '원격 브랜치를 그래프에 표시',
+  'Show Remote Branches': '원격 브랜치 표시',
+  'Hide remote branches without a local branch':
+    '대응하는 로컬 브랜치가 없는 원격 브랜치 숨기기',
+  'Hide Remote-Only Branches': '원격에만 있는 브랜치 숨기기',
   'Filter Branches… (glob: feature/*)': '브랜치 필터… (glob: feature/*)',
   'No matching branches': '일치하는 브랜치 없음',
   'Select/unselect all branches under this folder': '하위 브랜치 일괄 선택/해제',
   '{0} branches': '{0}개 브랜치',
+  'Hide Branch': '이 브랜치 숨기기',
+  'Hidden Branches ({0})': '숨긴 브랜치 ({0})',
+  'Unhide Branch': '브랜치 숨김 해제',
+  'Unhide All': '모두 숨김 해제',
   'Search (glob: fix*, feat-?)': '검색 (glob 지원: fix*, feat-?)',
   'Open/close the stash panel': '스태시 목록 패널 열기/닫기',
   'Open/close the worktree panel': '워크트리 패널 열기/닫기',
+  Stashes: '스태시',
+  Worktrees: '워크트리',
+  'Reset HEAD by N commits': 'HEAD를 N개 커밋만큼 되돌리기',
+  'Refresh graph': '그래프 새로고침',
+  'Open/close author statistics': '작성자 통계 열기/닫기',
+  Statistics: '통계',
   'Fetch — git fetch --all': 'Fetch — git fetch --all',
   'Fetch (prune) — clean up refs to branches deleted on the remote':
     'Fetch (prune) — 원격에서 삭제된 브랜치 참조 정리',
   'Fetched all remotes': 'git fetch --all 완료',
   'Fetched all remotes (prune)': 'git fetch --all --prune 완료',
+  'Pull current branch from {0}': '현재 브랜치를 {0}에서 pull',
+  'Cannot pull in detached HEAD state.': 'detached HEAD 상태에서는 pull할 수 없습니다.',
+  'Current branch has no upstream.': '현재 브랜치에 upstream이 없습니다.',
+  'Pulled current branch from {0}': '현재 브랜치를 {0}에서 pull 완료',
+
+  // ── 타임라인 ──
+  'Toggle commit timeline': '커밋 타임라인 열기/닫기',
+  'Commit Timeline': '커밋 타임라인',
+  '{0} of {1} currently loaded commits': '현재 로드된 커밋 {1}개 중 {0}개',
+  Author: '작성자',
+  'Timeline author': '타임라인 작성자',
+  'All authors': '모든 작성자',
+  'Timeline interval': '타임라인 구간',
+  Day: '일',
+  Month: '월',
+  Year: '연',
+  'No loaded commits to show.': '표시할 로드된 커밋이 없습니다.',
+  'Commit activity timeline': '커밋 활동 타임라인',
+  '{0}: {1} commits': '{0}: 커밋 {1}개',
+  'Timeline period: {0}': '타임라인 기간: {0}',
+  '{0} commits': '커밋 {0}개',
+  Clear: '지우기',
 
   // ── 그래프 · 뱃지 · 상세 ──
   'Double-click: git switch': '더블클릭: git switch',
@@ -46,6 +82,24 @@ const KO: Record<string, string> = {
   'Copy absolute path': '절대 경로 복사',
   'Open file': '파일 열기',
   'all changed files between the two commits': '두 커밋 사이의 모든 변경 파일',
+  'Calculating lines…': '라인 수 계산 중…',
+  'Line stats unavailable': '라인 수를 계산할 수 없음',
+  'Additions +{0} / Deletions −{1}': '추가 +{0} / 삭제 −{1}',
+  'Blank and comment-only lines are excluded from the calculation.':
+    '빈 줄과 주석만 있는 줄은 계산에서 제외됩니다.',
+  '{0} unsupported file(s) use raw counts': '미지원 파일 {0}개는 원시 수치 사용',
+  '{0} binary file(s) excluded': '바이너리 파일 {0}개는 합계에서 제외',
+  merging: '머지 중',
+  rebasing: '리베이스 중',
+  'cherry-picking': '체리픽 중',
+  reverting: '리버트 중',
+  '{0} conflicts': '충돌 {0}개',
+  Abort: '중단',
+  'Abort {0}?': '{0} 작업을 중단할까요?',
+  'This stops the {0} operation and returns the repository to the state before it started. Working tree and index changes made by the operation will be discarded.':
+    '{0} 작업을 멈추고 저장소를 작업 시작 전 상태로 되돌립니다. 작업이 만든 워킹 트리와 인덱스 변경사항은 폐기됩니다.',
+  '{0} operation aborted': '{0} 작업 중단 완료',
+  'Unable to abort {0}': '{0} 작업을 중단할 수 없음',
 
   // ── 브랜치 액션 ──
   'Branch {0} created (from {1})': '브랜치 {0} 생성 완료 (from {1})',
@@ -65,6 +119,21 @@ const KO: Record<string, string> = {
   'Fetches {0} into local branch {1} (fast-forward only).':
     '{0} → 로컬 {1} 브랜치로 fetch 합니다 (fast-forward만).',
   'Fetched {0} → {1}': 'fetch {0} → {1} 완료',
+  'Pull Branch…': '브랜치 Pull…',
+  'Unable to Pull Branch': '브랜치를 Pull할 수 없음',
+  'Branch {0} has no upstream branch.': '브랜치 {0}에 upstream 브랜치가 없습니다.',
+  'Branch {0} is {1} commit(s) ahead and {2} commit(s) behind {3}.':
+    '브랜치 {0}은(는) {3}보다 {1}개 커밋 앞서 있고 {2}개 커밋 뒤처져 있습니다.',
+  'This branch is checked out in worktree {0}. Pull it from that worktree instead.':
+    '이 브랜치는 worktree {0}에 체크아웃되어 있습니다. 해당 worktree에서 Pull하세요.',
+  'Fast-forward Pull Blocked': 'Fast-forward Pull 차단됨',
+  'The branch is ahead or diverged, so it cannot be updated by fast-forward only.':
+    '브랜치가 앞서 있거나 갈라져 있어 fast-forward만으로 갱신할 수 없습니다.',
+  'Pull Branch Without Checkout': '체크아웃 없이 브랜치 Pull',
+  'Fast-forward {0} from {1} without changing the current branch or working tree?':
+    '현재 브랜치나 워킹 트리를 바꾸지 않고 {1}에서 {0}을(를) fast-forward할까요?',
+  'Pull Branch': '브랜치 Pull',
+  'Pulled {0} without checkout': '{0}을(를) 체크아웃 없이 Pull 완료',
   'Pushed tag {0}': 'push tag {0} 완료',
 
   // ── merge / rebase / cherry-pick / revert / drop / reword ──
@@ -145,6 +214,20 @@ const KO: Record<string, string> = {
   'Worktree {0} done': 'worktree {0} 완료',
 
   // ── checkout ──
+  'Unable to Checkout Branch': '브랜치를 체크아웃할 수 없음',
+  'Checked out new tracking branch {0}': '새 추적 브랜치 {0} 체크아웃 완료',
+  'Local branch {0} is {1} commit(s) ahead and {2} commit(s) behind {3}.':
+    '로컬 브랜치 {0}은(는) {3}보다 {1}개 커밋 앞서 있고 {2}개 커밋 뒤처져 있습니다.',
+  'Checkout and Pull Remote Branch': '원격 브랜치 체크아웃 및 Pull',
+  'Checkout {0}, then pull from {1} with fast-forward only?':
+    '{0}을(를) 체크아웃한 뒤 {1}에서 fast-forward 전용으로 pull할까요?',
+  'Checkout and Pull': '체크아웃 및 Pull',
+  'Checked out {0} and pulled {1}': '{0} 체크아웃 및 {1} pull 완료',
+  'Automatic Pull Blocked': '자동 Pull 차단됨',
+  'Automatic pull will not run because the local branch is ahead or diverged. Checkout the local branch without pulling?':
+    '로컬 브랜치가 앞서 있거나 갈라져 있어 자동 pull을 실행하지 않습니다. pull 없이 로컬 브랜치만 체크아웃할까요?',
+  'Checkout Only': '체크아웃만',
+  'Checked out {0} without pulling': '{0}을(를) pull 없이 체크아웃했습니다',
   'Checking out commit {0} puts the repository in a detached HEAD state.\nContinue?':
     '{0} 커밋을 체크아웃하면 detached HEAD 상태가 됩니다.\n계속할까요?',
 
@@ -177,6 +260,38 @@ const KO: Record<string, string> = {
     '베이스 커밋이 어떤 브랜치/태그에서도 도달할 수 없습니다 (브랜치 삭제 또는 rebase). 그래프에는 표시되지 않지만 Apply/Drop은 가능합니다.',
   'Drop all checked stashes': '체크한 스태시 일괄 삭제',
   'Stash working tree changes': '워킹트리 변경사항을 스태시로 저장',
+  'Refresh stashes': '스태시 새로고침',
+  'Close stash panel': '스태시 패널 닫기',
+  'Show changed files': '변경 파일 보기',
+  'No changed files': '변경 파일 없음',
+  'Apply stash': '스태시 적용',
+  'Pop stash': '스태시 적용 후 삭제',
+  'Rename stash': '스태시 이름 변경',
+  'Stash name': '스태시 이름',
+  'Renaming keeps the stash contents but moves it to the top of the list.':
+    '스태시 내용은 그대로 유지되지만 목록 맨 위로 이동합니다.',
+  'Renamed stash {0}': '스태시 {0} 이름 변경 완료',
+  'Drop stash': '스태시 삭제',
+  // ── 작성자 통계 패널 ──
+  'Author statistics': '작성자 통계',
+  'Author Statistics': '작성자 통계',
+  'Close author statistics': '작성자 통계 닫기',
+  Scope: '범위',
+  'Current branch': '현재 브랜치',
+  'All refs': '모든 참조',
+  Period: '기간',
+  'All time': '전체 기간',
+  'Last 30 days': '최근 30일',
+  'Last 90 days': '최근 90일',
+  'Last 365 days': '최근 365일',
+  'Counts the complete Git history for this scope, not the loaded graph rows.':
+    '로드된 그래프 행이 아닌 선택 범위의 전체 Git 히스토리를 집계합니다.',
+  'Loading…': '불러오는 중…',
+  'No commits in this range': '선택 범위에 커밋 없음',
+  commit: '커밋',
+  commits: '커밋',
+  '{0} authors · {1} commits': '작성자 {0}명 · 커밋 {1}개',
+  Refresh: '새로고침',
 
   // ── tag ──
   'Message (when annotated)': 'Message (annotated일 때)',

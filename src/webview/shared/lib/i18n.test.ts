@@ -25,4 +25,38 @@ describe('t', () => {
       'dev의 커밋 해시가 바뀌고 HEAD가 dev으로 이동합니다.',
     )
   })
+
+  it('타임라인 노출 문구와 개수를 번역한다', () => {
+    setLocale('ko')
+    expect(t('Commit Timeline')).toBe('커밋 타임라인')
+    expect(t('{0} of {1} currently loaded commits', 2, 10)).toBe(
+      '현재 로드된 커밋 10개 중 2개',
+    )
+    expect(t('Timeline period: {0}', '2026-09')).toBe('타임라인 기간: 2026-09')
+    expect(t('Clear')).toBe('지우기')
+  })
+
+  it('Git 아이콘 툴바의 접근 가능한 이름을 한국어로 제공한다', () => {
+    setLocale('ko')
+    expect(t('Reset HEAD by N commits')).toBe('HEAD를 N개 커밋만큼 되돌리기')
+    expect(t('Refresh graph')).toBe('그래프 새로고침')
+    expect(t('Stashes')).toBe('스태시')
+    expect(t('Worktrees')).toBe('워크트리')
+  })
+
+  it('체크아웃 없는 브랜치 pull 문구를 번역한다', () => {
+    setLocale('ko')
+    expect(t('Pull Branch…')).toBe('브랜치 Pull…')
+    expect(t('Branch {0} has no upstream branch.', 'feat/local')).toBe(
+      '브랜치 feat/local에 upstream 브랜치가 없습니다.',
+    )
+  })
+
+  it('개별 브랜치 숨김과 복구 문구를 번역한다', () => {
+    setLocale('ko')
+    expect(t('Hide Branch')).toBe('이 브랜치 숨기기')
+    expect(t('Hidden Branches ({0})', 2)).toBe('숨긴 브랜치 (2)')
+    expect(t('Unhide Branch')).toBe('브랜치 숨김 해제')
+    expect(t('Unhide All')).toBe('모두 숨김 해제')
+  })
 })

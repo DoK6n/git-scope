@@ -9,19 +9,21 @@ import type { MenuItem } from '../../../shared/ui'
 function buildWorktreeMenu(worktree: Worktree): MenuItem[] {
   const items: MenuItem[] = []
   if (!worktree.isMain) {
-    items.push({ label: 'Move Worktree', onClick: () => void worktreeStore.moveWorktree(worktree) })
+    items.push({ label: 'Move Worktree', intent: 'change', onClick: () => void worktreeStore.moveWorktree(worktree) })
   }
-  items.push({ label: 'Repair Worktree', onClick: () => void worktreeStore.repairWorktree(worktree) })
+  items.push({ label: 'Repair Worktree', intent: 'change', onClick: () => void worktreeStore.repairWorktree(worktree) })
   if (!worktree.isMain) {
     items.push(
       {
         label: 'Remove Worktree',
+        intent: 'change',
         danger: true,
         separatorBefore: true,
         onClick: () => void worktreeStore.removeWorktree(worktree),
       },
       {
         label: worktree.locked ? 'Unlock Worktree' : 'Lock Worktree',
+        intent: 'change',
         separatorBefore: true,
         onClick: () => void worktreeStore.toggleLockWorktree(worktree),
       },

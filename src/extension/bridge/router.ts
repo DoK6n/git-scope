@@ -20,11 +20,16 @@ const READ_ONLY_REQUESTS = new Set<RequestCommand>([
   'listRepos',
   'getGraph',
   'getCommitDetails',
+  'getCommitLineStats',
+  'getAuthorStats',
   'getCommitComparison',
+  'getRemoteCheckoutPlan',
+  'getBranchPullPlan',
   'openDiff',
   'getTagDetails',
   'openScmView',
   'listStashes',
+  'getStashFiles',
   'listWorktrees',
   'openWorktree',
   'getFileIcons',
@@ -46,6 +51,7 @@ const MERGE_LIKE_REQUESTS = new Set<RequestCommand>([
   'cherryPick',
   'revert',
   'pullBranch',
+  'pullCurrent',
 ])
 
 /** webview 요청을 GitRepo/VS Code API 호출로 라우팅한다 */
@@ -156,6 +162,10 @@ export class Router {
             name === 'packed-refs' ||
             name.startsWith('refs') ||
             name.endsWith('_HEAD') ||
+            name === 'rebase-merge' ||
+            name.startsWith('rebase-merge/') ||
+            name === 'rebase-apply' ||
+            name.startsWith('rebase-apply/') ||
             name.endsWith('/HEAD') // 다른 worktree의 HEAD 이동 (commondir/worktrees/*/HEAD)
           if (!relevant) return
           // 앱 자신의 변경 요청이 낸 이벤트로 다시 갱신하면 클릭 한 번에 그래프가
@@ -265,6 +275,20 @@ export class Router {
         parts.push(`index:${stat.mtimeMs}`)
       } catch {
         parts.push('index:-')
+      }
+      for (const marker of [
+        'MERGE_HEAD',
+        'rebase-merge',
+        'rebase-apply',
+        'CHERRY_PICK_HEAD',
+        'REVERT_HEAD',
+      ]) {
+        try {
+          const stat = await fs.promises.stat(path.join(dir, marker))
+          parts.push(`${marker}:${stat.mtimeMs}`)
+        } catch {
+          parts.push(`${marker}:-`)
+        }
       }
     }
     const [refs, status] = await Promise.all([
@@ -471,14 +495,30 @@ export class Router {
       listRepos: () => this.listRepos(),
       getGraph: (p) => {
         this.activeRepo = p.repo
-        return this.getRepo(p.repo).getGraph(p.maxCommits, p.branches, p.includeRemotes)
+        return this.getRepo(p.repo).getGraph(
+          p.maxCommits,
+          p.branches,
+          p.includeRemotes,
+          p.hideRemoteOnlyBranches,
+          p.hiddenBranchNames,
+        )
       },
       getCommitDetails: (p) => this.getRepo(p.repo).getCommitDetails(p.hash),
+      getCommitLineStats: (p) =>
+        this.getRepo(p.repo).getCommitLineStats(p.baseHash, p.hash),
+      getAuthorStats: (p) => this.getRepo(p.repo).getAuthorStats(p.scope, p.period),
       getCommitComparison: (p) => this.getRepo(p.repo).getComparison(p.fromHash, p.toHash),
       openDiff: (p) => this.openDiff(p),
       checkoutBranch: (p) => this.getRepo(p.repo).checkoutBranch(p.name),
+      getRemoteCheckoutPlan: (p) =>
+        this.getRepo(p.repo).getRemoteCheckoutPlan(p.remote, p.branch, p.localName),
       checkoutRemoteBranch: (p) =>
-        this.getRepo(p.repo).checkoutRemoteBranch(p.remoteName, p.localName),
+        this.getRepo(p.repo).checkoutRemoteBranch(
+          p.remote,
+          p.branch,
+          p.localName,
+          p.mode,
+        ),
       checkoutCommit: (p) => this.getRepo(p.repo).checkoutCommit(p.hash),
       createBranch: (p) => this.getRepo(p.repo).createBranch(p.name, p.at, p.checkout),
       deleteBranch: (p) => this.getRepo(p.repo).deleteBranch(p.name, p.force),
@@ -499,6 +539,14 @@ export class Router {
       pushBranch: (p) =>
         this.getRepo(p.repo).pushBranch(p.name, p.remote, p.setUpstream, p.force),
       pullBranch: (p) => this.getRepo(p.repo).pullBranch(p.remote, p.branch),
+      pullCurrent: (p) => this.getRepo(p.repo).pullCurrent(),
+      getBranchPullPlan: (p) => this.getRepo(p.repo).getBranchPullPlan(p.branch),
+      pullBranchWithoutCheckout: (p) =>
+        this.getRepo(p.repo).pullBranchWithoutCheckout(
+          p.branch,
+          p.remote,
+          p.remoteRef,
+        ),
       deleteRemoteBranch: (p) => this.getRepo(p.repo).deleteRemoteBranch(p.remote, p.name),
       fetchIntoLocal: (p) =>
         this.getRepo(p.repo).fetchIntoLocal(p.remote, p.remoteBranch, p.localBranch),
@@ -507,6 +555,7 @@ export class Router {
       stashApply: (p) => this.getRepo(p.repo).stashApply(p.selector, p.reinstateIndex),
       stashPop: (p) => this.getRepo(p.repo).stashPop(p.selector, p.reinstateIndex),
       stashDrop: (p) => this.getRepo(p.repo).stashDrop(p.selector),
+      stashRename: (p) => this.getRepo(p.repo).stashRename(p.selector, p.message),
       stashBranch: (p) => this.getRepo(p.repo).stashBranch(p.selector, p.branchName),
       stashPush: (p) => this.getRepo(p.repo).stashPush(p.message, p.includeUntracked),
       cleanUntracked: (p) => this.getRepo(p.repo).cleanUntracked(p.directories),
@@ -528,8 +577,10 @@ export class Router {
         }
       },
       reset: (p) => this.getRepo(p.repo).reset(p.to, p.mode),
+      abortOperation: (p) => this.getRepo(p.repo).abortOperation(p.operation),
       fetch: (p) => this.getRepo(p.repo).fetch(p.prune),
       listStashes: (p) => this.getRepo(p.repo).listStashes(),
+      getStashFiles: (p) => this.getRepo(p.repo).getStashFiles(p.selector),
       listWorktrees: (p) => this.getRepo(p.repo).listWorktrees(),
       addWorktree: (p) =>
         this.getRepo(p.repo).addWorktree(p.path, p.branch, p.createBranch, p.startPoint),

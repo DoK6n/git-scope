@@ -1,6 +1,7 @@
 export {
   stashApply,
   stashDrop,
+  stashRename,
   stashBranch,
   stashPush,
   cleanUntracked,

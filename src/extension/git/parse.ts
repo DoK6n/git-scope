@@ -1,4 +1,6 @@
 import type {
+  AuthorStatsEntry,
+  BranchUpstream,
   Commit,
   FileChange,
   FileChangeStatus,
@@ -49,8 +51,43 @@ export function parseLog(output: string): Commit[] {
   return commits
 }
 
+/** 작성자 통계용 `git log --format` — mailmap 적용 필드 사용 */
+export const AUTHOR_STATS_FORMAT = '%H%x00%aN%x00%aE'
+
+/** 정규 이메일 기준으로 작성자를 합치고 커밋 수 내림차순으로 정렬한다. */
+export function parseAuthorStats(output: string): AuthorStatsEntry[] {
+  const byEmail = new Map<string, AuthorStatsEntry>()
+  for (const line of output.split('\n')) {
+    if (line === '') continue
+    const [commitHash = '', name = '', email = ''] = line.split(NUL)
+    const key = email !== '' ? email.toLowerCase() : `name:${name.toLowerCase()}`
+    const existing = byEmail.get(key)
+    if (existing) existing.commits++
+    else byEmail.set(key, { name, email, commits: 1, commitHash })
+  }
+  return [...byEmail.values()].sort(
+    (a, b) => b.commits - a.commits || a.name.localeCompare(b.name) || a.email.localeCompare(b.email),
+  )
+}
+
 /** for-each-ref 포맷: refname, 해시, (태그면) 참조 대상 해시. for-each-ref는 %00 문법을 쓴다 */
 export const REF_FORMAT = '%(refname)%00%(objectname)%00%(*objectname)'
+
+/** 현재 브랜치와 upstream 원격/브랜치를 한 번에 읽는 for-each-ref 포맷. */
+export const HEAD_UPSTREAM_FORMAT = '%(HEAD)%00%(upstream:remotename)%00%(upstream:remoteref)'
+
+export function parseHeadUpstream(output: string): BranchUpstream | null {
+  for (const line of output.split('\n')) {
+    const [head, remote, remoteRef] = line.split(NUL)
+    if (head?.trim() !== '*' || !remote || !remoteRef) continue
+    const prefix = 'refs/heads/'
+    return {
+      remote,
+      branch: remoteRef.startsWith(prefix) ? remoteRef.slice(prefix.length) : remoteRef,
+    }
+  }
+  return null
+}
 
 /** `git for-each-ref --format=REF_FORMAT` 출력 파싱 */
 export function parseRefs(output: string): GitRef[] {
@@ -147,6 +184,14 @@ export function parseNumstat(output: string): Map<string, NumstatEntry> {
 /** stash list --format 문자열 (LOG_FORMAT + %gd 셀렉터) */
 export const STASH_FORMAT = '%H%x00%gd%x00%P%x00%an%x00%ae%x00%at%x00%ct%x00%s'
 
+/** git이 만드는 "WIP on <branch>: …" / "On <branch>: …" 제목을 표시 정보로 분리한다. */
+export function parseStashSubject(subject: string): { branch: string | null; message: string } {
+  const match = /^(?:WIP on|On) ([^:]+):\s?(.*)$/.exec(subject)
+  return match
+    ? { branch: match[1]!, message: match[2]! }
+    : { branch: null, message: subject }
+}
+
 /** `git stash list --format=STASH_FORMAT` 출력 파싱 */
 export function parseStashList(output: string): StashEntry[] {
   const stashes: StashEntry[] = []
@@ -156,6 +201,7 @@ export function parseStashList(output: string): StashEntry[] {
     if (fields.length < 8) continue
     const parents = fields[2] === '' ? [] : fields[2]!.split(' ')
     if (parents.length === 0) continue
+    const subject = fields.slice(7).join(NUL)
     stashes.push({
       hash: fields[0]!,
       selector: fields[1]!,
@@ -164,7 +210,8 @@ export function parseStashList(output: string): StashEntry[] {
       authorEmail: fields[4]!,
       authorDate: Number(fields[5]),
       commitDate: Number(fields[6]),
-      subject: fields.slice(7).join(NUL),
+      subject,
+      ...parseStashSubject(subject),
     })
   }
   return stashes
@@ -179,6 +226,21 @@ export function countPorcelainEntries(output: string): number {
     if (!entry) continue
     count++
     // rename 레코드(R  new -> old)는 다음 NUL 필드가 이전 경로라서 건너뛴다
+    if (entry.startsWith('R') || entry.startsWith('C')) i++
+  }
+  return count
+}
+
+/** `git status --porcelain -z` 출력에서 unmerged 상태인 파일 수를 센다. */
+export function countUnmergedEntries(output: string): number {
+  const unmerged = new Set(['DD', 'AU', 'UD', 'UA', 'DU', 'AA', 'UU'])
+  let count = 0
+  const parts = output.split(NUL)
+  for (let i = 0; i < parts.length; i++) {
+    const entry = parts[i]
+    if (!entry) continue
+    if (unmerged.has(entry.slice(0, 2))) count++
+    // rename/copy는 다음 NUL 필드가 이전 경로다
     if (entry.startsWith('R') || entry.startsWith('C')) i++
   }
   return count

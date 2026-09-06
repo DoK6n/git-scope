@@ -13,7 +13,7 @@ GitScope 기능 명세의 목차이자 구현 상태 대시보드. 각 영역의
 | [30-search-filter.md](30-search-filter.md) | 커밋 검색, 브랜치 필터 (+glob 확장) | M2, M4 |
 | [40-views.md](40-views.md) | 커밋 상세 뷰, 비교 뷰, 파일 액션 | M2, M5 |
 | [50-settings.md](50-settings.md) | `gitScope.*` 설정 인벤토리 | 전체 |
-| [60-new-features.md](60-new-features.md) | 신규 기능: reset UI, worktree, glob 필터, fetch --prune | M4 |
+| [60-new-features.md](60-new-features.md) | 신규 기능: reset UI, worktree, glob 필터, fetch --prune, 원격 체크아웃 안전 동기화, Git 아이콘 체계 | M4, v0.7 |
 
 ## 구현 상태 (마일스톤 기준)
 
@@ -35,6 +35,8 @@ GitScope 기능 명세의 목차이자 구현 상태 대시보드. 각 영역의
 - **git reset**: 모드(soft/mixed/hard) + HEAD~N 타겟 선택 UI (원본: 제한적)
 - **git worktree**: 완전 신규 (원본: 미지원)
 - **파일 상태 문자 표식(A/M/D/R)**: 항상 표시 (원본: 옵션, 기본 꺼짐)
+- **원격 브랜치 체크아웃**: 동명 로컬 브랜치의 ahead/behind에 따라 안전한 pull 또는 checkout-only 제공 (원본: 새 추적 브랜치 생성)
+- **Git 아이콘 체계**: 툴바·메뉴·참조 뱃지에서 액션 성격과 참조 종류를 일관되게 구분
 
 ## 비목표 (구현하지 않음)
 

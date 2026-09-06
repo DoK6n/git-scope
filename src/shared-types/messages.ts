@@ -1,9 +1,17 @@
 import type {
   ActionResult,
+  AuthorStatsEntry,
+  AuthorStatsPeriod,
+  AuthorStatsScope,
+  BranchPullPlan,
   CommitDetails,
+  CommitLineStats,
   GraphData,
   IconSpec,
+  InProgressOperationType,
   RepoInfo,
+  RemoteCheckoutPlan,
+  StashFileChange,
   StashEntry,
   TagDetails,
   Worktree,
@@ -26,6 +34,10 @@ export interface RequestMap {
       branches: string[] | null
       /** false면 원격 브랜치를 로그·ref 목록에서 제외 (Show Remote Branches 토글) */
       includeRemotes: boolean
+      /** true면 대응하는 로컬 브랜치가 없는 원격 브랜치를 제외 */
+      hideRemoteOnlyBranches: boolean
+      /** 사용자가 현재 저장소에서 직접 숨긴 브랜치 ref 이름 목록 */
+      hiddenBranchNames: string[]
     }
     result: GraphData
   }
@@ -33,6 +45,18 @@ export interface RequestMap {
   getCommitDetails: {
     params: { repo: string; hash: string }
     result: CommitDetails
+  }
+
+  /** 공백·주석 전용 줄을 근사 제외한 커밋 라인 통계 */
+  getCommitLineStats: {
+    params: { repo: string; hash: string; baseHash: string | null }
+    result: CommitLineStats
+  }
+
+  /** 그래프의 증분 로딩과 무관한 전체 Git 히스토리 작성자 통계 */
+  getAuthorStats: {
+    params: { repo: string; scope: AuthorStatsScope; period: AuthorStatsPeriod }
+    result: AuthorStatsEntry[]
   }
 
   /** 두 커밋 비교 (M5) — from..to 변경 파일 목록 */
@@ -56,8 +80,18 @@ export interface RequestMap {
 
   // ── 기본 액션 (M3) ─────────────────────────────
   checkoutBranch: { params: { repo: string; name: string }; result: ActionResult }
+  getRemoteCheckoutPlan: {
+    params: { repo: string; remote: string; branch: string; localName: string }
+    result: RemoteCheckoutPlan
+  }
   checkoutRemoteBranch: {
-    params: { repo: string; remoteName: string; localName: string }
+    params: {
+      repo: string
+      remote: string
+      branch: string
+      localName: string
+      mode: 'create' | 'checkout-only' | 'checkout-and-pull'
+    }
     result: ActionResult
   }
   checkoutCommit: { params: { repo: string; hash: string }; result: ActionResult }
@@ -122,6 +156,16 @@ export interface RequestMap {
     result: ActionResult
   }
   pullBranch: { params: { repo: string; remote: string; branch: string }; result: ActionResult }
+  /** 현재 브랜치의 설정된 upstream과 pull 전략을 그대로 사용 */
+  pullCurrent: { params: { repo: string }; result: ActionResult }
+  getBranchPullPlan: {
+    params: { repo: string; branch: string }
+    result: BranchPullPlan
+  }
+  pullBranchWithoutCheckout: {
+    params: { repo: string; branch: string; remote: string; remoteRef: string }
+    result: ActionResult
+  }
   deleteRemoteBranch: {
     params: { repo: string; remote: string; name: string }
     result: ActionResult
@@ -141,6 +185,10 @@ export interface RequestMap {
     result: ActionResult
   }
   stashDrop: { params: { repo: string; selector: string }; result: ActionResult }
+  stashRename: {
+    params: { repo: string; selector: string; message: string }
+    result: ActionResult
+  }
   stashBranch: {
     params: { repo: string; selector: string; branchName: string }
     result: ActionResult
@@ -161,9 +209,19 @@ export interface RequestMap {
     params: { repo: string; to: string; mode: 'soft' | 'mixed' | 'hard' }
     result: ActionResult
   }
+  /** 진행 중인 merge/rebase/cherry-pick/revert를 시작 전 상태로 되돌린다 ⚠️ */
+  abortOperation: {
+    params: { repo: string; operation: InProgressOperationType }
+    result: ActionResult
+  }
   fetch: { params: { repo: string; prune: boolean }; result: ActionResult }
   /** 스태시 목록 (스태시 패널용) */
   listStashes: { params: { repo: string }; result: StashEntry[] }
+  /** 스태시에 포함된 변경 파일과 각 파일의 실제 diff 객체 쌍 (행을 펼칠 때 지연 조회) */
+  getStashFiles: {
+    params: { repo: string; selector: string }
+    result: StashFileChange[]
+  }
   listWorktrees: { params: { repo: string }; result: Worktree[] }
   addWorktree: {
     params: {

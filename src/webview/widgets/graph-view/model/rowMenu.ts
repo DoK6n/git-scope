@@ -31,16 +31,18 @@ const copy = (text: string) => void request('copyToClipboard', { text })
 export function buildRowMenu(commit: Commit): MenuItem[] {
   if (commit.isUncommitted) {
     return [
-      { label: 'Stash Uncommitted Changes…', onClick: () => void stashPush() },
-      { label: 'Open Source Control View', onClick: () => void openScmView() },
+      { label: 'Stash Uncommitted Changes…', intent: 'change', onClick: () => void stashPush() },
+      { label: 'Open Source Control View', intent: 'read', onClick: () => void openScmView() },
       {
         label: 'Clean Untracked Files…',
+        intent: 'change',
         danger: true,
         separatorBefore: true,
         onClick: () => void cleanUntracked(),
       },
       {
         label: 'Discard All Changes… (reset --hard)',
+        intent: 'change',
         danger: true,
         onClick: () => void discardAllChanges(),
       },
@@ -50,21 +52,23 @@ export function buildRowMenu(commit: Commit): MenuItem[] {
   if (commit.stashSelector) {
     const selector = commit.stashSelector
     return [
-      { label: 'Apply Stash…', onClick: () => void stashApply(selector, false) },
-      { label: 'Pop Stash…', onClick: () => void stashApply(selector, true) },
-      { label: 'Create Branch from Stash…', onClick: () => void stashBranch(selector) },
+      { label: 'Apply Stash…', intent: 'change', onClick: () => void stashApply(selector, false) },
+      { label: 'Pop Stash…', intent: 'change', onClick: () => void stashApply(selector, true) },
+      { label: 'Create Branch from Stash…', intent: 'change', onClick: () => void stashBranch(selector) },
       {
         label: 'Drop Stash…',
+        intent: 'change',
         danger: true,
         separatorBefore: true,
         onClick: () => void stashDrop(selector),
       },
       {
         label: 'Copy Stash Name',
+        intent: 'read',
         separatorBefore: true,
         onClick: () => copy(selector),
       },
-      { label: 'Copy Stash Hash', onClick: () => copy(commit.hash) },
+      { label: 'Copy Stash Hash', intent: 'read', onClick: () => copy(commit.hash) },
     ]
   }
 
@@ -77,59 +81,68 @@ export function buildRowMenu(commit: Commit): MenuItem[] {
       ? [
           {
             label: 'Squash Fixups into Target... (autosquash)',
+            intent: 'change',
             danger: true,
             onClick: () => void applyAutosquash(commit),
           } satisfies MenuItem,
         ]
       : []),
-    { label: 'Add Tag...', onClick: () => void createTagAt(hash) },
-    { label: 'Create Branch...', onClick: () => void createBranchAt(hash) },
+    { label: 'Add Tag...', intent: 'change', onClick: () => void createTagAt(hash) },
+    { label: 'Create Branch...', intent: 'change', onClick: () => void createBranchAt(hash) },
     {
       label: 'Checkout...',
+      intent: 'change',
       separatorBefore: true,
       onClick: () => void checkoutCommit(hash),
     },
-    { label: 'Cherry Pick...', onClick: () => void cherryPick(commit) },
-    { label: 'Revert...', onClick: () => void revertCommit(commit) },
-    { label: 'Edit Commit Message...', onClick: () => void rewordCommit(commit) },
+    { label: 'Cherry Pick...', intent: 'change', onClick: () => void cherryPick(commit) },
+    { label: 'Revert...', intent: 'change', onClick: () => void revertCommit(commit) },
+    { label: 'Edit Commit Message...', intent: 'change', onClick: () => void rewordCommit(commit) },
     // 워킹트리에 변경이 있을 때만 — 현재 작업분을 이 커밋용 fixup으로 저장
     ...(uncommittedCount > 0
       ? [
           {
             label: 'Create Fixup Commit... (--fixup)',
+            intent: 'change',
             onClick: () => void createFixupCommit(commit),
           } satisfies MenuItem,
         ]
       : []),
     {
       label: 'Merge into current branch...',
+      intent: 'change',
       separatorBefore: true,
       onClick: () => void mergeInto(hash),
     },
     {
       label: 'Rebase current branch on this Commit...',
+      intent: 'change',
       onClick: () => void rebaseOnto(hash, hash.slice(0, 8)),
     },
     {
       label: 'Reset current branch to this Commit...',
+      intent: 'change',
       danger: true,
       onClick: () => void resetToCommit(hash),
     },
     {
       label: 'Undo this Commit & above... (reset to parent)',
+      intent: 'change',
       danger: true,
       onClick: () => void undoCommitsFrom(hash, commit.parents),
     },
     {
       label: 'Drop Commit...',
+      intent: 'change',
       danger: true,
       onClick: () => void dropCommit(commit),
     },
     {
       label: 'Copy Commit Hash to Clipboard',
+      intent: 'read',
       separatorBefore: true,
       onClick: () => copy(hash),
     },
-    { label: 'Copy Commit Subject to Clipboard', onClick: () => copy(commit.subject) },
+    { label: 'Copy Commit Subject to Clipboard', intent: 'read', onClick: () => copy(commit.subject) },
   ]
 }

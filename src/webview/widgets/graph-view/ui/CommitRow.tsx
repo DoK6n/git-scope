@@ -6,8 +6,9 @@ import { graphStore } from '../../../entities/graph'
 import { dropBranchOn, isBranchDrag, startBranchDrag } from '../../../features/branch-dnd'
 import { checkoutBranch, checkoutRemoteBranch } from '../../../features/checkout'
 import { fixupKind, scrollToFixupTarget } from '../../../features/fixup'
+import { ConflictOperationControls } from '../../../features/conflict-operation'
 import { BRANCH_PALETTE, formatDate, shortHash, t } from '../../../shared/lib'
-import { openContextMenu } from '../../../shared/ui'
+import { GitIcon, openContextMenu } from '../../../shared/ui'
 import { buildRefMenu } from '../model/refMenu'
 
 interface CommitRowProps {
@@ -46,18 +47,6 @@ function FixupGlyph() {
   )
 }
 
-/** 스태시 뱃지용 상자 글리프 — 자체 제작 (클린룸: 원본 아이콘 자산 미사용) */
-function StashGlyph() {
-  return (
-    <svg viewBox="0 0 16 16" width="10" height="10">
-      <path
-        fill="currentColor"
-        d="M1.5 3h13a.5.5 0 0 1 .5.5V6h-14V3.5a.5.5 0 0 1 .5-.5zM2 7h12v5.5a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5V7zm4 1.5v1h4v-1H6z"
-      />
-    </svg>
-  )
-}
-
 export function CommitRow(props: CommitRowProps) {
   const date = () =>
     graphStore.settings().dateType === 'commit'
@@ -77,6 +66,9 @@ export function CommitRow(props: CommitRowProps) {
         selected: props.selected,
         compared: props.compared,
         uncommitted: props.commit.isUncommitted,
+        'operation-in-progress': Boolean(
+          props.commit.isUncommitted && graphStore.graph()?.operation,
+        ),
         stash: props.commit.stashSelector !== undefined,
         'search-match': props.searchMatch,
         'search-current': props.searchCurrent,
@@ -133,7 +125,7 @@ export function CommitRow(props: CommitRowProps) {
                         (graphStore.graph()?.worktreeBranches ?? []).includes(group.ref.name)
                       if (isCheckedOut || inWorktree) return
                       if (group.ref.type === 'head') void checkoutBranch(group.ref.name)
-                      else void checkoutRemoteBranch(group.ref.name)
+                      else void checkoutRemoteBranch(group.ref.name, group.ref.remote)
                     }
               }
             />
@@ -148,7 +140,7 @@ export function CommitRow(props: CommitRowProps) {
             >
               <span class="ref-local-part">
                 <span class="ref-icon" style={{ 'background-color': lineColor() }}>
-                  <StashGlyph />
+                  <GitIcon name="stash" size={11} />
                 </span>
                 <span class="ref-name">{selector()}</span>
               </span>
@@ -183,6 +175,9 @@ export function CommitRow(props: CommitRowProps) {
           <span class="new-head-chip">{t('→ new HEAD')}</span>
         </Show>
       </div>
+      <Show when={props.commit.isUncommitted ? graphStore.graph()?.operation : null}>
+        {(operation) => <ConflictOperationControls operation={operation()} />}
+      </Show>
       <Show when={!props.commit.isUncommitted}>
         <div class="col-author" title={props.commit.authorEmail}>
           <Show when={graphStore.currentRepo()}>

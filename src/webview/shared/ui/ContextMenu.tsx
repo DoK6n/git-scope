@@ -2,6 +2,8 @@ import { createSignal, For, Show } from 'solid-js'
 
 export interface MenuItem {
   label: string
+  /** read = 보기/복사, change = 저장소·표시 상태 변경. danger는 경고색을 적용한다. */
+  intent: 'read' | 'change'
   danger?: boolean
   separatorBefore?: boolean
   onClick: () => void
@@ -47,13 +49,17 @@ export function ContextMenuHost() {
                   </Show>
                   <button
                     class="context-menu-item"
-                    classList={{ danger: item.danger }}
+                    classList={{
+                      danger: item.danger,
+                      read: !item.danger && item.intent === 'read',
+                      change: !item.danger && item.intent === 'change',
+                    }}
                     onClick={() => {
                       closeContextMenu()
                       item.onClick()
                     }}
                   >
-                    {item.label}
+                    <span>{item.label}</span>
                   </button>
                 </>
               )}

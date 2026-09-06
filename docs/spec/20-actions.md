@@ -260,7 +260,7 @@
 
 | # | 메뉴 항목 | 상태 | 흐름 |
 |---|---|---|---|
-| 1 | Checkout Branch... | `[todo]` | ↓ 4.1 |
+| 1 | Checkout Branch... | `[changed]` | ↓ 4.1 |
 | 2 | Delete Remote Branch... | `[todo]` | ↓ 4.2 |
 | 3 | Fetch into local branch... | `[done]` | ↓ 4.3 |
 | 4 | Merge into current branch... | `[todo]` | 1.7과 동일 |
@@ -272,11 +272,13 @@
 | 10 | Unselect in Branches Dropdown | `[done]` | 3.5와 동일 |
 | 11 | Copy Branch Name to Clipboard | `[todo]` | 즉시 실행, 갱신 없음 |
 
-### 4.1 Checkout Branch... `[todo]`
+### 4.1 Checkout Branch... `[changed]`
 
 우클릭 → `Checkout Branch...` → 다이얼로그에서 생성할 **로컬 추적 브랜치 이름 입력** (원격 브랜치명에서 원격 접두사를 뗀 값이 기본으로 채워진다) → 확정 → 추적 브랜치 생성 + 체크아웃 → 새 로컬 브랜치 라벨과 HEAD 이동이 반영된 상태로 그래프 갱신.
 
 로컬 브랜치의 `Checkout Branch`가 즉시 실행인 것과 달리, 여기는 이름 입력이 필요해 다이얼로그를 거친다 (원본 라벨에 `...`이 붙은 이유).
+
+**GitScope 변경점**: 입력한 로컬 브랜치가 이미 있으면 선택한 원격 ref와의 ahead/behind를 먼저 보여준다. 로컬이 앞서지 않았으면 확인 후 해당 로컬 브랜치를 체크아웃하고 fast-forward 전용 pull을 실행한다. 로컬이 앞섰거나 갈라졌으면 자동 pull 없이 Checkout Only 또는 Cancel만 제공한다. 상세 명세는 `60-new-features.md` §15 참조.
 
 ### 4.2 ⚠️ Delete Remote Branch... `[todo]`
 
@@ -428,11 +430,11 @@ Commit Details View File 메뉴 중 `Mark as Reviewed` / `Mark as Not Reviewed`�
 | 커밋 | 11 | 6 | 4 | 1 | 0 |
 | uncommitted changes | 4 | 1 | 2 | 1 | 0 |
 | 로컬 브랜치 | 12 | 5 | 4 | 0 | 3 |
-| 원격 브랜치 | 11 | 4 | 4 | 0 | 3 |
+| 원격 브랜치 | 11 | 3 | 4 | 1 | 3 |
 | 태그 | 5 | 3 | 1 | 0 | 1 |
 | 스태시 | 6 | 0 | 6 | 0 | 0 |
 | 툴바 | 2 | 1 | 0 | 1 | 0 |
-| **합계** | **51** | **20** | **21** | **3** | **7** |
+| **합계** | **51** | **19** | **21** | **4** | **7** |
 
 - 컨텍스트 메뉴 액션 49개 + 툴바 액션 2개 = **51개**
 - 이 문서 범위 외로 넘긴 메뉴 항목 15개는 위 집계에 포함하지 않았다 (§8).

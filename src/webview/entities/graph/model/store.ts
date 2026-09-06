@@ -35,6 +35,16 @@ const [maxCommits, setMaxCommits] = createSignal(initialSettings().initialLoadCo
 const [branchFilter, setBranchFilter] = createSignal<string[] | null>(null)
 /** 원격 브랜치 표시 여부 — 끄면 로그·뱃지·드롭다운에서 원격 참조 제외 */
 const [showRemotes, setShowRemotesRaw] = createSignal(true)
+/** 대응 로컬 브랜치가 없는 원격 브랜치 숨김 — webview 세션 동안 저장소 전환 후에도 유지 */
+const [hideRemoteOnlyBranches, setHideRemoteOnlyBranchesRaw] = createSignal(false)
+/** 수동 숨김은 이름 충돌을 피하도록 저장소별 세션 blocklist로 보관한다. */
+const [manuallyHiddenBranchNamesByRepo, setManuallyHiddenBranchNamesByRepo] = createSignal<
+  Record<string, string[]>
+>({})
+const hiddenBranchNames = createMemo(() => {
+  const repo = currentRepo()
+  return repo === null ? [] : (manuallyHiddenBranchNamesByRepo()[repo] ?? [])
+})
 const [selectedCommit, setSelectedCommitRaw] = createSignal<string | null>(null)
 /** Ctrl/Cmd+클릭으로 고른 비교 대상 커밋 (selectedCommit과 비교) */
 const [compareWith, setCompareWith] = createSignal<string | null>(null)
@@ -108,6 +118,8 @@ async function refresh(): Promise<void> {
       maxCommits: maxCommits(),
       branches: branchFilter(),
       includeRemotes: showRemotes(),
+      hideRemoteOnlyBranches: hideRemoteOnlyBranches(),
+      hiddenBranchNames: hiddenBranchNames(),
     })
     setGraph(data)
     setError(null)
@@ -140,6 +152,31 @@ async function applyBranchFilter(refs: string[] | null): Promise<void> {
   await refresh()
 }
 
+async function updateHiddenBranches(update: (current: string[]) => string[]): Promise<void> {
+  const repo = currentRepo()
+  if (repo === null) return
+  setManuallyHiddenBranchNamesByRepo((byRepo) => ({
+    ...byRepo,
+    [repo]: update(byRepo[repo] ?? []),
+  }))
+  setMaxCommits(settings().initialLoadCommits)
+  await refresh()
+}
+
+async function hideBranch(name: string): Promise<void> {
+  if (hiddenBranchNames().includes(name)) return
+  await updateHiddenBranches((current) => [...current, name].sort())
+}
+
+async function unhideBranch(name: string): Promise<void> {
+  await updateHiddenBranches((current) => current.filter((branch) => branch !== name))
+}
+
+async function clearHiddenBranches(): Promise<void> {
+  if (hiddenBranchNames().length === 0) return
+  await updateHiddenBranches(() => [])
+}
+
 /** 원격 브랜치 표시 토글 — 끌 때 필터에 남아 있는 원격 선택도 함께 제거 */
 async function setShowRemotes(show: boolean): Promise<void> {
   if (show === showRemotes()) return
@@ -157,6 +194,35 @@ async function setShowRemotes(show: boolean): Promise<void> {
   await refresh()
 }
 
+/** 원격 전용 브랜치 숨김 토글 — 숨겨지는 ref만 기존 allowlist에서 제거한다. */
+async function setHideRemoteOnlyBranches(hide: boolean): Promise<void> {
+  if (hide === hideRemoteOnlyBranches()) return
+  if (hide) {
+    const refs = graph()?.refs ?? []
+    const localBranches = new Set(
+      refs.filter((ref) => ref.type === 'head').map((ref) => ref.name),
+    )
+    const remoteOnly = new Set(
+      refs
+        .filter(
+          (ref) =>
+            ref.type === 'remote' &&
+            ref.remote !== undefined &&
+            ref.name !== `${ref.remote}/HEAD` &&
+            !localBranches.has(ref.name.slice(ref.remote.length + 1)),
+        )
+        .map((ref) => ref.name),
+    )
+    const current = branchFilter()
+    if (current) {
+      const next = current.filter((name) => !remoteOnly.has(name))
+      setBranchFilter(next.length === 0 ? null : next)
+    }
+  }
+  setHideRemoteOnlyBranchesRaw(hide)
+  await refresh()
+}
+
 /**
  * git 액션 실행 공통 흐름: 성공하면 그래프를 갱신하고 true,
  * 실패하면 git stderr를 에러로 노출하고 false.
@@ -166,6 +232,7 @@ async function runAction(
   action: Promise<ActionResult>,
   successMessage?: string,
   errorTitle?: string,
+  refreshOnFailure = false,
 ): Promise<boolean> {
   const fail = (message: string): false => {
     if (errorTitle) {
@@ -183,8 +250,10 @@ async function runAction(
       if (successMessage) setNotice(successMessage)
       return true
     }
+    if (refreshOnFailure) await refresh()
     return fail(result.error)
   } catch (e) {
+    if (refreshOnFailure) await refresh()
     return fail(e instanceof Error ? e.message : String(e))
   }
 }
@@ -202,8 +271,14 @@ export const graphStore = {
   error,
   setError,
   branchFilter,
+  hiddenBranchNames,
+  hideBranch,
+  unhideBranch,
+  clearHiddenBranches,
   showRemotes,
   setShowRemotes,
+  hideRemoteOnlyBranches,
+  setHideRemoteOnlyBranches,
   selectedCommit,
   setSelectedCommit,
   compareWith,

@@ -1,67 +1,34 @@
-import { createMemo, createSignal, For, Show } from 'solid-js'
+import { createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { graphStore } from '../../../entities/graph'
+import { authorStatsStore } from '../../../features/author-stats'
 import { fetchAll, fetchDefault } from '../../../features/fetch'
+import { pullCurrent } from '../../../features/pull'
 import { resetHeadN } from '../../../features/reset'
 import { stashPanelStore } from '../../../features/stash'
+import { timelineStore } from '../../../features/timeline'
 import { worktreeStore } from '../../../features/worktree'
 import { makeMatcher, t } from '../../../shared/lib'
+import { GitIcon } from '../../../shared/ui'
 import { branchLeafName, buildBranchTree, leafBranches } from '../lib/branchTree'
 import type { BranchTreeFolder } from '../lib/branchTree'
 
-/** fetch 버튼 글리프 — 구름 + 아래 화살표 (자체 제작) */
-function FetchGlyph() {
-  return (
-    <svg viewBox="0 0 16 16" width="15" height="15">
-      <path
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        d="M5.2 11.5 H4.1 A2.6 2.6 0 0 1 3.9 6.3 A4.1 4.1 0 0 1 11.9 5.2 A2.9 2.9 0 0 1 11.6 11.5 H10.8"
-      />
-      <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M8 7.2 v5.4" />
-      <path fill="currentColor" d="M8 15 L5.7 12.4 h4.6 z" />
-    </svg>
-  )
-}
-
-/** fetch --prune 글리프 — 가위 (죽은 가지치기 메타포, 자체 제작) */
-function PruneGlyph() {
-  return (
-    <svg viewBox="0 0 16 16" width="15" height="15">
-      <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-        <circle cx="3.6" cy="4.1" r="1.9" />
-        <circle cx="3.6" cy="11.9" r="1.9" />
-        <path d="M5.3 5 L13.8 12.6" />
-        <path d="M5.3 11 L13.8 3.4" />
-      </g>
-    </svg>
-  )
-}
-
-/** 새로고침 글리프 — 원형 화살표 (자체 제작). 로딩 중이면 회전 */
-function RefreshGlyph() {
-  return (
-    <svg viewBox="0 0 16 16" width="15" height="15">
-      <path
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.6"
-        stroke-linecap="round"
-        d="M13.2 8 A5.2 5.2 0 1 1 11.7 4.4"
-      />
-      <path fill="currentColor" d="M14.2 1.6 v4.8 h-4.8 z" />
-    </svg>
-  )
-}
-
 /** 상단 툴바 — [필터] · [상호작용 버튼] */
 export function Toolbar() {
+  let branchQueryInput: HTMLInputElement | undefined
   const [filterOpen, setFilterOpen] = createSignal(false)
   const [branchQuery, setBranchQuery] = createSignal('')
   const [branchView, setBranchView] = createSignal<'list' | 'tree'>('list')
   /** 접힌 폴더 path 집합 — 기본은 모두 펼침 (tree 뷰) */
   const [collapsed, setCollapsed] = createSignal<Set<string>>(new Set())
+
+  createEffect(() => {
+    if (!filterOpen()) return
+    queueMicrotask(() => {
+      if (!branchQueryInput?.isConnected) return
+      branchQueryInput.focus()
+      if (branchQueryInput.value !== '') branchQueryInput.select()
+    })
+  })
 
   /** 선택 집합 = branchFilter 그대로 — 드롭다운은 상태를 따로 들고 있지 않는다 */
   const selected = createMemo(() => new Set(graphStore.branchFilter() ?? []))
@@ -137,11 +104,38 @@ export function Toolbar() {
     setFilterOpen(false)
   }
 
+  const toggleAuthorStats = (): void => {
+    if (!authorStatsStore.panelOpen()) {
+      stashPanelStore.closePanel()
+      worktreeStore.closePanel()
+    }
+    void authorStatsStore.togglePanel()
+  }
+
+  const toggleStashes = (): void => {
+    if (!stashPanelStore.panelOpen()) authorStatsStore.closePanel()
+    void stashPanelStore.togglePanel()
+  }
+
+  const toggleWorktrees = (): void => {
+    if (!worktreeStore.panelOpen()) authorStatsStore.closePanel()
+    void worktreeStore.togglePanel()
+  }
+
   const faceLabel = () => {
     const filter = graphStore.branchFilter()
     if (!filter) return 'Show All'
     if (filter.length === 1) return filter[0]!
     return t('{0} branches', filter.length)
+  }
+
+  const pullTooltip = () => {
+    const graph = graphStore.graph()
+    if (!graph?.headBranch) return t('Cannot pull in detached HEAD state.')
+    const upstream = graph.headUpstream
+    return upstream
+      ? t('Pull current branch from {0}', `${upstream.remote}/${upstream.branch}`)
+      : t('Current branch has no upstream.')
   }
 
   const OptionRow = (p: {
@@ -263,6 +257,7 @@ export function Toolbar() {
             <div class="branch-filter-dropdown">
               <div class="branch-filter-glob">
                 <input
+                  ref={(element) => (branchQueryInput = element)}
                   type="text"
                   placeholder={t('Filter Branches… (glob: feature/*)')}
                   value={branchQuery()}
@@ -273,15 +268,30 @@ export function Toolbar() {
                 />
               </div>
               <div class="branch-filter-head">
-                <span
-                  class="toolbar-check"
-                  classList={{ checked: graphStore.showRemotes() }}
-                  title={t('Show remote branches in the graph')}
-                  onClick={() => void graphStore.setShowRemotes(!graphStore.showRemotes())}
-                >
-                  <span class="branch-option-check">✓</span>
-                  Show Remote Branches
-                </span>
+                <div class="branch-filter-scope-toggles">
+                  <span
+                    class="toolbar-check"
+                    classList={{ checked: graphStore.showRemotes() }}
+                    title={t('Show remote branches in the graph')}
+                    onClick={() => void graphStore.setShowRemotes(!graphStore.showRemotes())}
+                  >
+                    <span class="branch-option-check">✓</span>
+                    {t('Show Remote Branches')}
+                  </span>
+                  <span
+                    class="toolbar-check"
+                    classList={{ checked: graphStore.hideRemoteOnlyBranches() }}
+                    title={t('Hide remote branches without a local branch')}
+                    onClick={() =>
+                      void graphStore.setHideRemoteOnlyBranches(
+                        !graphStore.hideRemoteOnlyBranches(),
+                      )
+                    }
+                  >
+                    <span class="branch-option-check">✓</span>
+                    {t('Hide Remote-Only Branches')}
+                  </span>
+                </div>
                 <span class="files-view-toggle">
                   <button
                     class="toolbar-btn"
@@ -301,6 +311,33 @@ export function Toolbar() {
                   </button>
                 </span>
               </div>
+              <Show when={graphStore.hiddenBranchNames().length > 0}>
+                <div class="hidden-branches">
+                  <div class="hidden-branches-head">
+                    <span>{t('Hidden Branches ({0})', graphStore.hiddenBranchNames().length)}</span>
+                    <button
+                      class="hidden-branch-action"
+                      onClick={() => void graphStore.clearHiddenBranches()}
+                    >
+                      {t('Unhide All')}
+                    </button>
+                  </div>
+                  <For each={graphStore.hiddenBranchNames()}>
+                    {(name) => (
+                      <div class="hidden-branch-row" title={name}>
+                        <span class="hidden-branch-name">{name}</span>
+                        <button
+                          class="hidden-branch-action"
+                          aria-label={`${t('Unhide Branch')}: ${name}`}
+                          onClick={() => void graphStore.unhideBranch(name)}
+                        >
+                          {t('Unhide Branch')}
+                        </button>
+                      </div>
+                    )}
+                  </For>
+                </div>
+              </Show>
               <div class="branch-filter-list">
                 <OptionRow
                   checked={graphStore.branchFilter() === null}
@@ -383,49 +420,86 @@ export function Toolbar() {
       {/* 네이티브 title 툴팁이 webview에서 안 뜨는 환경이 있어 data-tip 커스텀 툴팁 사용 */}
       <div class="toolbar-section toolbar-right">
         <button
-          class="toolbar-btn"
-          data-tip="git reset --soft|mixed|hard HEAD~N"
+          class="toolbar-btn icon-btn timeline-toggle"
+          data-tip={t('Toggle commit timeline')}
+          aria-label={t('Toggle commit timeline')}
+          aria-pressed={timelineStore.panelOpen()}
+          onClick={() => timelineStore.togglePanel()}
+        >
+          <GitIcon name="timeline" size={15} />
+        </button>
+        <button
+          class="toolbar-btn with-icon"
+          data-tip={t('Open/close author statistics')}
+          aria-label={t('Open/close author statistics')}
+          classList={{ primary: authorStatsStore.panelOpen() }}
+          onClick={toggleAuthorStats}
+        >
+          <GitIcon name="statistics" size={15} />
+          <span>{t('Statistics')}</span>
+        </button>
+        <button
+          class="toolbar-btn with-icon"
+          data-tip={t('Reset HEAD by N commits')}
+          aria-label={t('Reset HEAD by N commits')}
           onClick={() => void resetHeadN()}
         >
-          Reset…
+          <GitIcon name="reset" size={15} />
+          <span>Reset…</span>
         </button>
         <button
-          class="toolbar-btn"
+          class="toolbar-btn with-icon"
           data-tip={t('Open/close the stash panel')}
+          aria-label={t('Open/close the stash panel')}
           classList={{ primary: stashPanelStore.panelOpen() }}
-          onClick={() => void stashPanelStore.togglePanel()}
+          onClick={toggleStashes}
         >
-          ▤ Stashes
+          <GitIcon name="stash" size={15} />
+          <span>{t('Stashes')}</span>
         </button>
         <button
-          class="toolbar-btn"
+          class="toolbar-btn with-icon"
           data-tip={t('Open/close the worktree panel')}
+          aria-label={t('Open/close the worktree panel')}
           classList={{ primary: worktreeStore.panelOpen() }}
-          onClick={() => void worktreeStore.togglePanel()}
+          onClick={toggleWorktrees}
         >
-          ⊕ Worktrees
+          <GitIcon name="worktree" size={15} />
+          <span>{t('Worktrees')}</span>
         </button>
         <button
-          class="toolbar-btn icon-btn"
+          class="toolbar-btn icon-btn toolbar-pull"
+          data-tip={pullTooltip()}
+          aria-label={pullTooltip()}
+          disabled={!graphStore.graph()?.headUpstream}
+          onClick={() => void pullCurrent()}
+        >
+          <GitIcon name="pull" size={15} />
+        </button>
+        <button
+          class="toolbar-btn icon-btn toolbar-fetch"
           data-tip={t('Fetch — git fetch --all')}
+          aria-label={t('Fetch — git fetch --all')}
           onClick={() => void fetchDefault()}
         >
-          <FetchGlyph />
+          <GitIcon name="fetch" size={15} />
         </button>
         <button
           class="toolbar-btn icon-btn"
           data-tip={t('Fetch (prune) — clean up refs to branches deleted on the remote')}
+          aria-label={t('Fetch (prune) — clean up refs to branches deleted on the remote')}
           onClick={() => void fetchAll(true)}
         >
-          <PruneGlyph />
+          <GitIcon name="prune" size={15} />
         </button>
         <button
           class="toolbar-btn icon-btn"
           classList={{ spinning: graphStore.loading() }}
-          data-tip="Refresh"
+          data-tip={t('Refresh graph')}
+          aria-label={t('Refresh graph')}
           onClick={() => void graphStore.refresh()}
         >
-          <RefreshGlyph />
+          <GitIcon name="refresh" size={15} />
         </button>
       </div>
     </div>

@@ -2,9 +2,19 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import type {
   ActionResult,
+  AuthorStatsEntry,
+  AuthorStatsPeriod,
+  AuthorStatsScope,
+  BranchPullPlan,
   Commit,
   CommitDetails,
+  CommitLineStats,
+  GitRef,
   GraphData,
+  InProgressOperation,
+  InProgressOperationType,
+  RemoteCheckoutPlan,
+  StashFileChange,
   StashEntry,
   TagDetails,
   Worktree,
@@ -12,8 +22,13 @@ import type {
 import { execGit, GitError } from './exec'
 import {
   countPorcelainEntries,
+  AUTHOR_STATS_FORMAT,
+  countUnmergedEntries,
+  HEAD_UPSTREAM_FORMAT,
   LOG_FORMAT,
   parseLog,
+  parseAuthorStats,
+  parseHeadUpstream,
   parseNameStatus,
   parseNumstat,
   parseRefs,
@@ -23,9 +38,130 @@ import {
   STASH_FORMAT,
   stripCommitMessageComments,
 } from './parse'
+import { calculateCommitLineStats } from './lineStats'
+import {
+  branchAheadBehindArgs,
+  branchPullMetadataArgs,
+  parseBranchPullMetadata,
+  pullBranchWithoutCheckoutArgs,
+} from './branchPull'
+import {
+  aheadBehindArgs,
+  createTrackingBranchArgs,
+  localBranchExistsArgs,
+  parseAheadBehind,
+  pullFastForwardArgs,
+  switchLocalBranchArgs,
+} from './remoteCheckout'
 
 /** git의 잘 알려진 빈 트리 해시 — 루트 커밋 디프의 베이스로 쓴다 */
 export const EMPTY_TREE_HASH = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'
+
+/** 작성자 통계 조회 범위를 Git log 인자로 변환한다. Current branch는 detached HEAD도 포함한다. */
+export function authorStatsLogArgs(
+  scope: AuthorStatsScope,
+  period: AuthorStatsPeriod,
+): string[] {
+  const since = period === 'all' ? [] : [`--since=${period.slice(0, -1)} days ago`]
+  const revisions =
+    scope === 'allRefs' ? ['--branches', '--remotes', '--tags', 'HEAD'] : ['HEAD']
+  return [
+    'log',
+    '--use-mailmap',
+    `--format=${AUTHOR_STATS_FORMAT}`,
+    ...since,
+    ...revisions,
+    '--',
+  ]
+}
+
+/** 그래프·뱃지·필터 목록에 노출할 refs에 범위 규칙과 수동 숨김을 적용한다. */
+export function visibleGraphRefs(
+  refs: GitRef[],
+  includeRemotes: boolean,
+  hideRemoteOnlyBranches: boolean,
+  hiddenBranchNames: string[] = [],
+): GitRef[] {
+  const localBranches = new Set(
+    refs.filter((ref) => ref.type === 'head').map((ref) => ref.name),
+  )
+  const hidden = new Set(hiddenBranchNames)
+  return refs
+    .filter((ref) => {
+      if (ref.type !== 'remote') return true
+      if (!includeRemotes) return false
+      if (!hideRemoteOnlyBranches || !ref.remote) return true
+      // origin/HEAD는 브랜치가 아닌 심볼릭 ref이며 기존 표시 의미를 유지한다.
+      if (ref.name === `${ref.remote}/HEAD`) return true
+      return localBranches.has(ref.name.slice(ref.remote.length + 1))
+    })
+    .filter((ref) => {
+      if (ref.type === 'tag') return true
+      if (ref.type === 'remote' && ref.remote && ref.name === `${ref.remote}/HEAD`) return true
+      return !hidden.has(ref.name)
+    })
+}
+
+/** 브랜치 표시 옵션을 실제 git log revision 인자로 변환한다. 빈 배열이면 조회 대상이 없다. */
+export function graphRevisionArgs(
+  branches: string[] | null,
+  refs: GitRef[],
+  includeRemotes: boolean,
+  hideRemoteOnlyBranches: boolean,
+  hiddenBranchNames: string[] = [],
+  headBranch: string | null = null,
+): string[] {
+  if (hiddenBranchNames.length > 0) {
+    const visible = visibleGraphRefs(
+      refs,
+      includeRemotes,
+      hideRemoteOnlyBranches,
+      hiddenBranchNames,
+    )
+    if (branches !== null) {
+      const visibleNames = new Set(visible.map((ref) => ref.name))
+      return branches.filter((name) => visibleNames.has(name))
+    }
+
+    const revisions = visible
+      .filter(
+        (ref) =>
+          ref.type === 'head' ||
+          (ref.type === 'remote' && ref.remote && ref.name !== `${ref.remote}/HEAD`),
+      )
+      .map((ref) =>
+        ref.type === 'head' ? `refs/heads/${ref.name}` : `refs/remotes/${ref.name}`,
+      )
+    revisions.push('--tags')
+    if (headBranch === null) revisions.push('HEAD')
+    return revisions
+  }
+
+  if (branches === null) {
+    if (!includeRemotes) return ['--branches', '--tags', 'HEAD']
+    if (!hideRemoteOnlyBranches) return ['--branches', '--remotes', '--tags', 'HEAD']
+    const visible = visibleGraphRefs(refs, true, true)
+      .filter(
+        (ref) =>
+          ref.type === 'remote' &&
+          ref.remote !== undefined &&
+          ref.name !== `${ref.remote}/HEAD`,
+      )
+      .map((ref) => `refs/remotes/${ref.name}`)
+    return ['--branches', ...visible, '--tags', 'HEAD']
+  }
+
+  if (includeRemotes && !hideRemoteOnlyBranches) return branches
+  const visibleNames = new Set(
+    visibleGraphRefs(refs, includeRemotes, hideRemoteOnlyBranches).map((ref) => ref.name),
+  )
+  const hiddenRemoteNames = new Set(
+    refs
+      .filter((ref) => ref.type === 'remote' && !visibleNames.has(ref.name))
+      .map((ref) => ref.name),
+  )
+  return branches.filter((name) => !hiddenRemoteNames.has(name))
+}
 
 /** 리포 하나에 대한 git 명령 실행기 */
 export class GitRepo {
@@ -41,9 +177,13 @@ export class GitRepo {
       await this.git(args)
       return { ok: true }
     } catch (e) {
-      if (e instanceof GitError) return { ok: false, error: e.stderr.trim() || e.message }
-      return { ok: false, error: String(e) }
+      return this.actionError(e)
     }
+  }
+
+  private actionError(error: unknown): ActionResult {
+    if (error instanceof GitError) return { ok: false, error: error.stderr.trim() || error.message }
+    return { ok: false, error: String(error) }
   }
 
   // ── 조회 ─────────────────────────────────────────
@@ -52,34 +192,78 @@ export class GitRepo {
     maxCommits: number,
     branches: string[] | null,
     includeRemotes = true,
+    hideRemoteOnlyBranches = false,
+    hiddenBranchNames: string[] = [],
   ): Promise<GraphData> {
-    // 필터가 있으면 선택된 브랜치만 — HEAD를 넣으면 체크아웃 브랜치 이력이 항상 섞여
-    // 필터가 무력화되므로, HEAD는 전체 표시일 때만 포함한다
+    const refsPromise = this.git(['for-each-ref', `--format=${REF_FORMAT}`])
+    const headHashPromise = this.git(['rev-parse', 'HEAD'], [128])
+      .then((value) => (value.startsWith('HEAD') || value === '' ? null : value.trim()))
+      .catch(() => null)
+    const headBranchPromise = this.git(['symbolic-ref', '--short', '-q', 'HEAD'], [1]).then(
+      (value) => value.trim() || null,
+    )
+    const headUpstreamPromise = this.git([
+      'for-each-ref',
+      `--format=${HEAD_UPSTREAM_FORMAT}`,
+      '--points-at',
+      'HEAD',
+      'refs/heads',
+    ]).catch(() => '')
+    const statusPromise = this.git(['status', '--porcelain', '-z'])
+    const worktreesPromise = this.listWorktrees().catch(() => [] as Worktree[])
+    // 원격 ref를 선별해야 할 때만 refs를 먼저 기다린다. 기본 경로는 log와 refs를 병렬 조회한다.
+    const needsRefAwareRevisions =
+      hideRemoteOnlyBranches ||
+      hiddenBranchNames.length > 0 ||
+      (!includeRemotes && branches !== null)
+    const [refsBeforeLog, headBranchBeforeLog] = needsRefAwareRevisions
+      ? await Promise.all([refsPromise, headBranchPromise])
+      : [null, null]
     const revisions =
-      branches === null
-        ? ['--branches', ...(includeRemotes ? ['--remotes'] : []), '--tags', 'HEAD']
-        : branches
-    const [logOut, refsOut, headHash, headBranch, statusOut, worktrees] = await Promise.all([
-      this.git([
-        'log',
-        '--date-order',
-        `-n`,
-        String(maxCommits + 1),
-        `--format=${LOG_FORMAT}`,
-        ...revisions,
-        '--',
-      ]).catch((e) => {
-        // 커밋이 하나도 없는 리포는 log가 실패한다
-        if (e instanceof GitError && /does not have any commits|bad revision/i.test(e.stderr)) return ''
-        throw e
-      }),
-      this.git(['for-each-ref', `--format=${REF_FORMAT}`]),
-      this.git(['rev-parse', 'HEAD'], [128]).then((s) => (s.startsWith('HEAD') || s === '' ? null : s.trim())).catch(() => null),
-      this.git(['symbolic-ref', '--short', '-q', 'HEAD'], [1]).then((s) => s.trim() || null),
-      this.git(['status', '--porcelain', '-z']),
-      this.listWorktrees().catch(() => [] as Worktree[]),
+      refsBeforeLog === null
+        ? branches === null
+          ? ['--branches', ...(includeRemotes ? ['--remotes'] : []), '--tags', 'HEAD']
+          : branches
+        : graphRevisionArgs(
+            branches,
+            parseRefs(refsBeforeLog),
+            includeRemotes,
+            hideRemoteOnlyBranches,
+            hiddenBranchNames,
+            headBranchBeforeLog,
+          )
+    const [logOut, refsOut, headHash, headBranch, headUpstreamOut, statusOut, worktrees] =
+      await Promise.all([
+        revisions.length === 0
+          ? Promise.resolve('')
+          : this.git([
+              'log',
+              '--date-order',
+              `-n`,
+              String(maxCommits + 1),
+              `--format=${LOG_FORMAT}`,
+              ...revisions,
+              '--',
+            ]).catch((e) => {
+              // 커밋이 하나도 없는 리포는 log가 실패한다
+              if (
+                e instanceof GitError &&
+                /does not have any commits|bad revision/i.test(e.stderr)
+              )
+                return ''
+              throw e
+            }),
+        refsPromise,
+        headHashPromise,
+        headBranchPromise,
+        headUpstreamPromise,
+        statusPromise,
+        worktreesPromise,
+      ])
+    const [stashOut, operation] = await Promise.all([
+      this.git(['stash', 'list', `--format=${STASH_FORMAT}`]).catch(() => ''),
+      this.getInProgressOperation(statusOut),
     ])
-    const stashOut = await this.git(['stash', 'list', `--format=${STASH_FORMAT}`]).catch(() => '')
 
     let commits = parseLog(logOut)
     const moreAvailable = commits.length > maxCommits
@@ -102,9 +286,14 @@ export class GitRepo {
     }
 
     const uncommittedCount = countPorcelainEntries(statusOut)
-    // 브랜치 필터로 HEAD 커밋이 로드되지 않았으면 부모 없는 고아 노드가 되므로 얹지 않는다
+    // 일반 변경은 브랜치 필터로 HEAD가 빠지면 고아 노드가 되므로 얹지 않는다.
+    // 진행 중 작업은 필터와 무관하게 알려야 하므로 행을 유지한다.
     const headLoaded = headHash !== null && commits.some((c) => c.hash === headHash)
-    if (uncommittedCount > 0 && headHash !== null && headLoaded) {
+    if (
+      (uncommittedCount > 0 || operation !== null) &&
+      headHash !== null &&
+      (headLoaded || operation !== null)
+    ) {
       // 워킹트리 변경사항을 HEAD를 부모로 갖는 합성 커밋으로 그래프 맨 위에 얹는다
       const now = Math.floor(Date.now() / 1000)
       const uncommitted: Commit = {
@@ -122,15 +311,59 @@ export class GitRepo {
 
     return {
       commits,
-      refs: parseRefs(refsOut).filter((r) => includeRemotes || r.type !== 'remote'),
+      refs: visibleGraphRefs(
+        parseRefs(refsOut),
+        includeRemotes,
+        hideRemoteOnlyBranches,
+        hiddenBranchNames,
+      ),
       headHash,
       headBranch,
+      headUpstream: parseHeadUpstream(headUpstreamOut),
       uncommittedCount,
+      operation,
       moreAvailable,
       worktreeBranches: worktrees
         .filter((w) => !w.isMain && w.branch !== null)
         .map((w) => w.branch as string),
     }
+  }
+
+  /**
+   * 진행 중인 Git 작업 판정. 경로는 Git이 해석하게 해 linked worktree·서브모듈의
+   * 실제 gitdir에 있는 상태 파일/디렉토리를 확인한다.
+   */
+  private async getInProgressOperation(statusOut: string): Promise<InProgressOperation | null> {
+    const [mergeHead, rebaseMerge, rebaseApply, cherryPickHead, revertHead] = await this.gitPaths(
+      'MERGE_HEAD',
+      'rebase-merge',
+      'rebase-apply',
+      'CHERRY_PICK_HEAD',
+      'REVERT_HEAD',
+    )
+    const exists = (filePath: string | undefined): Promise<boolean> =>
+      filePath === undefined
+        ? Promise.resolve(false)
+        : fs.promises.stat(filePath).then(
+            () => true,
+            () => false,
+          )
+    const [merging, rebaseMergeExists, rebaseApplyExists, cherryPicking, reverting] =
+      await Promise.all([
+        exists(mergeHead),
+        exists(rebaseMerge),
+        exists(rebaseApply),
+        exists(cherryPickHead),
+        exists(revertHead),
+      ])
+
+    // rebase는 내부적으로 cherry-pick 상태 파일을 함께 남길 수 있으므로 우선 판정한다.
+    let type: InProgressOperationType | null = null
+    if (rebaseMergeExists || rebaseApplyExists) type = 'rebase'
+    else if (merging) type = 'merge'
+    else if (cherryPicking) type = 'cherry-pick'
+    else if (reverting) type = 'revert'
+    return type === null ? null : { type, conflictCount: countUnmergedEntries(statusOut) }
   }
 
   async getCommitDetails(hash: string): Promise<CommitDetails> {
@@ -157,9 +390,51 @@ export class GitRepo {
     }
   }
 
+  /**
+   * 로드된 그래프와 무관한 작성자별 전체 히스토리 집계.
+   * %aN/%aE와 --use-mailmap을 함께 써서 설정값과 무관하게 mailmap을 적용한다.
+   */
+  async getAuthorStats(
+    scope: AuthorStatsScope,
+    period: AuthorStatsPeriod,
+  ): Promise<AuthorStatsEntry[]> {
+    try {
+      const output = await this.git(authorStatsLogArgs(scope, period))
+      return parseAuthorStats(output)
+    } catch (e) {
+      // unborn HEAD / 커밋이 하나도 없는 저장소는 빈 통계로 표시한다.
+      if (e instanceof GitError && /does not have any commits|bad revision|unknown revision/i.test(e.stderr))
+        return []
+      throw e
+    }
+  }
+
   async getComparison(fromHash: string, toHash: string): Promise<CommitDetails> {
     const details = await this.getCommitDetails(toHash)
     return { ...details, files: await this.diffFiles(fromHash, toHash) }
+  }
+
+  /** 공백·주석 전용 변경 줄을 근사 제외한 커밋 라인 통계 */
+  async getCommitLineStats(baseHash: string | null, hash: string): Promise<CommitLineStats> {
+    const base = baseHash ?? EMPTY_TREE_HASH
+    const [numstat, patch] = await Promise.all([
+      this.git(['diff', '--numstat', '-z', '--find-renames', base, hash, '--']),
+      this.git([
+        '-c',
+        'core.quotePath=false',
+        'diff',
+        '--no-ext-diff',
+        '--no-color',
+        '--no-prefix',
+        '--unified=0',
+        '--find-renames',
+        base,
+        hash,
+        '--',
+      ]),
+    ])
+    const files = [...parseNumstat(numstat)].map(([path, stat]) => ({ path, ...stat }))
+    return calculateCommitLineStats(files, patch)
   }
 
   /** name-status(변경 종류) + numstat(추가/삭제 라인 수)을 합친 파일 목록 */
@@ -190,8 +465,55 @@ export class GitRepo {
     return this.action(['switch', name])
   }
 
-  checkoutRemoteBranch(remoteName: string, localName: string): Promise<ActionResult> {
-    return this.action(['switch', '-c', localName, '--track', remoteName])
+  async getRemoteCheckoutPlan(
+    remote: string,
+    branch: string,
+    localName: string,
+  ): Promise<RemoteCheckoutPlan> {
+    const localHash = await this.git(localBranchExistsArgs(localName), [1])
+    if (localHash.trim() === '') return { localExists: false, ahead: 0, behind: 0 }
+    const counts = await this.git(aheadBehindArgs(remote, branch, localName))
+    return { localExists: true, ...parseAheadBehind(counts) }
+  }
+
+  async checkoutRemoteBranch(
+    remote: string,
+    branch: string,
+    localName: string,
+    mode: 'create' | 'checkout-only' | 'checkout-and-pull',
+  ): Promise<ActionResult> {
+    try {
+      // 확인 다이얼로그 뒤 ref가 바뀌었을 수 있으므로, 첫 mutation 전에 다시 판정한다.
+      const plan = await this.getRemoteCheckoutPlan(remote, branch, localName)
+      if (mode === 'create') {
+        if (plan.localExists) {
+          return {
+            ok: false,
+            error: `Local branch "${localName}" now exists. Retry remote checkout to review its ahead/behind state.`,
+          }
+        }
+        return this.action(createTrackingBranchArgs(remote, branch, localName))
+      }
+
+      if (!plan.localExists) {
+        return {
+          ok: false,
+          error: `Local branch "${localName}" no longer exists. Retry remote checkout.`,
+        }
+      }
+      if (mode === 'checkout-and-pull' && plan.ahead > 0) {
+        return {
+          ok: false,
+          error: `Automatic pull stopped: local branch "${localName}" is ${plan.ahead} ahead and ${plan.behind} behind ${remote}/${branch}. No branch was checked out or rewritten.`,
+        }
+      }
+
+      const switched = await this.action(switchLocalBranchArgs(localName))
+      if (!switched.ok || mode === 'checkout-only') return switched
+      return this.action(pullFastForwardArgs(remote, branch))
+    } catch (error) {
+      return this.actionError(error)
+    }
   }
 
   checkoutCommit(hash: string): Promise<ActionResult> {
@@ -453,6 +775,95 @@ export class GitRepo {
     return this.action(['pull', remote, branch])
   }
 
+  pullCurrent(): Promise<ActionResult> {
+    return this.action(['pull'])
+  }
+
+  async getBranchPullPlan(branch: string): Promise<BranchPullPlan> {
+    const metadata = parseBranchPullMetadata(
+      await this.git(branchPullMetadataArgs(branch)),
+      branch,
+    )
+    if (!metadata) throw new Error(`Local branch "${branch}" does not exist.`)
+
+    const current = await this.git(['symbolic-ref', '--short', '-q', 'HEAD'], [1])
+      .then((value) => value.trim())
+      .catch(() => '')
+    if (!metadata.upstreamRef) {
+      return {
+        upstream: null,
+        ahead: 0,
+        behind: 0,
+        worktreePath: metadata.worktreePath,
+        isCurrent: current === branch,
+      }
+    }
+
+    const counts = parseAheadBehind(
+      await this.git(branchAheadBehindArgs(branch, metadata.upstreamRef)),
+    )
+    return {
+      upstream: {
+        displayName: metadata.upstreamDisplayName!,
+        remote: metadata.remote!,
+        remoteRef: metadata.remoteRef!,
+      },
+      ...counts,
+      worktreePath: metadata.worktreePath,
+      isCurrent: current === branch,
+    }
+  }
+
+  async pullBranchWithoutCheckout(
+    branch: string,
+    expectedRemote: string,
+    expectedRemoteRef: string,
+  ): Promise<ActionResult> {
+    try {
+      // 확인 이후 ref/upstream/worktree 상태가 바뀌었을 수 있으므로 mutation 직전에 재검사한다.
+      const plan = await this.getBranchPullPlan(branch)
+      if (!plan.upstream) {
+        return { ok: false, error: `Branch "${branch}" has no upstream branch.` }
+      }
+      if (
+        plan.upstream.remote !== expectedRemote ||
+        plan.upstream.remoteRef !== expectedRemoteRef
+      ) {
+        return {
+          ok: false,
+          error: `The upstream of branch "${branch}" changed. Review the branch and try again.`,
+        }
+      }
+      if (plan.isCurrent) {
+        return {
+          ok: false,
+          error: `Branch "${branch}" is now checked out in the current worktree. Use the regular Pull action instead.`,
+        }
+      }
+      if (plan.worktreePath) {
+        return {
+          ok: false,
+          error: `Branch "${branch}" is checked out in worktree "${plan.worktreePath}" and cannot be updated without checkout there.`,
+        }
+      }
+      if (plan.ahead > 0) {
+        return {
+          ok: false,
+          error: `Fast-forward pull stopped: branch "${branch}" is ${plan.ahead} ahead and ${plan.behind} behind ${plan.upstream.displayName}. No ref was updated.`,
+        }
+      }
+      return this.action(
+        pullBranchWithoutCheckoutArgs(
+          branch,
+          plan.upstream.remote,
+          plan.upstream.remoteRef,
+        ),
+      )
+    } catch (error) {
+      return this.actionError(error)
+    }
+  }
+
   deleteRemoteBranch(remote: string, name: string): Promise<ActionResult> {
     return this.action(['push', remote, '--delete', name])
   }
@@ -502,6 +913,44 @@ export class GitRepo {
     return this.action(['stash', 'drop', selector])
   }
 
+  /** Git에는 stash rename이 없어 tree·parents·작성 정보를 보존한 새 commit을 저장한다. */
+  async stashRename(selector: string, message: string): Promise<ActionResult> {
+    const index = /^stash@\{(\d+)\}$/.exec(selector)?.[1]
+    const trimmed = message.trim()
+    if (index === undefined || trimmed === '') {
+      return { ok: false, error: `Invalid stash rename: ${selector}` }
+    }
+
+    try {
+      const stash = (await this.listStashes()).find((entry) => entry.selector === selector)
+      if (!stash) return { ok: false, error: `Stash not found: ${selector}` }
+      if (trimmed === stash.message) return { ok: true }
+
+      const subject = stash.branch ? `On ${stash.branch}: ${trimmed}` : trimmed
+      const original = await this.git(['cat-file', 'commit', stash.hash])
+      const headerEnd = original.indexOf('\n\n')
+      if (headerEnd < 0) return { ok: false, error: `Invalid stash commit: ${stash.hash}` }
+      const renamedCommit = `${original.slice(0, headerEnd)}\n\n${subject}\n`
+      const renamedHash = (
+        await execGit(['hash-object', '-t', 'commit', '-w', '--stdin'], {
+          cwd: this.root,
+          stdin: renamedCommit,
+        })
+      ).trim()
+      await this.git(['stash', 'store', '-m', subject, renamedHash])
+      try {
+        await this.git(['stash', 'drop', `stash@{${Number(index) + 1}}`])
+      } catch (error) {
+        // 원본 제거 실패 시 방금 만든 맨 위 항목을 지워 rename 전 상태로 복구한다.
+        await this.git(['stash', 'drop', 'stash@{0}']).catch(() => '')
+        return this.actionError(error)
+      }
+      return { ok: true }
+    } catch (error) {
+      return this.actionError(error)
+    }
+  }
+
   stashBranch(selector: string, branchName: string): Promise<ActionResult> {
     return this.action(['stash', 'branch', branchName, selector])
   }
@@ -525,6 +974,16 @@ export class GitRepo {
 
   reset(to: string, mode: 'soft' | 'mixed' | 'hard'): Promise<ActionResult> {
     return this.action(['reset', `--${mode}`, to])
+  }
+
+  abortOperation(operation: InProgressOperationType): Promise<ActionResult> {
+    const commands: Record<InProgressOperationType, string> = {
+      merge: 'merge',
+      rebase: 'rebase',
+      'cherry-pick': 'cherry-pick',
+      revert: 'revert',
+    }
+    return this.action([commands[operation], '--abort'])
   }
 
   fetch(prune: boolean): Promise<ActionResult> {
@@ -556,6 +1015,38 @@ export class GitRepo {
       for (const stash of stashes) stash.isOrphan = orphans.has(stash.baseHash)
     }
     return stashes
+  }
+
+  /** 스태시의 tracked/untracked 변경 파일 — 펼친 행에서만 지연 조회한다. */
+  async getStashFiles(selector: string): Promise<StashFileChange[]> {
+    const args = ['stash', 'show', '--include-untracked', '--find-renames']
+    const [nameStatus, numstat, stashHash, baseHash, untrackedHash] = await Promise.all([
+      this.git([...args, '--name-status', '-z', selector]),
+      this.git([...args, '--numstat', '-z', selector]),
+      this.git(['rev-parse', '--verify', selector]),
+      this.git(['rev-parse', '--verify', `${selector}^1`]),
+      this.git(['rev-parse', '--verify', '--quiet', `${selector}^3`], [1]),
+    ])
+    const resolvedStashHash = stashHash.trim()
+    const resolvedBaseHash = baseHash.trim()
+    const resolvedUntrackedHash = untrackedHash.trim()
+    const untrackedPaths = new Set(
+      resolvedUntrackedHash
+        ? (await this.git(['ls-tree', '-r', '--name-only', '-z', resolvedUntrackedHash]))
+            .split('\0')
+            .filter(Boolean)
+        : [],
+    )
+    const stats = parseNumstat(numstat)
+    return parseNameStatus(nameStatus).map((file) => {
+      const isUntracked = untrackedPaths.has(file.path)
+      return {
+        ...file,
+        ...(stats.get(file.path) ?? {}),
+        hash: isUntracked ? resolvedUntrackedHash : resolvedStashHash,
+        baseHash: isUntracked ? EMPTY_TREE_HASH : resolvedBaseHash,
+      }
+    })
   }
 
   async listWorktrees(): Promise<Worktree[]> {

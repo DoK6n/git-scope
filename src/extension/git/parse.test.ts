@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   countPorcelainEntries,
+  parseAuthorStats,
+  countUnmergedEntries,
+  parseHeadUpstream,
   parseLog,
   parseNameStatus,
   parseRefs,
@@ -64,6 +67,27 @@ describe('parseLog', () => {
   })
 })
 
+describe('parseAuthorStats', () => {
+  it('mailmap 정규 이메일 기준으로 합치고 최신 대표 커밋을 유지한 채 커밋 수 순으로 정렬한다', () => {
+    const output = [
+      ['kim-newest', 'Kim Dokyun', 'dokyun@example.com'].join(NUL),
+      ['kim-older', 'Kim D.', 'DOKYUN@example.com'].join(NUL),
+      ['alice-hash', 'Alice', 'alice@example.com'].join(NUL),
+      ['bob-hash', 'Bob', 'bob@example.com'].join(NUL),
+    ].join('\n')
+
+    expect(parseAuthorStats(output)).toEqual([
+      { name: 'Kim Dokyun', email: 'dokyun@example.com', commits: 2, commitHash: 'kim-newest' },
+      { name: 'Alice', email: 'alice@example.com', commits: 1, commitHash: 'alice-hash' },
+      { name: 'Bob', email: 'bob@example.com', commits: 1, commitHash: 'bob-hash' },
+    ])
+  })
+
+  it('빈 출력이면 빈 통계다', () => {
+    expect(parseAuthorStats('')).toEqual([])
+  })
+})
+
 describe('parseRefs', () => {
   it('로컬/원격/태그를 구분하고 origin/HEAD도 원격 참조로 포함한다', () => {
     const out = [
@@ -85,6 +109,21 @@ describe('parseRefs', () => {
       { name: 'v1.0.0', hash: 'ccc', type: 'tag' },
       { name: 'v0.1.0-light', hash: 'ddd', type: 'tag' },
     ])
+  })
+})
+
+describe('parseHeadUpstream', () => {
+  it('현재 브랜치 행에서 upstream 원격과 브랜치명을 파싱한다', () => {
+    const out = [
+      [' ', 'origin', 'refs/heads/other'].join(NUL),
+      ['*', 'upstream', 'refs/heads/feature/pull'].join(NUL),
+    ].join('\n')
+    expect(parseHeadUpstream(out)).toEqual({ remote: 'upstream', branch: 'feature/pull' })
+  })
+
+  it('detached HEAD 또는 upstream 미설정이면 null이다', () => {
+    expect(parseHeadUpstream([' ', 'origin', 'refs/heads/main'].join(NUL))).toBeNull()
+    expect(parseHeadUpstream(['*', '', ''].join(NUL))).toBeNull()
   })
 })
 
@@ -135,6 +174,23 @@ describe('countPorcelainEntries', () => {
   })
 })
 
+describe('countUnmergedEntries', () => {
+  it('실제 porcelain v1 상태 코드 중 unmerged 파일만 센다', () => {
+    const out = [
+      'UU src/both-modified.ts',
+      'AA src/both-added.ts',
+      'DU src/deleted-by-us.ts',
+      ' M src/ordinary.ts',
+      '?? untracked.txt',
+    ].join(NUL) + NUL
+    expect(countUnmergedEntries(out)).toBe(3)
+  })
+
+  it('충돌이 없으면 0', () => {
+    expect(countUnmergedEntries(' M src/a.ts\0A  src/b.ts\0')).toBe(0)
+  })
+})
+
 describe('parseStashList', () => {
   it('stash 항목을 파싱한다', async () => {
     const { parseStashList } = await import('./parse')
@@ -155,6 +211,20 @@ describe('parseStashList', () => {
       selector: 'stash@{0}',
       baseHash: 'base1111',
       subject: 'WIP on main: 1234 feat',
+      branch: 'main',
+      message: '1234 feat',
+    })
+  })
+
+  it('사용자 메시지와 비표준 stash 제목을 표시 정보로 분리한다', async () => {
+    const { parseStashSubject } = await import('./parse')
+    expect(parseStashSubject('On feature/panel: keep local work')).toEqual({
+      branch: 'feature/panel',
+      message: 'keep local work',
+    })
+    expect(parseStashSubject('Created via git stash store')).toEqual({
+      branch: null,
+      message: 'Created via git stash store',
     })
   })
 
