@@ -139,7 +139,7 @@ export function CommitRow(props: CommitRowProps) {
               title={selector()}
             >
               <span class="ref-local-part">
-                <span class="ref-icon">
+                <span class="ref-icon" style={{ 'background-color': lineColor() }}>
                   <GitIcon name="stash" size={11} />
                 </span>
                 <span class="ref-name">{selector()}</span>
@@ -159,7 +159,7 @@ export function CommitRow(props: CommitRowProps) {
               }}
             >
               <span class="ref-local-part">
-                <span class="ref-icon">
+                <span class="ref-icon" style={{ 'background-color': lineColor() }}>
                   <FixupGlyph />
                 </span>
                 <span class="ref-name">{kind()}</span>

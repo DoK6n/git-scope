@@ -51,6 +51,29 @@ describe('Git reference badge icons', () => {
     ).toEqual(['branch', 'remote', 'tag'])
   })
 
+  it('uses each graph lane color for its reference icon chip', () => {
+    const cases: { group: RefGroup; color: string }[] = [
+      {
+        group: { ref: { name: 'main', hash: 'a', type: 'head' }, remotes: [] },
+        color: 'rgb(83, 193, 127)',
+      },
+      {
+        group: { ref: { name: 'v1.0.0', hash: 'b', type: 'tag' }, remotes: [] },
+        color: 'rgb(214, 119, 74)',
+      },
+    ]
+    const root = mount(() => (
+      <For each={cases}>
+        {(testCase) => <RefBadge group={testCase.group} color={testCase.color} />}
+      </For>
+    ))
+    expect(
+      [...root.querySelectorAll<HTMLElement>('.ref-icon')].map(
+        (icon) => icon.style.backgroundColor,
+      ),
+    ).toEqual(cases.map((testCase) => testCase.color))
+  })
+
   it('uses the stash icon on a stash commit badge', () => {
     const stash: Commit = {
       hash: 'abc',
@@ -75,5 +98,8 @@ describe('Git reference badge icons', () => {
       />
     ))
     expect(root.querySelector('.stash-badge [data-icon="stash"]')).toBeTruthy()
+    expect(
+      (root.querySelector('.stash-badge .ref-icon') as HTMLElement).style.backgroundColor,
+    ).not.toBe('')
   })
 })
