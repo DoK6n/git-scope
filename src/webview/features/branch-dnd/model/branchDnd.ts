@@ -86,11 +86,15 @@ export async function confirmBranchDrop(
     await graphStore.runAction(
       request('rebaseBranchOnto', { repo, branch: source.name, onto: target }),
       t('Rebased {0} onto {1}', source.name, target),
+      undefined,
+      true,
     )
   } else {
     await graphStore.runAction(
       request('mergeBranchInto', { repo, source: source.name, target }),
       t('Merged {0} into {1}', source.name, target),
+      undefined,
+      true,
     )
   }
 }

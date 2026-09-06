@@ -103,8 +103,16 @@ describe('충돌 작업 Abort UI 흐름', () => {
     expect(document.querySelector('.commit-row.uncommitted.operation-in-progress')).toBeTruthy()
     expect(document.querySelector('.operation-badge')?.textContent).toBe('merging')
     expect(document.querySelector('.conflict-count')?.textContent).toBe('2 conflicts')
+    const abortButton = document.querySelector<HTMLButtonElement>('.conflict-abort-btn')!
+    expect(abortButton.textContent).toBe('')
+    expect(abortButton.title).toBe('Abort')
+    expect(abortButton.getAttribute('aria-label')).toBe('Abort')
+    expect(abortButton.dataset.tip).toBe('Abort')
+    expect(abortButton.querySelector('[data-icon="reset"]')).toBeTruthy()
+    expect(abortButton.closest('.col-message')).toBeNull()
+    expect(abortButton.closest('.commit-row')).toBeTruthy()
 
-    document.querySelector<HTMLButtonElement>('.conflict-abort-btn')!.click()
+    abortButton.click()
     await flush()
 
     expect(document.querySelector('.dialog-title')?.textContent).toBe('Abort merging?')
@@ -129,7 +137,10 @@ describe('충돌 작업 Abort UI 흐름', () => {
     await flush()
     expect(document.querySelector('.operation-badge')?.textContent).toBe('머지 중')
     expect(document.querySelector('.conflict-count')?.textContent).toBe('충돌 2개')
-    expect(document.querySelector('.conflict-abort-btn')?.textContent).toBe('중단')
+    const abortButton = document.querySelector<HTMLButtonElement>('.conflict-abort-btn')!
+    expect(abortButton.title).toBe('중단')
+    expect(abortButton.getAttribute('aria-label')).toBe('중단')
+    expect(abortButton.dataset.tip).toBe('중단')
   })
 
   it('git 실패 시 stderr를 오류 다이얼로그에 그대로 표시한다', async () => {

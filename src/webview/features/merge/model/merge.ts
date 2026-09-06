@@ -33,5 +33,8 @@ export async function mergeInto(target: string): Promise<void> {
       noFf: values.mode === 'no-ff',
       squash: values.mode === 'squash',
     }),
+    undefined,
+    undefined,
+    true,
   )
 }

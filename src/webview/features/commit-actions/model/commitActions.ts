@@ -31,6 +31,8 @@ export async function cherryPick(commit: Commit): Promise<void> {
       isMerge: commit.parents.length > 1,
     }),
     t('Cherry-picked {0}', commit.hash.slice(0, 8)),
+    undefined,
+    true,
   )
 }
 
@@ -47,6 +49,8 @@ export async function revertCommit(commit: Commit): Promise<void> {
   await graphStore.runAction(
     request('revert', { repo: r, hash: commit.hash, isMerge: commit.parents.length > 1 }),
     t('Reverted {0}', commit.hash.slice(0, 8)),
+    undefined,
+    true,
   )
 }
 
@@ -118,5 +122,7 @@ export async function rebaseOnto(target: string, label: string): Promise<void> {
   await graphStore.runAction(
     request('rebase', { repo: r, target }),
     t('Rebased onto {0}', label),
+    undefined,
+    true,
   )
 }
