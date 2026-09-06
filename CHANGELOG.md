@@ -22,7 +22,7 @@
 
 ### Changed
 
-- Standardized Git-related icons across the toolbar, context menus, and branch/remote/tag/stash badges with one VS Code-style 16px icon set. Context menus now visually distinguish read-only, state-changing, and destructive actions without replacing their labels or confirmation dialogs, while icon and danger colors follow VS Code theme variables for light and dark theme contrast.
+- Standardized Git-related icons across the toolbar and branch/remote/tag/stash badges with one VS Code-style 16px icon set. Context menus remain text-only, using the existing warning color for destructive actions, while icon and danger colors follow VS Code theme variables for light and dark theme contrast.
 
 ## [0.6.3] - 2026-09-03
 

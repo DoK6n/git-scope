@@ -41,7 +41,7 @@ describe('GitIcon', () => {
 })
 
 describe('roadmap icon locations', () => {
-  it('distinguishes read, state-changing, and destructive context-menu actions', () => {
+  it('keeps context menus text-only while preserving destructive styling', () => {
     const root = mount(() => <ContextMenuHost />)
     openContextMenu(new MouseEvent('contextmenu', { clientX: 10, clientY: 10 }), [
       { label: 'Copy', intent: 'read', onClick: () => {} },
@@ -49,11 +49,9 @@ describe('roadmap icon locations', () => {
       { label: 'Delete', intent: 'change', danger: true, onClick: () => {} },
     ])
 
-    expect([...root.querySelectorAll('[data-icon]')].map((icon) => icon.getAttribute('data-icon')))
-      .toEqual(['read', 'change', 'danger'])
-    expect(root.querySelectorAll('.context-menu-icon.read')).toHaveLength(1)
-    expect(root.querySelectorAll('.context-menu-icon.change')).toHaveLength(1)
-    expect(root.querySelectorAll('.context-menu-icon.danger')).toHaveLength(1)
+    expect(root.querySelectorAll('[data-icon]')).toHaveLength(0)
+    expect(root.querySelectorAll('.context-menu-icon')).toHaveLength(0)
+    expect(root.querySelectorAll('.context-menu-item')).toHaveLength(3)
     expect(root.querySelector('.context-menu-item.danger')!.textContent).toContain('Delete')
   })
 
