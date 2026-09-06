@@ -5,6 +5,8 @@ interface DialogProps {
   open: boolean
   title: string
   onClose: () => void
+  /** 단일 행 입력에서 Enter로 폼을 확정할 때 호출 */
+  onConfirm?: () => void
   /** 하단 버튼 영역 */
   footer?: JSX.Element
 }
@@ -60,6 +62,19 @@ export const Dialog: ParentComponent<DialogProps> = (props) => {
     if (e.key === 'Escape') {
       e.stopPropagation() // 뒤의 find 위젯 등 다른 Esc 처리로 번지지 않게
       props.onClose()
+      return
+    }
+
+    if (
+      e.key === 'Enter' &&
+      !e.isComposing &&
+      props.onConfirm &&
+      e.target instanceof HTMLInputElement &&
+      (e.target.type === 'text' || e.target.type === 'number')
+    ) {
+      e.preventDefault()
+      e.stopPropagation()
+      props.onConfirm()
       return
     }
 

@@ -210,6 +210,7 @@ function FormDialogView(props: { state: FormState }) {
       open
       title={props.state.title}
       onClose={() => close(null)}
+      onConfirm={() => close(values())}
       footer={
         <>
           <button class="toolbar-btn" onClick={() => close(null)}>

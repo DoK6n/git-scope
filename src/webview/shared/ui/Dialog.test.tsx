@@ -3,7 +3,7 @@ import { createSignal } from 'solid-js'
 import { render } from 'solid-js/web'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { Dialog } from './Dialog'
-import { confirmDialog, PromptHost } from './prompts'
+import { confirmDialog, formDialog, PromptHost } from './prompts'
 
 function flush(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0))
@@ -94,6 +94,40 @@ describe('Dialog focus management', () => {
 
     textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     expect(closed).toBe(true)
+  })
+
+  it('submits every form dialog from a single-line input with Enter', async () => {
+    dispose = render(() => <PromptHost />, document.getElementById('root')!)
+    const result = formDialog({
+      title: 'Rename',
+      fields: [{ kind: 'text', name: 'name', label: 'Name', initial: 'old name' }],
+      confirmLabel: 'Rename',
+    })
+    await flush()
+
+    const input = document.querySelector<HTMLInputElement>('.dialog input')!
+    input.value = 'new name'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+
+    await expect(result).resolves.toEqual({ name: 'new name' })
+    expect(document.querySelector('.dialog')).toBeNull()
+  })
+
+  it('cancels every form dialog with Escape', async () => {
+    dispose = render(() => <PromptHost />, document.getElementById('root')!)
+    const result = formDialog({
+      title: 'Rename',
+      fields: [{ kind: 'text', name: 'name', label: 'Name' }],
+    })
+    await flush()
+
+    document
+      .querySelector<HTMLInputElement>('.dialog input')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+
+    await expect(result).resolves.toBeNull()
+    expect(document.querySelector('.dialog')).toBeNull()
   })
 
   it('focuses the container for a destructive confirmation and never its confirm button', async () => {
