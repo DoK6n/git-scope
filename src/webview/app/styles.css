@@ -1079,8 +1079,7 @@ path.graph-line.doomed,
   right: 400px;
 }
 
-.stash-header-actions,
-.stash-inline-actions {
+.stash-header-actions {
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -1226,13 +1225,15 @@ path.graph-line.doomed,
 }
 
 .stash-inline-actions {
-  visibility: hidden;
+  display: none;
+  align-items: center;
+  gap: 2px;
   flex-shrink: 0;
 }
 
 .stash-entry:hover .stash-inline-actions,
 .stash-entry:focus-within .stash-inline-actions {
-  visibility: visible;
+  display: inline-flex;
 }
 
 .stash-action-btn {

@@ -34,4 +34,12 @@ describe('stash panel layout', () => {
     expect(rowButton).toContain('width: 24px')
     expect(rowButton).toContain('height: 24px')
   })
+
+  it('평상시에는 액션 공간을 쓰지 않고 hover나 focus에서만 표시한다', () => {
+    const actions = rule('.stash-inline-actions {')
+    const revealed = rule('.stash-entry:hover .stash-inline-actions,')
+    expect(actions).toContain('display: none')
+    expect(actions).not.toContain('visibility: hidden')
+    expect(revealed).toContain('display: inline-flex')
+  })
 })
