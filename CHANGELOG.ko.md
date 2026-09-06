@@ -4,6 +4,8 @@ English version: [CHANGELOG.md](CHANGELOG.md)
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-06
+
 ### Fixed
 
 - 참조 뱃지의 아이콘 칩이 테마의 단일 뱃지 배경색으로 통일되지 않고 다시 각 그래프 레인 색상을 사용합니다. 브랜치·태그·스태시·fixup 뱃지는 공용 Git 아이콘을 유지하면서 레인과의 색상 연결을 복원했습니다.
