@@ -12,19 +12,24 @@ Click **Git Scope** in the left side of the status bar, or use Command Palette (
 
 ## Features
 
-- **Commit graph**: branch lanes & colors, local/remote/tag badges (combined `branch | origin` badges), HEAD indicator, incremental loading on scroll; a commit's graph line highlights on mouse hover and stays highlighted while its details are open
-
-- **Commit details**: inline expansion below the row, changed files as an icon-themed tree or flat list with `(+added | -removed)` line stats, hover actions to copy a file's absolute path or open it in the editor, click to open diffs, commit comparison via Ctrl/Cmd+click
-- **Actions**: checkout (double-click a badge to `git switch`), create/delete/rename branches, merge, rebase, cherry-pick, revert, drop, tag, stash, push/pull — destructive actions always require confirmation
-- **Branch drag & drop**: drag a local or remote branch badge onto a local branch to merge or rebase
-
-- **Enhanced git reset**: choose `--soft` / `--mixed` / `--hard` with a commit target or `HEAD~N`, plus an "undo this commit" shortcut
-- **Worktree management**: list/add/remove/move/lock worktrees, worktree badges on the graph, open in a new or current window
-- **IDE-style Find**: `Cmd/Ctrl+F` opens a top-right Find widget with result position, previous/next navigation, match-case, whole-word and regex options, search history, and no-result feedback
-- **Branch filters**: instant glob patterns (`feature/*`, `release-[0-9]*`), Tree/List views, and a Show Remote Branches toggle
-- **fetch --prune**: clean up deleted remote branch references right from the fetch button
-- **Avatars**: GitHub profile pictures (with disk cache and GitHub sign-in support), Gravatar fallback, and AI co-author icons for `Co-authored-by` trailers
-- Auto-refresh: the graph follows any `.git` change — actions in the app or commands in your terminal
+- **Commit graph**: colored branch lanes, local/remote/tag/stash/fixup badges, HEAD and worktree indicators, incremental loading, and persistent line highlighting. Badge icon colors stay connected to their graph lanes.
+- **Commit inspection**: inline metadata, themed file tree or flat list, per-file diffs, file opening and path copying, and comparisons between commits.
+- **Effective change size**: commit details calculate a net effective line count while excluding blank and comment-only changes, with separate addition/deletion totals and clear fallbacks for unsupported or binary files.
+- **Author statistics**: complete-history commit counts by author for the current branch or every ref, with date ranges, avatars, email addresses, and automatic `.mailmap` identity normalization.
+- **Commit timeline**: an activity line chart with day, month, and year grouping, author filtering, date breakdowns, and graph filtering by time bucket.
+- **Git actions**: checkout, branch creation/deletion/rename, merge, rebase, cherry-pick, revert, commit editing and dropping, tags, fixup/autosquash, stash, fetch, push, and pull. Destructive actions require confirmation.
+- **Branch synchronization**: safe remote checkout with ahead/behind detection, fast-forward-only updates for existing local branches, regular upstream pulls for the current branch, and non-checkout pulls for other local branches without changing HEAD or the working tree.
+- **Conflict awareness**: live merge, rebase, cherry-pick, and revert status in the graph, unresolved-file counts, and safe abort support. Conflict-capable actions refresh immediately even when Git reports a failure.
+- **Branch organization**: glob filters, Tree/List views, remote visibility control, remote-only branch hiding, and per-repository manual hiding of individual local or remote branches.
+- **Branch drag & drop**: visual merge and rebase workflows between local and remote branch badges.
+- **Enhanced git reset**: soft, mixed, and hard resets by commit or `HEAD~N`, an undo-commit shortcut, and a drag-to-reset preview for affected history.
+- **Stash management**: create, inspect, apply, pop, rename, and drop stashes; view tracked and untracked files with diffs; detect orphaned stashes; and manage multiple entries from a responsive stash panel.
+- **Worktree management**: list, add, remove, move, repair, and lock worktrees, with graph badges and window-opening support.
+- **IDE-style Find**: commit search with result navigation, match-case, whole-word and regex modes, search history, and no-result feedback.
+- **Responsive dialogs**: keyboard-friendly input, submission, dismissal, focus trapping, and focus restoration across modal workflows.
+- **Fetch pruning**: remove stale remote-tracking references during fetch.
+- **Avatars and co-authors**: cached GitHub profile pictures, Gravatar fallback, `.mailmap`-aware identities, and dedicated Claude, Codex, and Cursor co-author icons.
+- **Automatic refresh**: efficient graph updates for Git Scope actions, terminal commands, Source Control changes, linked worktrees, and submodules, while ignored files and hidden panels avoid unnecessary background Git work.
 
 ## Telemetry
 
