@@ -388,27 +388,19 @@ export function Toolbar() {
           </Show>
         </div>
 
-        <div class="timeline-mode-toggle" role="group" aria-label={t('View mode')}>
-          <button
-            class="toolbar-btn"
-            classList={{ primary: timelineStore.viewMode() === 'graph' }}
-            onClick={() => timelineStore.setViewMode('graph')}
-          >
-            {t('Graph')}
-          </button>
-          <button
-            class="toolbar-btn"
-            classList={{ primary: timelineStore.viewMode() === 'timeline' }}
-            onClick={() => timelineStore.setViewMode('timeline')}
-          >
-            {t('Timeline')}
-          </button>
-        </div>
-
       </div>
 
       {/* 네이티브 title 툴팁이 webview에서 안 뜨는 환경이 있어 data-tip 커스텀 툴팁 사용 */}
       <div class="toolbar-section toolbar-right">
+        <button
+          class="toolbar-btn icon-btn timeline-toggle"
+          data-tip={t('Toggle commit timeline')}
+          aria-label={t('Toggle commit timeline')}
+          aria-pressed={timelineStore.panelOpen()}
+          onClick={() => timelineStore.togglePanel()}
+        >
+          <GitIcon name="timeline" size={15} />
+        </button>
         <button
           class="toolbar-btn with-icon"
           data-tip={t('Open/close author statistics')}

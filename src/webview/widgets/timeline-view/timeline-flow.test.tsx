@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { Show } from 'solid-js'
 import { render } from 'solid-js/web'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { BridgeRequest } from '@shared-types/messages'
@@ -82,7 +83,7 @@ describe('timeline to graph flow', () => {
     timelineStore.clearDateFilter()
     timelineStore.setSelectedAuthor(null)
     timelineStore.setUnit('month')
-    timelineStore.setViewMode('timeline')
+    timelineStore.closePanel()
     setLocale('en')
     graphStore.setSelectedCommit(null)
     await graphStore.switchRepo('/fake/repo')
@@ -96,16 +97,40 @@ describe('timeline to graph flow', () => {
     setLocale('en')
   })
 
-  it('is reachable from the graph toolbar', () => {
-    timelineStore.setViewMode('graph')
-    dispose = render(() => <Toolbar />, document.getElementById('root')!)
+  it('toggles a line timeline above the graph from an icon button', () => {
+    dispose = render(
+      () => (
+        <>
+          <Toolbar />
+          <Show when={timelineStore.panelOpen()}>
+            <TimelineView />
+          </Show>
+          <GraphView />
+        </>
+      ),
+      document.getElementById('root')!,
+    )
 
-    const timelineButton = [...document.querySelectorAll<HTMLButtonElement>('.toolbar-btn')].find(
-      (button) => button.textContent?.trim() === 'Timeline',
+    const timelineButton = document.querySelector<HTMLButtonElement>(
+      '[aria-label="Toggle commit timeline"]',
     )!
     timelineButton.click()
 
-    expect(timelineStore.viewMode()).toBe('timeline')
+    expect(timelineStore.panelOpen()).toBe(true)
+    expect(document.querySelector('.timeline-panel + .graph-view')).toBeTruthy()
+    expect(document.querySelector('.timeline-line')).toBeTruthy()
+    expect(document.querySelector('.timeline-bar')).toBeNull()
+
+    const january = [...document.querySelectorAll<SVGGElement>('.timeline-bucket')].find(
+      (bucket) => bucket.getAttribute('aria-label')?.startsWith('2026-01:'),
+    )!
+    january.dispatchEvent(new MouseEvent('mouseenter'))
+    expect(document.querySelector('.timeline-hover-line')).toBeTruthy()
+    expect(document.querySelector('.timeline-tooltip')?.textContent).toContain('2026-01')
+
+    timelineButton.click()
+    expect(timelineStore.panelOpen()).toBe(false)
+    expect(document.querySelector('.timeline-panel')).toBeNull()
   })
 
   it('translates timeline toolbar and chart labels to Korean', () => {
@@ -120,13 +145,10 @@ describe('timeline to graph flow', () => {
       document.getElementById('root')!,
     )
 
-    expect(document.querySelector('.timeline-mode-toggle')?.getAttribute('aria-label')).toBe(
-      '보기 모드',
+    expect(document.querySelector('[data-icon="timeline"]')?.parentElement?.getAttribute('aria-label')).toBe(
+      '커밋 타임라인 열기/닫기',
     )
-    expect(document.querySelector('.timeline-mode-toggle button')?.textContent?.trim()).toBe(
-      '그래프',
-    )
-    expect(document.querySelector('.timeline-controls h2')?.textContent).toBe('커밋 타임라인')
+    expect(document.querySelector('.timeline-summary strong')?.textContent).toBe('커밋 타임라인')
     expect(document.querySelector<HTMLSelectElement>('.timeline-control-group select')?.options[0]?.text).toBe(
       '모든 작성자',
     )
@@ -173,7 +195,7 @@ describe('timeline to graph flow', () => {
     )!
     january.dispatchEvent(new MouseEvent('click', { bubbles: true }))
 
-    expect(timelineStore.viewMode()).toBe('graph')
+    expect(document.querySelector('.timeline-line')).toBeTruthy()
     expect(timelineStore.dateFilter()?.label).toBe('2026-01')
     expect(graphStore.selectedCommit()).toBe('jan-ada')
 

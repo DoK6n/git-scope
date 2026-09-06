@@ -51,9 +51,7 @@ const KO: Record<string, string> = {
   'Pulled current branch from {0}': '현재 브랜치를 {0}에서 pull 완료',
 
   // ── 타임라인 ──
-  'View mode': '보기 모드',
-  Graph: '그래프',
-  Timeline: '타임라인',
+  'Toggle commit timeline': '커밋 타임라인 열기/닫기',
   'Commit Timeline': '커밋 타임라인',
   '{0} of {1} currently loaded commits': '현재 로드된 커밋 {1}개 중 {0}개',
   Author: '작성자',
@@ -66,7 +64,6 @@ const KO: Record<string, string> = {
   'No loaded commits to show.': '표시할 로드된 커밋이 없습니다.',
   'Commit activity timeline': '커밋 활동 타임라인',
   '{0}: {1} commits': '{0}: 커밋 {1}개',
-  'Timeline authors': '타임라인 작성자',
   'Timeline period: {0}': '타임라인 기간: {0}',
   '{0} commits': '커밋 {0}개',
   Clear: '지우기',

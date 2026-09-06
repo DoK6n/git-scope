@@ -33,10 +33,11 @@ export function App() {
           fallback={<div class="empty-state">No git repository found in this workspace.</div>}
         >
           <>
-            <Show when={timelineStore.viewMode() === 'graph'} fallback={<TimelineView />}>
-              <SearchWidget />
-              <GraphView />
+            <SearchWidget />
+            <Show when={timelineStore.panelOpen()}>
+              <TimelineView />
             </Show>
+            <GraphView />
           </>
         </Show>
       </div>

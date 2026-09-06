@@ -29,6 +29,7 @@ describe('Git toolbar icons', () => {
       icon.getAttribute('data-icon'),
     )
     expect(icons).toEqual([
+      'timeline',
       'statistics',
       'reset',
       'stash',

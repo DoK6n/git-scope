@@ -9,6 +9,7 @@ export type GitIconName =
   | 'change'
   | 'danger'
   | 'statistics'
+  | 'timeline'
   | 'reset'
   | 'worktree'
   | 'pull'
@@ -36,6 +37,7 @@ const PATHS: Record<GitIconName, string[]> = {
   change: ['M2 8h4M10 8h4', 'M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z'],
   danger: ['M3 4.5h10M6 4.5V3h4v1.5M5 6.5v6M8 6.5v6M11 6.5v6M4 4.5l.7 9h6.6l.7-9'],
   statistics: ['M2.5 13.5V8h3v5.5h-3ZM6.5 13.5V3h3v10.5h-3ZM10.5 13.5V6h3v7.5h-3Z'],
+  timeline: ['M2 12.5 5 8.5 8 10.5 11 4 14 6.5', 'M2 13.5h12'],
   reset: ['M3 5V2.5L1 4.5 3 6.5V5a5.5 5.5 0 1 1-.3 6.2', 'M8 5v3l2 1.5'],
   worktree: ['M2 2.5h4v4H2v-4ZM10 9.5h4v4h-4v-4Z', 'M6 4.5h2a2 2 0 0 1 2 2v3'],
   pull: ['M8 2.5v9M4.8 8.8 8 12l3.2-3.2', 'M3 14h10'],

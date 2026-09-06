@@ -3,14 +3,14 @@ import { timelineStore } from './timeline'
 
 afterEach(() => {
   timelineStore.clearDateFilter()
-  timelineStore.setViewMode('graph')
+  timelineStore.closePanel()
   timelineStore.setSelectedAuthor(null)
   timelineStore.setUnit('month')
 })
 
 describe('timelineStore', () => {
-  it('returns to the graph with a date filter when a populated bucket is selected', () => {
-    timelineStore.setViewMode('timeline')
+  it('keeps the top panel open and applies a date filter when a populated bucket is selected', () => {
+    timelineStore.togglePanel()
     timelineStore.selectBucket({
       key: '2026-09',
       start: 10,
@@ -19,17 +19,15 @@ describe('timelineStore', () => {
       counts: {},
     })
 
-    expect(timelineStore.viewMode()).toBe('graph')
+    expect(timelineStore.panelOpen()).toBe(true)
     expect(timelineStore.dateFilter()).toEqual({ start: 10, end: 20, label: '2026-09' })
   })
 
   it('clears the graph date filter and ignores empty buckets', () => {
     timelineStore.selectBucket({ key: 'filled', start: 10, end: 20, total: 1, counts: {} })
     timelineStore.clearDateFilter()
-    timelineStore.setViewMode('timeline')
     timelineStore.selectBucket({ key: 'empty', start: 20, end: 30, total: 0, counts: {} })
 
-    expect(timelineStore.viewMode()).toBe('timeline')
     expect(timelineStore.dateFilter()).toBeNull()
   })
 })
