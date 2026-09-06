@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-06
+
 ### Fixed
 
 - Reference badge icon chips once again use their matching graph lane colors instead of collapsing to the theme's single badge background color. Branch, tag, stash, and fixup badges keep the shared Git icons while restoring the per-lane visual connection.
