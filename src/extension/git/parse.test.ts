@@ -68,18 +68,18 @@ describe('parseLog', () => {
 })
 
 describe('parseAuthorStats', () => {
-  it('mailmap 정규 이메일 기준으로 합치고 커밋 수 순으로 정렬한다', () => {
+  it('mailmap 정규 이메일 기준으로 합치고 최신 대표 커밋을 유지한 채 커밋 수 순으로 정렬한다', () => {
     const output = [
-      ['Kim Dokyun', 'dokyun@example.com'].join(NUL),
-      ['Kim D.', 'DOKYUN@example.com'].join(NUL),
-      ['Alice', 'alice@example.com'].join(NUL),
-      ['Bob', 'bob@example.com'].join(NUL),
+      ['kim-newest', 'Kim Dokyun', 'dokyun@example.com'].join(NUL),
+      ['kim-older', 'Kim D.', 'DOKYUN@example.com'].join(NUL),
+      ['alice-hash', 'Alice', 'alice@example.com'].join(NUL),
+      ['bob-hash', 'Bob', 'bob@example.com'].join(NUL),
     ].join('\n')
 
     expect(parseAuthorStats(output)).toEqual([
-      { name: 'Kim Dokyun', email: 'dokyun@example.com', commits: 2 },
-      { name: 'Alice', email: 'alice@example.com', commits: 1 },
-      { name: 'Bob', email: 'bob@example.com', commits: 1 },
+      { name: 'Kim Dokyun', email: 'dokyun@example.com', commits: 2, commitHash: 'kim-newest' },
+      { name: 'Alice', email: 'alice@example.com', commits: 1, commitHash: 'alice-hash' },
+      { name: 'Bob', email: 'bob@example.com', commits: 1, commitHash: 'bob-hash' },
     ])
   })
 

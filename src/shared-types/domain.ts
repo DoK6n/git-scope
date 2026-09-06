@@ -141,6 +141,8 @@ export interface AuthorStatsEntry {
   name: string
   email: string
   commits: number
+  /** 기존 아바타 조회에 사용할 이 범위의 최신 작성 커밋 */
+  commitHash: string
 }
 
 /** 원격 체크아웃 전, 입력한 로컬 브랜치와 선택한 원격 ref의 관계 */

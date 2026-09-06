@@ -41,9 +41,13 @@ vi.stubGlobal('acquireVsCodeApi', () => ({
         else if (statsResponse === 'empty') respond(message.id, [])
         else
           respond(message.id, [
-            { name: 'Kim', email: 'kim@example.com', commits: 4 },
-            { name: 'Alice', email: 'alice@example.com', commits: 2 },
+            { name: 'Kim', email: 'kim@example.com', commits: 4, commitHash: 'kim-hash' },
+            { name: 'Alice', email: 'alice@example.com', commits: 2, commitHash: 'alice-hash' },
           ])
+      }, 0)
+    } else if (message.command === 'getAvatar') {
+      setTimeout(() => {
+        respond(message.id, { dataUri: 'data:image/png;base64,iVBORw0KGgo=' })
       }, 0)
     } else if (message.command === 'notify') {
       setTimeout(() => respond(message.id, { ok: true }), 0)
@@ -92,6 +96,14 @@ describe('AuthorStatsPanel', () => {
     )
     expect(document.querySelector('.author-stats-list')?.textContent).toContain('Kim')
     expect(document.querySelector('.author-stats-list')?.textContent).toContain('4 commits')
+    await flush()
+    await flush()
+    expect(document.querySelectorAll('.author-stats-item .author-avatar')).toHaveLength(2)
+    expect(sent.find((message) => message.command === 'getAvatar')?.params).toEqual({
+      repo: '/fake/repo',
+      email: 'kim@example.com',
+      commitHash: 'kim-hash',
+    })
     expect(sent.find((message) => message.command === 'getAuthorStats')?.params).toEqual({
       repo: '/fake/repo',
       scope: 'currentBranch',

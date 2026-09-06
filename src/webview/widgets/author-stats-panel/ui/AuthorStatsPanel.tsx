@@ -1,5 +1,6 @@
 import { createEffect, createMemo, For, on, Show } from 'solid-js'
 import type { AuthorStatsPeriod, AuthorStatsScope } from '@shared-types/domain'
+import { AuthorAvatar } from '../../../entities/author'
 import { graphStore } from '../../../entities/graph'
 import { authorStatsStore } from '../../../features/author-stats'
 import { t } from '../../../shared/lib'
@@ -73,6 +74,13 @@ export function AuthorStatsPanel() {
             <For each={authorStatsStore.authors()}>
               {(author) => (
                 <div class="author-stats-item">
+                  <AuthorAvatar
+                    repo={graphStore.currentRepo() ?? ''}
+                    name={author.name}
+                    email={author.email}
+                    commitHash={author.commitHash}
+                    size={28}
+                  />
                   <span class="author-stats-identity">
                     <strong>{author.name}</strong>
                     <span title={author.email}>{author.email}</span>

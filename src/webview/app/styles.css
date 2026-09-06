@@ -2184,6 +2184,12 @@ path.graph-line.doomed,
   background: var(--vscode-list-hoverBackground);
 }
 
+.author-stats-item .author-avatar {
+  width: 28px;
+  height: 28px;
+  font-size: 12px;
+}
+
 .author-stats-identity {
   display: flex;
   flex: 1;
