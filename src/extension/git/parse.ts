@@ -181,8 +181,8 @@ export function parseNumstat(output: string): Map<string, NumstatEntry> {
   return result
 }
 
-/** stash list --format 문자열. 이름 변경이 반영되는 reflog 제목(%gs)을 사용한다. */
-export const STASH_FORMAT = '%H%x00%gd%x00%P%x00%an%x00%ae%x00%at%x00%ct%x00%gs'
+/** stash list --format 문자열 (LOG_FORMAT + %gd 셀렉터) */
+export const STASH_FORMAT = '%H%x00%gd%x00%P%x00%an%x00%ae%x00%at%x00%ct%x00%s'
 
 /** git이 만드는 "WIP on <branch>: …" / "On <branch>: …" 제목을 표시 정보로 분리한다. */
 export function parseStashSubject(subject: string): { branch: string | null; message: string } {

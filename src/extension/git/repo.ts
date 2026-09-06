@@ -774,10 +774,7 @@ export class GitRepo {
     return this.action(['stash', 'drop', selector])
   }
 
-  /**
-   * Git에는 stash rename이 없어 동일 커밋을 새 reflog 메시지로 다시 저장한 뒤 원본을 제거한다.
-   * store가 먼저라서 drop이 실패해도 원본 내용은 남고, 가능한 경우 새 항목을 되돌린다.
-   */
+  /** Git에는 stash rename이 없어 tree·parents·작성 정보를 보존한 새 commit을 저장한다. */
   async stashRename(selector: string, message: string): Promise<ActionResult> {
     const index = /^stash@\{(\d+)\}$/.exec(selector)?.[1]
     const trimmed = message.trim()
@@ -788,9 +785,20 @@ export class GitRepo {
     try {
       const stash = (await this.listStashes()).find((entry) => entry.selector === selector)
       if (!stash) return { ok: false, error: `Stash not found: ${selector}` }
+      if (trimmed === stash.message) return { ok: true }
 
       const subject = stash.branch ? `On ${stash.branch}: ${trimmed}` : trimmed
-      await this.git(['stash', 'store', '-m', subject, stash.hash])
+      const original = await this.git(['cat-file', 'commit', stash.hash])
+      const headerEnd = original.indexOf('\n\n')
+      if (headerEnd < 0) return { ok: false, error: `Invalid stash commit: ${stash.hash}` }
+      const renamedCommit = `${original.slice(0, headerEnd)}\n\n${subject}\n`
+      const renamedHash = (
+        await execGit(['hash-object', '-t', 'commit', '-w', '--stdin'], {
+          cwd: this.root,
+          stdin: renamedCommit,
+        })
+      ).trim()
+      await this.git(['stash', 'store', '-m', subject, renamedHash])
       try {
         await this.git(['stash', 'drop', `stash@{${Number(index) + 1}}`])
       } catch (error) {

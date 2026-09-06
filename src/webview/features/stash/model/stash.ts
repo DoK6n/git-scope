@@ -62,7 +62,7 @@ export async function stashRename(stash: StashEntry): Promise<void> {
     confirmLabel: 'Rename',
   })
   const message = values ? String(values.message).trim() : ''
-  if (message === '') return
+  if (message === '' || message === stash.message) return
   await graphStore.runAction(
     request('stashRename', { repo: r, selector: stash.selector, message }),
     t('Renamed stash {0}', stash.selector),
