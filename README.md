@@ -1,5 +1,7 @@
 # Git Scope
 
+[한국어 문서](README.ko.md)
+
 ![Git Scope preview](images/preview.gif)
 
 > A clean-room reimplementation of the Git Graph concept, rebuilt from scratch with modern improvements. Not derived from the original source code.
