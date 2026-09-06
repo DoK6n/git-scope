@@ -19,7 +19,7 @@ export type GitIconName =
   | 'close'
   | 'stash-apply'
   | 'stash-pop'
-  | 'compare'
+  | 'edit'
 
 const PATHS: Record<GitIconName, string[]> = {
   branch: [
@@ -49,10 +49,7 @@ const PATHS: Record<GitIconName, string[]> = {
   close: ['M3 3l10 10M13 3L3 13'],
   'stash-apply': ['M2.5 11v2h11v-2', 'M8 2.5v8M5.5 8 8 10.5 10.5 8'],
   'stash-pop': ['M2.5 11v2h11v-2', 'M8 10.5v-8M5.5 5 8 2.5 10.5 5'],
-  compare: [
-    'M5 3v8a2 2 0 0 0 2 2h2M3 5l2-2 2 2',
-    'M11 13V5a2 2 0 0 0-2-2H7M9 11l2 2 2-2',
-  ],
+  edit: ['M3 13l2.8-.6 7-7-2.2-2.2-7 7L3 13Z', 'M9.8 4l2.2 2.2'],
 }
 
 export function GitIcon(props: { name: GitIconName; size?: number; class?: string }) {

@@ -174,6 +174,10 @@ export interface RequestMap {
     result: ActionResult
   }
   stashDrop: { params: { repo: string; selector: string }; result: ActionResult }
+  stashRename: {
+    params: { repo: string; selector: string; message: string }
+    result: ActionResult
+  }
   stashBranch: {
     params: { repo: string; selector: string; branchName: string }
     result: ActionResult

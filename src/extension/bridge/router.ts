@@ -546,6 +546,7 @@ export class Router {
       stashApply: (p) => this.getRepo(p.repo).stashApply(p.selector, p.reinstateIndex),
       stashPop: (p) => this.getRepo(p.repo).stashPop(p.selector, p.reinstateIndex),
       stashDrop: (p) => this.getRepo(p.repo).stashDrop(p.selector),
+      stashRename: (p) => this.getRepo(p.repo).stashRename(p.selector, p.message),
       stashBranch: (p) => this.getRepo(p.repo).stashBranch(p.selector, p.branchName),
       stashPush: (p) => this.getRepo(p.repo).stashPush(p.message, p.includeUntracked),
       cleanUntracked: (p) => this.getRepo(p.repo).cleanUntracked(p.directories),

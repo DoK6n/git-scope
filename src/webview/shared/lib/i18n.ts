@@ -248,11 +248,12 @@ const KO: Record<string, string> = {
   'No changed files': '변경 파일 없음',
   'Apply stash': '스태시 적용',
   'Pop stash': '스태시 적용 후 삭제',
-  'Compare stash': '스태시 비교',
+  'Rename stash': '스태시 이름 변경',
+  'Stash name': '스태시 이름',
+  'Renaming keeps the stash contents but moves it to the top of the list.':
+    '스태시 내용은 그대로 유지되지만 목록 맨 위로 이동합니다.',
+  'Renamed stash {0}': '스태시 {0} 이름 변경 완료',
   'Drop stash': '스태시 삭제',
-  'This orphan stash can only be compared one file at a time below.':
-    '이 고아 스태시는 아래 파일 목록에서 파일별로만 비교할 수 있습니다.',
-
   // ── 작성자 통계 패널 ──
   'Author statistics': '작성자 통계',
   'Author Statistics': '작성자 통계',

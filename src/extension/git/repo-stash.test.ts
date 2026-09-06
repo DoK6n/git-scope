@@ -48,4 +48,34 @@ describe('GitRepo stash details', () => {
       },
     ])
   })
+
+  it('기존 내용을 유지한 채 스태시 이름을 바꾸고 목록 맨 위로 이동한다', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'git-scope-stash-rename-'))
+    tempRepos.push(root)
+    const git = (...args: string[]) => execFileSync('git', args, { cwd: root, stdio: 'pipe' })
+    git('init', '-q', '-b', 'main')
+    git('config', 'user.name', 'Test')
+    git('config', 'user.email', 'test@example.com')
+    writeFileSync(join(root, 'tracked.txt'), 'base\n')
+    git('add', 'tracked.txt')
+    git('commit', '-qm', 'base')
+
+    appendFileSync(join(root, 'tracked.txt'), 'first\n')
+    git('stash', 'push', '-m', 'first work')
+    const firstHash = git('rev-parse', 'stash@{0}').toString().trim()
+    appendFileSync(join(root, 'tracked.txt'), 'second\n')
+    git('stash', 'push', '-m', 'second work')
+
+    const result = await new GitRepo(root).stashRename('stash@{1}', 'renamed work')
+
+    expect(result).toEqual({ ok: true })
+    const stashes = await new GitRepo(root).listStashes()
+    expect(stashes).toHaveLength(2)
+    expect(stashes[0]).toMatchObject({
+      hash: firstHash,
+      branch: 'main',
+      message: 'renamed work',
+    })
+    expect(stashes[1]).toMatchObject({ branch: 'main', message: 'second work' })
+  })
 })

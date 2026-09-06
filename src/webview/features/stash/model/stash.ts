@@ -1,4 +1,5 @@
 import { graphStore } from '../../../entities/graph'
+import type { StashEntry } from '@shared-types/domain'
 import { request } from '../../../shared/api'
 import { t } from '../../../shared/lib'
 import { confirmDialog, formDialog } from '../../../shared/ui'
@@ -41,6 +42,30 @@ export async function stashDrop(selector: string): Promise<void> {
   await graphStore.runAction(
     request('stashDrop', { repo: r, selector }),
     t('Dropped stash {0}', selector),
+  )
+}
+
+export async function stashRename(stash: StashEntry): Promise<void> {
+  const r = repo()
+  if (!r) return
+  const values = await formDialog({
+    title: `Rename Stash: ${stash.selector}`,
+    note: t('Renaming keeps the stash contents but moves it to the top of the list.'),
+    fields: [
+      {
+        kind: 'text',
+        name: 'message',
+        label: t('Stash name'),
+        initial: stash.message || stash.subject,
+      },
+    ],
+    confirmLabel: 'Rename',
+  })
+  const message = values ? String(values.message).trim() : ''
+  if (message === '') return
+  await graphStore.runAction(
+    request('stashRename', { repo: r, selector: stash.selector, message }),
+    t('Renamed stash {0}', stash.selector),
   )
 }
 

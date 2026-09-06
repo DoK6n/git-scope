@@ -58,6 +58,7 @@ vi.stubGlobal('acquireVsCodeApi', () => ({
       notify: { ok: true },
       stashDrop: { ok: true },
       stashPop: { ok: true },
+      stashRename: { ok: true },
     }
     if (message.command in responses) setTimeout(() => respond(message.id, responses[message.command]), 0)
   },
@@ -109,7 +110,7 @@ describe('StashPanel enhancements', () => {
       [...document.querySelectorAll('.stash-inline-actions [data-icon]')].map((icon) =>
         icon.getAttribute('data-icon'),
       ),
-    ).toEqual(['stash-apply', 'stash-pop', 'compare', 'danger'])
+    ).toEqual(['stash-apply', 'stash-pop', 'edit', 'danger'])
     for (const button of document.querySelectorAll('.stash-header-actions button, .stash-inline-actions button')) {
       expect(button.getAttribute('data-tip')).toBeTruthy()
       expect(button.getAttribute('aria-label')).toBeTruthy()
@@ -134,10 +135,24 @@ describe('StashPanel enhancements', () => {
     })
   })
 
-  it('Compare는 기존 비교 상세 상태를 사용하고 Drop은 확인 전 실행하지 않는다', async () => {
-    document.querySelector<HTMLButtonElement>('button[aria-label="Compare stash"]')!.click()
-    expect(graphStore.selectedCommit()).toBe(stash.hash)
-    expect(graphStore.compareWith()).toBe(stash.baseHash)
+  it('Rename은 기존 메시지를 수정해 요청하고 Drop은 확인 전 실행하지 않는다', async () => {
+    document.querySelector<HTMLButtonElement>('button[aria-label="Rename stash"]')!.click()
+    await flush()
+    const input = document.querySelector<HTMLInputElement>('.dialog-field input[type=text]')!
+    expect(input.value).toBe('keep local work')
+    input.value = 'renamed work'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    const rename = [...document.querySelectorAll<HTMLButtonElement>('.dialog-footer button')].find(
+      (button) => button.textContent === 'Rename',
+    )!
+    rename.click()
+    await flush()
+    await flush()
+    expect(sent.find((request) => request.command === 'stashRename')?.params).toEqual({
+      repo: '/fake/repo',
+      selector: 'stash@{0}',
+      message: 'renamed work',
+    })
 
     const before = sent.filter((request) => request.command === 'stashDrop').length
     document.querySelector<HTMLButtonElement>('button[aria-label="Drop stash"]')!.click()

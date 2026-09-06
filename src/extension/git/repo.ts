@@ -774,6 +774,36 @@ export class GitRepo {
     return this.action(['stash', 'drop', selector])
   }
 
+  /**
+   * Git에는 stash rename이 없어 동일 커밋을 새 reflog 메시지로 다시 저장한 뒤 원본을 제거한다.
+   * store가 먼저라서 drop이 실패해도 원본 내용은 남고, 가능한 경우 새 항목을 되돌린다.
+   */
+  async stashRename(selector: string, message: string): Promise<ActionResult> {
+    const index = /^stash@\{(\d+)\}$/.exec(selector)?.[1]
+    const trimmed = message.trim()
+    if (index === undefined || trimmed === '') {
+      return { ok: false, error: `Invalid stash rename: ${selector}` }
+    }
+
+    try {
+      const stash = (await this.listStashes()).find((entry) => entry.selector === selector)
+      if (!stash) return { ok: false, error: `Stash not found: ${selector}` }
+
+      const subject = stash.branch ? `On ${stash.branch}: ${trimmed}` : trimmed
+      await this.git(['stash', 'store', '-m', subject, stash.hash])
+      try {
+        await this.git(['stash', 'drop', `stash@{${Number(index) + 1}}`])
+      } catch (error) {
+        // 원본 제거 실패 시 방금 만든 맨 위 항목을 지워 rename 전 상태로 복구한다.
+        await this.git(['stash', 'drop', 'stash@{0}']).catch(() => '')
+        return this.actionError(error)
+      }
+      return { ok: true }
+    } catch (error) {
+      return this.actionError(error)
+    }
+  }
+
   stashBranch(selector: string, branchName: string): Promise<ActionResult> {
     return this.action(['stash', 'branch', branchName, selector])
   }

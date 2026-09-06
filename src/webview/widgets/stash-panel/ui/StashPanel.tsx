@@ -7,6 +7,7 @@ import {
   stashDrop,
   stashPanelStore,
   stashPush,
+  stashRename,
 } from '../../../features/stash'
 import { worktreeStore } from '../../../features/worktree'
 import { request } from '../../../shared/api'
@@ -55,20 +56,6 @@ function selectStash(stash: StashEntry): void {
     return
   }
   graphStore.setSelectedCommit(stash.hash)
-  void graphStore.scrollToHash(stash.hash)
-}
-
-/** 기존 commit comparison 상세 패널에서 stash base ↔ stash commit을 보여준다. */
-function compareStash(stash: StashEntry): void {
-  if (stash.isOrphan) {
-    if (!stashPanelStore.expanded().has(stash.selector)) {
-      void stashPanelStore.toggleExpanded(stash.selector)
-    }
-    graphStore.setNotice(t('This orphan stash can only be compared one file at a time below.'))
-    return
-  }
-  graphStore.setSelectedCommit(stash.hash)
-  graphStore.setCompareWith(stash.baseHash)
   void graphStore.scrollToHash(stash.hash)
 }
 
@@ -185,11 +172,11 @@ export function StashPanel() {
                         </button>
                         <button
                           class="stash-action-btn"
-                          data-tip={t('Compare stash')}
-                          aria-label={t('Compare stash')}
-                          onClick={stopAnd(() => compareStash(stash))}
+                          data-tip={t('Rename stash')}
+                          aria-label={t('Rename stash')}
+                          onClick={stopAnd(() => withReload(stashRename(stash)))}
                         >
-                          <GitIcon name="compare" size={16} />
+                          <GitIcon name="edit" size={16} />
                         </button>
                         <button
                           class="stash-action-btn danger"
