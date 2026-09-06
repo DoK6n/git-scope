@@ -135,4 +135,26 @@ describe('브랜치 드래그앤드롭 흐름', () => {
     respond(req!.id, { ok: true })
     await done
   })
+
+  it.each([
+    ['mergeBranchInto', false],
+    ['rebaseBranchOnto', true],
+  ] as const)('%s 충돌 실패 뒤 그래프를 다시 조회한다', async (command, selectRebase) => {
+    const done = confirmBranchDrop({ name: 'feature/login', isRemote: false }, 'develop')
+    await flush()
+    if (selectRebase) {
+      const radios = [...document.querySelectorAll<HTMLInputElement>('input[type=radio]')]
+      radios[1]!.click()
+    }
+    clickConfirm('Run')
+    await flush()
+
+    const action = sent.find((message) => message.command === command)!
+    respond(action.id, { ok: false, error: `CONFLICT: ${command}` })
+    await done
+    await flush()
+
+    const actionIndex = sent.indexOf(action)
+    expect(sent.slice(actionIndex + 1).some((message) => message.command === 'getGraph')).toBe(true)
+  })
 })

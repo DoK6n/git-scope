@@ -1,6 +1,7 @@
 import { Show } from 'solid-js'
 import type { InProgressOperation } from '@shared-types/domain'
 import { t } from '../../../shared/lib'
+import { GitIcon } from '../../../shared/ui'
 import { confirmAbortOperation, operationBadgeText } from '../model/conflictOperation'
 
 export function ConflictOperationControls(props: { operation: InProgressOperation }) {
@@ -13,12 +14,15 @@ export function ConflictOperationControls(props: { operation: InProgressOperatio
       <button
         type="button"
         class="conflict-abort-btn"
+        title={t('Abort')}
+        aria-label={t('Abort')}
+        data-tip={t('Abort')}
         onClick={(event) => {
           event.stopPropagation()
           void confirmAbortOperation(props.operation.type)
         }}
       >
-        {t('Abort')}
+        <GitIcon name="reset" size={14} />
       </button>
     </span>
   )

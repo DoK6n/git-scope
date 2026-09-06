@@ -168,9 +168,6 @@ export function CommitRow(props: CommitRowProps) {
           )}
         </Show>
         <span class="commit-subject">{props.commit.subject}</span>
-        <Show when={props.commit.isUncommitted ? graphStore.graph()?.operation : null}>
-          {(operation) => <ConflictOperationControls operation={operation()} />}
-        </Show>
         <Show when={props.resetErased}>
           <span class="reset-chip">reset</span>
         </Show>
@@ -178,6 +175,9 @@ export function CommitRow(props: CommitRowProps) {
           <span class="new-head-chip">{t('→ new HEAD')}</span>
         </Show>
       </div>
+      <Show when={props.commit.isUncommitted ? graphStore.graph()?.operation : null}>
+        {(operation) => <ConflictOperationControls operation={operation()} />}
+      </Show>
       <Show when={!props.commit.isUncommitted}>
         <div class="col-author" title={props.commit.authorEmail}>
           <Show when={graphStore.currentRepo()}>
