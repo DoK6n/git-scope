@@ -80,7 +80,9 @@ const KO: Record<string, string> = {
   'all changed files between the two commits': '두 커밋 사이의 모든 변경 파일',
   'Calculating lines…': '라인 수 계산 중…',
   'Line stats unavailable': '라인 수를 계산할 수 없음',
-  'Raw numstat: +{0} / −{1}': '원시 numstat: +{0} / −{1}',
+  'Additions +{0} / Deletions −{1}': '추가 +{0} / 삭제 −{1}',
+  'Blank and comment-only lines are excluded from the calculation.':
+    '빈 줄과 주석만 있는 줄은 계산에서 제외됩니다.',
   '{0} unsupported file(s) use raw counts': '미지원 파일 {0}개는 원시 수치 사용',
   '{0} binary file(s) excluded': '바이너리 파일 {0}개는 합계에서 제외',
   merging: '머지 중',

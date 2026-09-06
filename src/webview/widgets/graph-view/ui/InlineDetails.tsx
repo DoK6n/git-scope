@@ -82,12 +82,27 @@ export function InlineDetails(props: { top: number; left: number }) {
   const lineStatsTooltip = () => {
     const stats = lineStats()
     if (!stats) return ''
-    const notes = [t('Raw numstat: +{0} / −{1}', stats.rawAdditions, stats.rawDeletions)]
+    const notes = [
+      t('Additions +{0} / Deletions −{1}', stats.additions, stats.deletions),
+      t('Blank and comment-only lines are excluded from the calculation.'),
+    ]
     if (stats.fallbackFiles > 0) {
       notes.push(t('{0} unsupported file(s) use raw counts', stats.fallbackFiles))
     }
     if (stats.binaryFiles > 0) notes.push(t('{0} binary file(s) excluded', stats.binaryFiles))
-    return notes.join(' · ')
+    return notes.join('\n')
+  }
+
+  const lineStatsNet = () => {
+    const stats = lineStats()
+    return stats ? stats.additions - stats.deletions : 0
+  }
+
+  const formattedLineStatsNet = () => {
+    const net = lineStatsNet()
+    if (net > 0) return `+${net}`
+    if (net < 0) return `−${Math.abs(net)}`
+    return '0'
   }
 
   // 상세가 로드되면 트리에 등장하는 파일/폴더 이름의 아이콘을 미리 로드
@@ -150,11 +165,16 @@ export function InlineDetails(props: { top: number; left: number }) {
                       </span>
                     }
                   >
-                    {(stats) => (
+                    {(_stats) => (
                       <span class="details-line-stats" data-tip={lineStatsTooltip()}>
-                        <span class="file-added">+{stats().additions}</span>
-                        {' / '}
-                        <span class="file-removed">−{stats().deletions}</span>
+                        <span
+                          classList={{
+                            'file-added': lineStatsNet() > 0,
+                            'file-removed': lineStatsNet() < 0,
+                          }}
+                        >
+                          {formattedLineStatsNet()}
+                        </span>
                       </span>
                     )}
                   </Show>

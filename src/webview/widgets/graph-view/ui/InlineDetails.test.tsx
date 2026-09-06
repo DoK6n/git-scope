@@ -108,7 +108,7 @@ describe('InlineDetails line stats', () => {
     dispose()
   })
 
-  it('상세 본문을 먼저 보여주고 통계 응답 후 실질·raw 수치를 표시한다', async () => {
+  it('상세 본문을 먼저 보여주고 실질 추가·삭제를 합산한 최종값을 표시한다', async () => {
     expect(document.querySelector('.details-subject')?.textContent).toBe('feat: line stats')
     expect(document.querySelector('.details-line-stats')?.textContent).toContain('Calculating lines…')
     expect(pendingStats?.params).toEqual({
@@ -118,7 +118,7 @@ describe('InlineDetails line stats', () => {
     })
 
     respond(pendingStats!.id, {
-      additions: 3,
+      additions: 2,
       deletions: 2,
       rawAdditions: 7,
       rawDeletions: 5,
@@ -128,9 +128,14 @@ describe('InlineDetails line stats', () => {
     await flush()
 
     const stats = document.querySelector<HTMLElement>('.details-line-stats')!
-    expect(stats.textContent?.replace(/\s/g, '')).toBe('+3/−2')
+    expect(stats.textContent?.replace(/\s/g, '')).toBe('0')
     expect(stats.dataset.tip).toBe(
-      'Raw numstat: +7 / −5 · 1 unsupported file(s) use raw counts · 1 binary file(s) excluded',
+      [
+        'Additions +2 / Deletions −2',
+        'Blank and comment-only lines are excluded from the calculation.',
+        '1 unsupported file(s) use raw counts',
+        '1 binary file(s) excluded',
+      ].join('\n'),
     )
   })
 
@@ -145,14 +150,30 @@ describe('InlineDetails line stats', () => {
     )
   })
 
-  it('한국어 설정에서 로딩 문구와 raw 툴팁을 번역한다', async () => {
+  it('삭제가 더 많으면 음수 최종값을 삭제 색상으로 표시한다', async () => {
+    respond(pendingStats!.id, {
+      additions: 1,
+      deletions: 4,
+      rawAdditions: 1,
+      rawDeletions: 4,
+      fallbackFiles: 0,
+      binaryFiles: 0,
+    })
+    await flush()
+
+    const value = document.querySelector<HTMLElement>('.details-line-stats > span')!
+    expect(value.textContent).toBe('−3')
+    expect(value.classList.contains('file-removed')).toBe(true)
+  })
+
+  it('한국어 설정에서 로딩 문구와 여러 줄 툴팁을 번역한다', async () => {
     setLocale('ko')
     expect(document.querySelector('.details-line-stats')?.textContent).toContain(
       '라인 수 계산 중…',
     )
 
     respond(pendingStats!.id, {
-      additions: 3,
+      additions: 5,
       deletions: 2,
       rawAdditions: 7,
       rawDeletions: 5,
@@ -161,8 +182,14 @@ describe('InlineDetails line stats', () => {
     })
     await flush()
 
+    expect(document.querySelector<HTMLElement>('.details-line-stats')?.textContent).toBe('+3')
     expect(document.querySelector<HTMLElement>('.details-line-stats')?.dataset.tip).toBe(
-      '원시 numstat: +7 / −5 · 미지원 파일 1개는 원시 수치 사용 · 바이너리 파일 1개는 합계에서 제외',
+      [
+        '추가 +5 / 삭제 −2',
+        '빈 줄과 주석만 있는 줄은 계산에서 제외됩니다.',
+        '미지원 파일 1개는 원시 수치 사용',
+        '바이너리 파일 1개는 합계에서 제외',
+      ].join('\n'),
     )
   })
 })

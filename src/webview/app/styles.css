@@ -1888,6 +1888,10 @@ path.graph-line.doomed,
   cursor: help;
 }
 
+.details-line-stats[data-tip]::after {
+  white-space: pre-line;
+}
+
 .details-line-stats.pending {
   color: var(--vscode-descriptionForeground);
   font-family: inherit;
