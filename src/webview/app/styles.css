@@ -1303,6 +1303,11 @@ path.graph-line.doomed,
   color: var(--vscode-errorForeground, #f48771);
 }
 
+.stash-entry:last-child .stash-action-btn[data-tip]::after {
+  top: auto;
+  bottom: calc(100% + 5px);
+}
+
 .stash-files {
   padding: 0 6px 5px 42px;
 }
@@ -1889,7 +1894,11 @@ path.graph-line.doomed,
 }
 
 .details-line-stats[data-tip]::after {
+  width: max-content;
+  max-width: min(360px, calc(100vw - 24px));
   white-space: pre-line;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .details-line-stats.pending {
