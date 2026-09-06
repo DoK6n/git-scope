@@ -113,6 +113,7 @@ describe('StashPanel enhancements', () => {
     for (const button of document.querySelectorAll('.stash-header-actions button, .stash-inline-actions button')) {
       expect(button.getAttribute('data-tip')).toBeTruthy()
       expect(button.getAttribute('aria-label')).toBeTruthy()
+      expect(button.hasAttribute('title')).toBe(false)
     }
 
     document.querySelector<HTMLButtonElement>('.stash-expand')!.click()

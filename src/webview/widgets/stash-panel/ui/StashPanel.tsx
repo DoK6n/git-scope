@@ -96,7 +96,6 @@ export function StashPanel() {
           <span class="stash-header-actions">
             <button
               class="stash-header-btn"
-              title={t('Stash working tree changes')}
               data-tip={t('Stash working tree changes')}
               aria-label={t('Stash working tree changes')}
               disabled={(graphStore.graph()?.uncommittedCount ?? 0) === 0}
@@ -106,7 +105,6 @@ export function StashPanel() {
             </button>
             <button
               class="stash-header-btn"
-              title={t('Refresh stashes')}
               data-tip={t('Refresh stashes')}
               aria-label={t('Refresh stashes')}
               disabled={stashPanelStore.loading()}
@@ -116,7 +114,6 @@ export function StashPanel() {
             </button>
             <button
               class="stash-header-btn"
-              title={t('Close stash panel')}
               data-tip={t('Close stash panel')}
               onClick={stashPanelStore.closePanel}
               aria-label={t('Close stash panel')}
@@ -172,7 +169,6 @@ export function StashPanel() {
                       <span class="stash-inline-actions">
                         <button
                           class="stash-action-btn"
-                          title={t('Apply stash')}
                           data-tip={t('Apply stash')}
                           aria-label={t('Apply stash')}
                           onClick={stopAnd(() => withReload(stashApply(stash.selector, false)))}
@@ -181,7 +177,6 @@ export function StashPanel() {
                         </button>
                         <button
                           class="stash-action-btn"
-                          title={t('Pop stash')}
                           data-tip={t('Pop stash')}
                           aria-label={t('Pop stash')}
                           onClick={stopAnd(() => withReload(stashApply(stash.selector, true)))}
@@ -190,7 +185,6 @@ export function StashPanel() {
                         </button>
                         <button
                           class="stash-action-btn"
-                          title={t('Compare stash')}
                           data-tip={t('Compare stash')}
                           aria-label={t('Compare stash')}
                           onClick={stopAnd(() => compareStash(stash))}
@@ -199,7 +193,6 @@ export function StashPanel() {
                         </button>
                         <button
                           class="stash-action-btn danger"
-                          title={t('Drop stash')}
                           data-tip={t('Drop stash')}
                           aria-label={t('Drop stash')}
                           onClick={stopAnd(() => withReload(stashDrop(stash.selector)))}
