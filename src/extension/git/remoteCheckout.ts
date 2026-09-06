@@ -14,7 +14,7 @@ export function remoteBranchRef(remote: string, branch: string): string {
 }
 
 export function localBranchExistsArgs(localName: string): string[] {
-  return ['show-ref', '--verify', '--hash', '--', localBranchRef(localName)]
+  return ['rev-parse', '--verify', '--quiet', localBranchRef(localName)]
 }
 
 export function aheadBehindArgs(remote: string, branch: string, localName: string): string[] {

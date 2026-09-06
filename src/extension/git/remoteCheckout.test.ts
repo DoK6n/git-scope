@@ -11,10 +11,9 @@ import {
 describe('remote checkout git arguments', () => {
   it('uses fully qualified refs for existence and ahead/behind checks', () => {
     expect(localBranchExistsArgs('feat/search')).toEqual([
-      'show-ref',
+      'rev-parse',
       '--verify',
-      '--hash',
-      '--',
+      '--quiet',
       'refs/heads/feat/search',
     ])
     expect(aheadBehindArgs('upstream', 'feat/search', 'feat/search')).toEqual([
