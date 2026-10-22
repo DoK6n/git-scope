@@ -11,7 +11,7 @@ import {
 } from '../../../features/stash'
 import { worktreeStore } from '../../../features/worktree'
 import { request } from '../../../shared/api'
-import { formatDate, formatRelativeTime, t } from '../../../shared/lib'
+import { formatDate, formatRelativeTime, t, useEscapeLayer } from '../../../shared/lib'
 import { GitIcon, openContextMenu } from '../../../shared/ui'
 import type { MenuItem } from '../../../shared/ui'
 
@@ -75,6 +75,8 @@ function openStashDiff(file: StashFileChange): void {
 
 /** 스태시 목록 패널 — 행 클릭은 그래프로 이동하고, 화살표는 파일 목록을 펼친다. */
 export function StashPanel() {
+  useEscapeLayer('panel', stashPanelStore.panelOpen, stashPanelStore.closePanel)
+
   return (
     <Show when={stashPanelStore.panelOpen()}>
       <div class="worktree-panel stash-panel" classList={{ shifted: worktreeStore.panelOpen() }}>

@@ -7,7 +7,7 @@ import { resetHeadN } from '../../../features/reset'
 import { stashPanelStore } from '../../../features/stash'
 import { timelineStore } from '../../../features/timeline'
 import { worktreeStore } from '../../../features/worktree'
-import { makeMatcher, t } from '../../../shared/lib'
+import { makeMatcher, t, useEscapeLayer } from '../../../shared/lib'
 import { GitIcon } from '../../../shared/ui'
 import { branchLeafName, buildBranchTree, leafBranches } from '../lib/branchTree'
 import type { BranchTreeFolder } from '../lib/branchTree'
@@ -20,6 +20,8 @@ export function Toolbar() {
   const [branchView, setBranchView] = createSignal<'list' | 'tree'>('list')
   /** 접힌 폴더 path 집합 — 기본은 모두 펼침 (tree 뷰) */
   const [collapsed, setCollapsed] = createSignal<Set<string>>(new Set())
+
+  useEscapeLayer('popover', filterOpen, () => setFilterOpen(false))
 
   createEffect(() => {
     if (!filterOpen()) return
@@ -262,9 +264,6 @@ export function Toolbar() {
                   placeholder={t('Filter Branches… (glob: feature/*)')}
                   value={branchQuery()}
                   onInput={(e) => setBranchQuery(e.currentTarget.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') setFilterOpen(false)
-                  }}
                 />
               </div>
               <div class="branch-filter-head">
