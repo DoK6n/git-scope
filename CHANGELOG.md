@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-22
+
 ### Added
 
 - Pressing Escape now closes context menus, the floating **Worktrees**, **Stashes**, and **Author Statistics** panels, and the inline commit details. Each press closes only the topmost element, in the order context menu, dialog, branch filter dropdown or search widget, floating panel, then commit details; when several panels are open, the most recently opened closes first. Focus returns to the control that was focused before the element opened, or to the graph when that control is gone. Escape during a drag-to-reset only cancels the preview, Escape during IME composition never closes anything, and the Commit Timeline panel stays toggle-only.
