@@ -755,6 +755,11 @@ body {
   position: relative;
 }
 
+/* Esc로 창을 닫은 뒤 포커스가 돌아오는 자리일 뿐이라 외곽선은 그리지 않는다 */
+.graph-view:focus {
+  outline: none;
+}
+
 /* ── 그래프 상단 커밋 타임라인 ──────────────────────────── */
 .timeline-panel {
   flex: 0 0 auto;

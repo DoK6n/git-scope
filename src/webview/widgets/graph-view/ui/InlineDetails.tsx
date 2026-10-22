@@ -2,7 +2,7 @@ import { createEffect, createMemo, createResource, createSignal, For, Show } fro
 import type { FileChange, IconSpec } from '@shared-types/domain'
 import { graphStore } from '../../../entities/graph'
 import { request } from '../../../shared/api'
-import { formatDate, t } from '../../../shared/lib'
+import { formatDate, t, useEscapeLayer } from '../../../shared/lib'
 import { GoToFileIcon } from '../../../shared/ui'
 import { basename, buildFileTree } from '../lib/fileTree'
 import type { FileTreeFolder } from '../lib/fileTree'
@@ -30,6 +30,8 @@ const [filesView, setFilesView] = createSignal<'tree' | 'list'>('tree')
  * 그래프 컬럼은 가리지 않고 Commit 컬럼부터 시작한다 — 그래프 라인은 왼쪽으로 계속 흐른다.
  */
 export function InlineDetails(props: { top: number; left: number }) {
+  useEscapeLayer('details', () => true, () => graphStore.setSelectedCommit(null))
+
   /** 비교 모드면 [과거, 최신] 해시 쌍 — 행 순서(아래=과거)로 결정 */
   const comparePair = createMemo<[string, string] | null>(() => {
     const selected = graphStore.selectedCommit()

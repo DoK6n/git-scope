@@ -5,7 +5,7 @@ import type { Segment } from '../../../entities/graph'
 import { computeDragResetPlan, confirmDragReset, dragResetStore } from '../../../features/reset'
 import { searchStore } from '../../../features/search'
 import { filterCommitsByRange, timelineStore } from '../../../features/timeline'
-import { t } from '../../../shared/lib'
+import { registerEscapeLayer, t } from '../../../shared/lib'
 import { CommitRow } from './CommitRow'
 import { DETAILS_H, InlineDetails } from './InlineDetails'
 import { columnStore } from '../model/columns'
@@ -213,11 +213,20 @@ export function GraphView() {
       raf = requestAnimationFrame(tick)
     }
     const holdTimer = window.setTimeout(activate, HOLD_DELAY)
+    // 드래그 중 Esc는 미리보기 취소만 하고 열린 패널 등은 건드리지 않는다
+    const unregisterEscape = registerEscapeLayer(
+      'gesture',
+      () => {
+        cleanup()
+        dragResetStore.clear()
+      },
+      { restoreFocus: false },
+    )
 
     const cleanup = () => {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
-      window.removeEventListener('keydown', onKey)
+      unregisterEscape()
       window.clearTimeout(holdTimer)
       if (raf !== null) cancelAnimationFrame(raf)
       setDragging(false)
@@ -241,14 +250,8 @@ export function GraphView() {
         dragResetStore.clear()
       }
     }
-    const onKey = (ev: KeyboardEvent) => {
-      if (ev.key !== 'Escape') return
-      cleanup()
-      dragResetStore.clear()
-    }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
-    window.addEventListener('keydown', onKey)
   }
 
   /** 행/노드 공통 클릭 처리 — 선택 토글, Ctrl/Cmd+클릭은 비교 대상 지정 */
@@ -340,6 +343,8 @@ export function GraphView() {
   return (
     <div
       class="graph-view"
+      tabIndex={-1}
+      data-escape-fallback
       classList={{ 'dragging-reset': dragging() }}
       ref={(el) => (containerRef = el)}
       onScroll={onScroll}

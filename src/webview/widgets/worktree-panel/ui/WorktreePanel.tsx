@@ -2,6 +2,7 @@ import { For, Show } from 'solid-js'
 import type { Worktree } from '@shared-types/domain'
 import { graphStore } from '../../../entities/graph'
 import { worktreeStore } from '../../../features/worktree'
+import { useEscapeLayer } from '../../../shared/lib'
 import { openContextMenu } from '../../../shared/ui'
 import type { MenuItem } from '../../../shared/ui'
 
@@ -55,6 +56,8 @@ function ArrowRightIcon() {
 /** worktree 목록 패널 — ✓ 현재 / ▢ 기타 / ✨ 메인, hover 시 열기 액션 */
 export function WorktreePanel() {
   const isCurrent = (worktree: Worktree) => worktree.path === graphStore.currentRepo()
+
+  useEscapeLayer('panel', worktreeStore.panelOpen, worktreeStore.closePanel)
 
   return (
     <Show when={worktreeStore.panelOpen()}>
