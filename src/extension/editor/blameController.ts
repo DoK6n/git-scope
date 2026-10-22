@@ -169,10 +169,11 @@ export class BlameController implements vscode.Disposable {
     return repo
   }
 
-  /** blame을 표시 중인 줄이면 코드 위든 줄 끝 표시 위든 상세를 보여준다 */
+  /** 표시 중인 줄의 끝(인라인 텍스트 위)에 마우스를 올렸을 때만 상세를 보여준다 */
   private hover(doc: vscode.TextDocument, pos: vscode.Position): vscode.Hover | undefined {
     const shown = this.shown
     if (!shown || shown.uri !== doc.uri.toString() || shown.line !== pos.line) return undefined
+    if (pos.character < doc.lineAt(pos.line).range.end.character) return undefined
 
     const { commit, repo } = shown
     const lang = this.language()

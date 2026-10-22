@@ -6,7 +6,7 @@
 
 ### Added
 
-- Added opt-in inline blame for the code editor (`gitScope.blame.enabled`, off by default). The end of the cursor line shows the author, relative time, and summary of the commit that last changed it, or marks uncommitted lines. Hovering anywhere on that line shows the full author, dates, summary, and a **Show in Git Scope Graph** link that opens the graph, switches to the repository, and selects the commit. **Toggle Inline Blame** and **Show Line Commit in Graph** are also available from the Command Palette. Blame runs once per file version, uses the unsaved buffer while editing, refreshes when HEAD moves, and skips files over 20,000 lines, untracked files, and non-file editors.
+- Added opt-in inline blame for the code editor (`gitScope.blame.enabled`, off by default). The end of the cursor line shows the author, relative time, and summary of the commit that last changed it, or marks uncommitted lines. Hovering the annotation shows the full author, dates, summary, and a **Show in Git Scope Graph** link that opens the graph, switches to the repository, and selects the commit. **Toggle Inline Blame** and **Show Line Commit in Graph** are also available from the Command Palette. Blame runs once per file version, uses the unsaved buffer while editing, refreshes when HEAD moves, and skips files over 20,000 lines, untracked files, and non-file editors.
 
 ## [0.7.0] - 2026-09-06
 
