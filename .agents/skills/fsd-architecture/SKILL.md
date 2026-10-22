@@ -12,10 +12,12 @@ GitScope는 webview(SolidJS)에 FSD를 적용하고, extension host(Node)는 단
 ```
 src/
   extension/              # Extension host (Node) — FSD 아님
-    commands/             # VS Code 커맨드 등록
+    main.ts               # activate, 커맨드 등록
     git/                  # git spawn 실행기, --format 파서, 타입
     bridge/               # webview 메시지 프로토콜 (host 쪽)
     config/               # gitScope.* 설정 읽기
+    icons/                # 파일 아이콘 매핑
+    editor/               # (예정) 에디터 장식: 인라인 blame 등
   webview/                # SolidJS 앱 — FSD 적용
     app/                  # 엔트리, 전역 프로바이더, 테마
     widgets/              # graph-view, toolbar, commit-details, dialogs
@@ -38,6 +40,12 @@ app → widgets → features → entities → shared
 - **동일 레이어 슬라이스 간 import 금지**: `features/merge`가 `features/checkout`을 import하지 않는다. 조합이 필요하면 상위 레이어(widgets)에서 한다
 - **Public API**: 각 슬라이스는 `index.ts`로만 노출. 외부에서 슬라이스 내부 경로 deep import 금지
 - **세그먼트**: 슬라이스 내부는 `ui/` `model/`(상태·로직) `lib/` `api/`로 구분. 다 필요한 건 아니고 있는 것만
+
+## Extension host 규칙
+
+- `main.ts`가 각 폴더를 조립한다. 폴더끼리는 `editor/`, `bridge/` → `git/`, `config/`, `icons/`, `telemetry.ts` 방향으로만 import한다. `git/`, `config/`는 다른 폴더를 import하지 않는다 (`@shared-types`는 예외). `editor/`와 `bridge/`도 서로 import하지 않고 `main.ts`에서 연결한다
+- VS Code 에디터 UI(decoration, hover, status bar)는 `editor/`에 둔다. git 명령 실행과 출력 파싱은 항상 `git/`에 둔다
+- webview와 주고받는 기능은 `bridge/`를 거치고, 메시지 타입은 `shared-types/messages.ts`에 추가한다
 
 ## 배치 판단 기준
 
