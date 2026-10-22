@@ -17,7 +17,7 @@
 | **원본 설정 총계** | **110** |
 | GitScope [todo] | 22 |
 | GitScope [skip] | 59 (현행 81 중) + 29 (deprecated 전부) |
-| GitScope 신규 설정 [new] | 6 |
+| GitScope 신규 설정 [new] | 7 |
 
 **상태 태그**
 - `[todo]` — 1차 구현 대상
@@ -91,6 +91,7 @@
 | `gitScope.search.globPattern` | boolean | `true` | 검색 위젯 입력을 glob 패턴으로 해석 (브랜치명·커밋 메시지 대상) | [new] |
 | `gitScope.search.caseSensitive` | boolean | `false` | 검색 대소문자 구분 기본값 | [new] |
 | `gitScope.dialog.reset.defaultTarget` | string | `HEAD~1` | reset 다이얼로그의 `HEAD~N` 입력 초기값 | [new] |
+| `gitScope.blame.enabled` | boolean | `false` | 에디터 커서 줄 끝에 그 줄을 마지막으로 바꾼 커밋(작성자, 상대 시각, 요약)을 표시. 다른 blame 확장과 화면이 겹치지 않도록 기본은 꺼짐. 60-new-features §23 | [new] |
 | `gitScope.language` | enum | `en` | UI 문구 언어 (`en` / `ko`). 툴팁·다이얼로그·알림 텍스트에 적용되며 변경 시 뷰 재시작 없이 즉시 반영. 웹뷰 i18n 사전은 영어 원문을 키로 사용 (`shared/lib/i18n.ts`) | [done] |
 
 ---

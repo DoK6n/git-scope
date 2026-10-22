@@ -2,7 +2,7 @@
   "name": "git-scope-view-git-graph",
   "displayName": "Git Scope: View Git Graph",
   "description": "A clean-room reimplementation of the Git Graph concept, rebuilt from scratch with modern improvements — commit graph visualization with git actions, plus worktree management, glob search filters, an enhanced reset UI, and fetch --prune.",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "publisher": "dok6n",
   "private": true,
   "license": "MIT",
@@ -53,6 +53,16 @@
       {
         "command": "gitScope.setGitHubToken",
         "title": "Set GitHub Token (PAT)",
+        "category": "Git Scope"
+      },
+      {
+        "command": "gitScope.blame.toggle",
+        "title": "Toggle Inline Blame",
+        "category": "Git Scope"
+      },
+      {
+        "command": "gitScope.blame.showCommitInGraph",
+        "title": "Show Line Commit in Graph",
         "category": "Git Scope"
       }
     ],
@@ -109,6 +119,11 @@
           ],
           "default": "en",
           "description": "Language for Git Scope UI text (tooltips, dialogs, notifications)."
+        },
+        "gitScope.blame.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show the author, date, and summary of the commit that last changed the current line at the end of the line. Hover it to open the commit in the Git Scope graph."
         }
       }
     }

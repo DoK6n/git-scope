@@ -1,4 +1,5 @@
 import { createSignal, For, Show } from 'solid-js'
+import { useEscapeLayer } from '../lib'
 
 export interface MenuItem {
   label: string
@@ -30,6 +31,8 @@ export function closeContextMenu(): void {
 
 /** app 루트에 한 번만 렌더하는 컨텍스트 메뉴 호스트 */
 export function ContextMenuHost() {
+  useEscapeLayer('menu', () => menu() !== null, closeContextMenu)
+
   return (
     <Show when={menu()}>
       {(state) => (

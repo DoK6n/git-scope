@@ -22,7 +22,8 @@ export function App() {
     }
   })
 
-  onMount(() => void graphStore.loadRepos())
+  // 에디터 blame에서 패널을 연 경우 저장소 목록을 읽은 뒤 요청한 커밋으로 이동한다
+  onMount(() => void graphStore.loadRepos().then(() => graphStore.consumeRevealRequest()))
 
   return (
     <div class="app">

@@ -3,9 +3,11 @@ import type { AuthorStatsPeriod, AuthorStatsScope } from '@shared-types/domain'
 import { AuthorAvatar } from '../../../entities/author'
 import { graphStore } from '../../../entities/graph'
 import { authorStatsStore } from '../../../features/author-stats'
-import { t } from '../../../shared/lib'
+import { t, useEscapeLayer } from '../../../shared/lib'
 
 export function AuthorStatsPanel() {
+  useEscapeLayer('panel', authorStatsStore.panelOpen, authorStatsStore.closePanel)
+
   const totalCommits = createMemo(() =>
     authorStatsStore.authors().reduce((total, author) => total + author.commits, 0),
   )

@@ -16,6 +16,7 @@ Click **Git Scope** in the left side of the status bar, or use Command Palette (
 
 - **Commit graph**: colored branch lanes, local/remote/tag/stash/fixup badges, HEAD and worktree indicators, incremental loading, and persistent line highlighting. Badge icon colors stay connected to their graph lanes.
 - **Commit inspection**: inline metadata, themed file tree or flat list, per-file diffs, file opening and path copying, and comparisons between commits.
+- **Inline blame**: optionally show the author, relative time, and commit summary for the current editor line, then open and select that commit directly in the Git Scope graph.
 - **Effective change size**: commit details calculate a net effective line count while excluding blank and comment-only changes, with separate addition/deletion totals and clear fallbacks for unsupported or binary files.
 - **Author statistics**: complete-history commit counts by author for the current branch or every ref, with date ranges, avatars, email addresses, and automatic `.mailmap` identity normalization.
 - **Commit timeline**: an activity line chart with day, month, and year grouping, author filtering, date breakdowns, and graph filtering by time bucket.

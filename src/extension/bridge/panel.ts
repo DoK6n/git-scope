@@ -47,6 +47,7 @@ export class GraphPanel {
     // git이 계속 도는 것을 막는다.
     router.isActive = () => panel.visible
     router.onRepoActivity = () => this.post({ kind: 'event', event: 'repoChanged' })
+    router.onRevealRequested = () => this.post({ kind: 'event', event: 'revealRequested' })
     let wasVisible = panel.visible
     panel.onDidChangeViewState(
       () => {
@@ -98,6 +99,7 @@ export class GraphPanel {
     panel.onDidDispose(() => {
       GraphPanel.current = undefined
       router.onRepoActivity = null
+      router.onRevealRequested = null
       router.isActive = null
       for (const d of this.disposables) d.dispose()
     })

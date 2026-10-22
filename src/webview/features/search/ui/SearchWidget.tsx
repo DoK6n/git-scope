@@ -1,4 +1,5 @@
 import { createEffect, createSignal, onCleanup, onMount } from 'solid-js'
+import { useEscapeLayer } from '../../../shared/lib'
 import { searchStore } from '../model/search'
 
 function ArrowIcon(props: { direction: 'up' | 'down' }) {
@@ -59,17 +60,13 @@ export function SearchWidget() {
         event.stopPropagation()
         setOpen(true)
         focusInput()
-        return
-      }
-      if (event.key === 'Escape' && open()) {
-        event.preventDefault()
-        event.stopPropagation()
-        close()
       }
     }
     window.addEventListener('keydown', handleKeyDown, true)
     onCleanup(() => window.removeEventListener('keydown', handleKeyDown, true))
   })
+
+  useEscapeLayer('popover', open, close)
 
   createEffect(() => {
     if (!open()) return

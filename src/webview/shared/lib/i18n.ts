@@ -19,6 +19,7 @@ export function t(text: string, ...args: (string | number)[]): string {
 const KO: Record<string, string> = {
   // ── 공통 ──
   'Commit not found in the graph.': '해당 커밋을 그래프에서 찾을 수 없습니다.',
+  'This repository is not open in Git Scope.': '이 저장소는 Git Scope에 열려 있지 않습니다.',
 
   // ── 툴바 · 브랜치 필터 ──
   'Select branches to show in the graph': '그래프에 표시할 브랜치 선택',

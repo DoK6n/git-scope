@@ -37,6 +37,7 @@ const READ_ONLY_REQUESTS = new Set<RequestCommand>([
   'notify',
   'copyToClipboard',
   'openFile',
+  'takeRevealRequest',
 ])
 
 /**
@@ -65,6 +66,11 @@ export class Router {
 
   /** 그래프가 화면에 보이는지 — GraphPanel이 주입. 안 보이면 감시 처리를 통째로 건너뛴다 */
   isActive: (() => boolean) | null = null
+
+  /** 그래프에서 보여줄 커밋 요청 — 에디터 blame이 맡기고 webview가 가져간다 */
+  private pendingReveal: { repo: string; hash: string } | null = null
+  /** 열려 있는 webview에 revealRequested를 보내는 콜백 — GraphPanel이 주입 */
+  onRevealRequested: (() => void) | null = null
 
   private watchers = new Map<string, fs.FSWatcher[]>()
   private worktreeWatchers = new Map<string, vscode.FileSystemWatcher>()
@@ -389,6 +395,15 @@ export class Router {
     return spec
   }
 
+  /**
+   * 그래프에서 커밋을 보여달라는 요청을 맡긴다. 패널이 막 열리는 중이면 webview가 준비된 뒤
+   * takeRevealRequest로 가져가고, 이미 열려 있으면 onRevealRequested로 바로 알린다.
+   */
+  requestReveal(repo: string, hash: string): void {
+    this.pendingReveal = { repo, hash }
+    this.onRevealRequested?.()
+  }
+
   getRepo(root: string): GitRepo {
     let repo = this.repos.get(root)
     if (!repo) {
@@ -493,6 +508,11 @@ export class Router {
   ): Promise<RequestMap[C]['result']> {
     const handlers: { [K in RequestCommand]: Handler<K> } = {
       listRepos: () => this.listRepos(),
+      takeRevealRequest: () => {
+        const target = this.pendingReveal
+        this.pendingReveal = null
+        return Promise.resolve(target)
+      },
       getGraph: (p) => {
         this.activeRepo = p.repo
         return this.getRepo(p.repo).getGraph(
