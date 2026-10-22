@@ -273,6 +273,9 @@ export interface RequestMap {
 
   /** 워킹트리 변경사항 stash 등 이후 확장용 자리 */
   copyToClipboard: { params: { text: string }; result: ActionResult }
+
+  /** 에디터 blame 등에서 요청한 '그래프에서 이 커밋 보기'를 꺼낸다. 없으면 null */
+  takeRevealRequest: { params: Record<string, never>; result: { repo: string; hash: string } | null }
 }
 
 export type RequestCommand = keyof RequestMap
@@ -292,6 +295,8 @@ export type BridgeResponse<C extends RequestCommand = RequestCommand> =
 export type BridgeEvent =
   | { kind: 'event'; event: 'repoChanged' }
   | { kind: 'event'; event: 'settings'; settings: WebviewSettings }
+  /** 그래프에서 보여줄 커밋이 생겼다 — webview가 takeRevealRequest로 가져간다 */
+  | { kind: 'event'; event: 'revealRequested' }
 
 export interface WebviewSettings {
   initialLoadCommits: number
