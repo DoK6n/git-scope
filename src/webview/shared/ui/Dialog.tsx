@@ -1,5 +1,6 @@
 import type { JSX, ParentComponent } from 'solid-js'
 import { createEffect, onCleanup, Show } from 'solid-js'
+import { useEscapeLayer } from '../lib'
 
 interface DialogProps {
   open: boolean
@@ -56,14 +57,11 @@ export const Dialog: ParentComponent<DialogProps> = (props) => {
     })
   })
 
+  // 포커스 복귀는 위 effect가 맡는다
+  useEscapeLayer('dialog', () => props.open, () => props.onClose(), { restoreFocus: false })
+
   const onKey = (e: KeyboardEvent) => {
     if (!props.open) return
-
-    if (e.key === 'Escape') {
-      e.stopPropagation() // 뒤의 find 위젯 등 다른 Esc 처리로 번지지 않게
-      props.onClose()
-      return
-    }
 
     if (
       e.key === 'Enter' &&
