@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import { GraphPanel } from './bridge/panel'
 import { Router } from './bridge/router'
 import { AvatarService } from './git/avatars'
+import { BlameController } from './editor/blameController'
 import { GitContentProvider, GITSCOPE_SCHEME } from './git/contentProvider'
 import { setGitCommandLogger } from './git/exec'
 import { FileIconService } from './icons/fileIcons'
@@ -111,6 +112,11 @@ export function activate(context: vscode.ExtensionContext): void {
       GITSCOPE_SCHEME,
       new GitContentProvider((root) => router.getRepo(root)),
     ),
+    new BlameController((root, hash) => {
+      // 패널이 새로 열리면 webview가 준비된 뒤 이 요청을 가져간다
+      router.requestReveal(root, hash)
+      GraphPanel.show(context, router)
+    }),
   )
 }
 

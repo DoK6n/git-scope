@@ -61,7 +61,7 @@ const [scrollTargetRow, setScrollTargetRow] = createSignal<number | null>(null)
  * 해시의 커밋 행으로 스크롤 요청.
  * 로드된 범위 밖이면 커밋을 추가 로드하며 찾은 뒤 이동한다 (안전 상한 20회).
  */
-async function scrollToHash(hash: string): Promise<void> {
+async function scrollToHash(hash: string): Promise<boolean> {
   const find = () => (graph()?.commits ?? []).findIndex((c) => c.hash === hash)
   let index = find()
   let rounds = 0
@@ -75,9 +75,10 @@ async function scrollToHash(hash: string): Promise<void> {
   }
   if (index < 0) {
     setNotice(t('Commit not found in the graph.'))
-    return
+    return false
   }
   setScrollTargetRow(index)
+  return true
 }
 
 onBridgeEvent((event) => {
@@ -86,6 +87,7 @@ onBridgeEvent((event) => {
     setLocale(event.settings.language ?? 'en')
   }
   if (event.event === 'repoChanged') void refresh()
+  if (event.event === 'revealRequested') void consumeRevealRequest()
 })
 
 /** 그래프 레이아웃 — 커밋 목록이 바뀔 때만 재계산 */
@@ -144,6 +146,24 @@ async function switchRepo(root: string): Promise<void> {
   setBranchFilter(null)
   setSelectedCommit(null)
   await refresh()
+}
+
+/** 에디터 blame 등 host가 맡긴 '그래프에서 이 커밋 보기' 요청을 처리한다 */
+async function consumeRevealRequest(): Promise<void> {
+  let target: { repo: string; hash: string } | null
+  try {
+    target = await request('takeRevealRequest', {})
+  } catch {
+    return
+  }
+  if (!target) return
+  if (!repos().some((r) => r.root === target.repo)) await loadRepos()
+  if (!repos().some((r) => r.root === target.repo)) {
+    setNotice(t('This repository is not open in Git Scope.'))
+    return
+  }
+  if (currentRepo() !== target.repo) await switchRepo(target.repo)
+  if (await scrollToHash(target.hash)) setSelectedCommit(target.hash)
 }
 
 async function applyBranchFilter(refs: string[] | null): Promise<void> {
@@ -286,6 +306,7 @@ export const graphStore = {
   scrollTargetRow,
   consumeScrollTarget: () => setScrollTargetRow(null),
   scrollToHash,
+  consumeRevealRequest,
   loadRepos,
   refresh,
   loadMore,
